@@ -17,7 +17,4 @@ public class AuthResponse {
     public String getEmail() {
         return email;
     }
-
-    
-    
 }

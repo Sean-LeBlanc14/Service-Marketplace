@@ -1,21 +1,34 @@
 package com.ServiceMarketplace.service_marketplace.service;
 
-import org.springframework.stereotype.Service;
-
+import com.ServiceMarketplace.service_marketplace.dto.AuthResponse;
+import com.ServiceMarketplace.service_marketplace.dto.RegisterRequest;
+import com.ServiceMarketplace.service_marketplace.exception.EmailAlreadyExistsException;
 import com.ServiceMarketplace.service_marketplace.model.User;
 import com.ServiceMarketplace.service_marketplace.repository.UserRepository;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
 
 @Service
 public class UserService {
-    
-    private final UserRepository userRepository;
 
-    public UserService(UserRepository userRepository) {
+    private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
+
+    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
     }
 
-    public User registerUser(User user) {
-        // TODO: VALIDATE EMAIL, HASH PASSWORD, CHECK FOR DUPLICATES
-        throw new UnsupportedOperationException("Not implemented yet");
+    public AuthResponse registerUser(RegisterRequest request) {
+        if (userRepository.existsByEmail(request.getEmail())) {
+            throw new EmailAlreadyExistsException(request.getEmail());
+        }
+
+        User user = new User();
+        user.setEmail(request.getEmail());
+        user.setPassword(passwordEncoder.encode(request.getPassword()));
+
+        User saved = userRepository.save(user);
+        return new AuthResponse(saved.getId(), saved.getEmail());
     }
 }

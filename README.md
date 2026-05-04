@@ -25,8 +25,8 @@ cp .env.example .env
 
 ### 3. Run the backend
 
-cd packages/backend
-mvn spring-boot:run
+cd packages/backend/service-marketplace
+./mvnw spring-boot:run
 
 The API will start on http://localhost:8080
 
@@ -41,8 +41,20 @@ The app will start on http://localhost:5173
 ## Project Structure
 
 packages/
-├── backend/   # Spring Boot API
-└── frontend/  # React + Vite client
+├── backend/
+│   └── service-marketplace/
+│       └── src/main/java/com/ServiceMarketplace/service_marketplace/
+│           ├── config/       # Security and app configuration (e.g. BCrypt, filter chain)
+│           ├── controller/   # HTTP layer — maps requests to service calls
+│           ├── dto/          # Data Transfer Objects — request/response shapes
+│           ├── exception/    # Custom exceptions (e.g. EmailAlreadyExistsException)
+│           ├── model/        # MongoDB document models
+│           ├── repository/   # Spring Data MongoDB repositories
+│           └── service/      # Business logic
+└── frontend/
+    └── src/
+        ├── components/       # Shared UI components (e.g. Layout)
+        └── pages/            # Route-level page components
 
 ## Contributing
 

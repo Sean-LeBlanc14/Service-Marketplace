@@ -9,7 +9,8 @@ export default function TextField() {
       <input 
         style = {{
             borderRadius: 8,
-            padding: 3
+            padding: 3,
+            
         }}
       />
     </div>

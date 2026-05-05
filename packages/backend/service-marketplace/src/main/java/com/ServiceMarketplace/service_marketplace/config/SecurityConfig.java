@@ -26,7 +26,6 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        System.out.println("DEBUG: SecurityConfig is being loaded!");
         http
             .cors(Customizer.withDefaults())
             .csrf(csrf -> csrf.disable())

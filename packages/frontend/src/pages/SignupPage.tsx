@@ -1,8 +1,5 @@
-
-function SignupPage(){
-  return (
-    <></>
-  );
+function SignupPage() {
+  return <></>;
 }
 
 export default SignupPage;

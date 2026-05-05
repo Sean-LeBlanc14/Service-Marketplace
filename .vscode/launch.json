@@ -1,0 +1,14 @@
+{
+  "configurations": [
+    {
+      "type": "java",
+      "name": "Spring Boot-ServiceMarketplaceApplication<service-marketplace>",
+      "request": "launch",
+      "cwd": "${workspaceFolder}",
+      "mainClass": "com.ServiceMarketplace.service_marketplace.ServiceMarketplaceApplication",
+      "projectName": "service-marketplace",
+      "args": "",
+      "envFile": "${workspaceFolder}/.env"
+    }
+  ]
+}

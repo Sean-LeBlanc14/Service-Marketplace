@@ -5,12 +5,12 @@ import react from "@vitejs/plugin-react";
 export default defineConfig({
   plugins: [react()],
   optimizeDeps: {
-    include: ['@azure/msal-react', '@azure/msal-browser'],
+    include: ["@azure/msal-react", "@azure/msal-browser"]
   },
   // Ensure the commonjs plugin handles the msal library
   build: {
     commonjsOptions: {
-      include: [/node_modules/],
-    },
-  },
+      include: [/node_modules/]
+    }
+  }
 });

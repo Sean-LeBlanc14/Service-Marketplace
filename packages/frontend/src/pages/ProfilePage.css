@@ -1,0 +1,31 @@
+.profile-screen {
+  box-sizing: border-box;
+  min-height: 100svh;
+  width: 100%;
+  padding: 32px;
+  background: #000;
+  color: #fff;
+  text-align: left;
+}
+
+.profile-screen h1 {
+  margin: 0 0 32px;
+  color: #fff;
+  font-size: 40px;
+  font-weight: 500;
+  letter-spacing: 0;
+}
+
+.profile-section {
+  min-height: 140px;
+  margin-top: 24px;
+  border-top: 1px solid #222;
+}
+
+.profile-section h2 {
+  margin: 18px 0 0;
+  color: #fff;
+  font-size: 20px;
+  font-weight: 400;
+  letter-spacing: 0;
+}

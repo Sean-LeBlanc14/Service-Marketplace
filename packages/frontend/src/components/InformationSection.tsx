@@ -27,7 +27,7 @@ export default function InformationSection(){
             }}>
             <h2> Verified Students </h2>
             <p>
-              {" "}
+              
               Exclusive to the Mustang community. Secure,
               student-only access.
             </p>
@@ -52,7 +52,7 @@ export default function InformationSection(){
             }}>
             <h2> n Categories </h2>
             <p>
-              {" "}
+              
               Built for student life. Specialized categories
               tailored to your major and dorm needs.
             </p>

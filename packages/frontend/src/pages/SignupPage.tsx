@@ -1,10 +1,11 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 function SignupPage() {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [error, setError] = useState("");
-    const [success, setSuccess] = useState(false);
+    const navigate = useNavigate();
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -18,7 +19,7 @@ function SignupPage() {
             });
 
             if (response.ok) {
-                setSuccess(true);
+                navigate("/");
             } else if (response.status === 409) {
                 setError("An account with this email already exists.");
             } else if (response.status === 400) {
@@ -30,15 +31,6 @@ function SignupPage() {
             setError("Unable to connect to the server. Please try again.");
         }
     };
-
-    if (success) {
-        return (
-            <div>
-                <h2>You're registered!</h2>
-                <p>Your account has been created successfully.</p>
-            </div>
-        );
-    }
 
     return (
         <div>

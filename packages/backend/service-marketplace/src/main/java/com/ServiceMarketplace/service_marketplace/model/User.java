@@ -19,6 +19,12 @@ public class User {
 
     private String password;
 
+    private String firstName;
+
+    private String lastName;
+
+    private String major;
+
     @CreatedDate
     private Instant createdAt;
 
@@ -44,6 +50,30 @@ public class User {
 
     public void setPassword(String password) {
         this.password = password;
+    }
+
+    public String getFirstName(){
+        return this.firstName;
+    }
+
+    public void setFirstName(String firstName){
+        this.firstName = firstName;
+    }
+
+    public String getLastName(){
+        return this.lastName;
+    }
+
+    public void setLastName(String lastName){
+        this.lastName = lastName;
+    }
+
+    public String getMajor(){
+        return this.major;
+    }
+
+    public void setMajor(String major){
+        this.major = major;
     }
 
     public Instant getCreatedAt() {

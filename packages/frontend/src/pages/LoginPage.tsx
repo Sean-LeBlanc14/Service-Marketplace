@@ -1,13 +1,35 @@
 import { useState } from "react";
-import { Col } from "react-bootstrap";
+
 import { Link } from "react-router-dom";
+import TextField from "../components/TextField";
+import InformationSection from "../components/InformationSection";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
   const loginUser = async () => {
-    //Need to Setup
+
+    const user = {
+      email: email,
+      password: password
+    }
+
+    try{
+      const response = await fetch("http://localhost:8080/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(user)
+      });
+
+      if (response.ok){
+        const data = await response.json();
+
+        console.log(data);
+      }
+    }catch(e){
+      console.error('An error occurred when logging in: ', e);
+    }
   };
 
   return (
@@ -60,18 +82,11 @@ export default function LoginPage() {
               }}>
               Email
             </label>
-            <input
-              style={{
-                borderRadius: "8px",
-                border: "1px solid #ccc",
-                padding: "12px",
-                fontSize: "1rem"
-              }}
+            
+            <TextField
               type="email"
-              placeholder="johndoe@calpoly.edu"
-              onChange={(e) => {
-                setEmail(e.target.value);
-              }}
+              placeHolder="johndoe@calpoly.edu"
+              onChange={(e)=> {setEmail(e.target.value)}}
             />
           </div>
           {/*Password*/}
@@ -91,18 +106,10 @@ export default function LoginPage() {
               }}>
               Password
             </label>
-            <input
-              style={{
-                borderRadius: "8px",
-                border: "1px solid #ccc",
-                padding: "12px",
-                fontSize: "1rem"
-              }}
+            <TextField
               type="password"
-              placeholder="Password"
-              onChange={(e) => {
-                setPassword(e.target.value);
-              }}
+              placeHolder="Password"
+              onChange={(e)=>{setPassword(e.target.value)}}
             />
           </div>
           <button
@@ -127,64 +134,9 @@ export default function LoginPage() {
           </Link>
         </div>
       </section>
+      
       {/* Description Section*/}
-      <div
-        style={{
-          flex: "1",
-          backgroundColor: "#f4f4f4",
-          padding: "60px"
-        }}>
-        <section
-          style={{
-            flex: "1",
-            display: "flex",
-            flexDirection: "row",
-            justifyContent: "center",
-            alignItems: "center",
-            gap: "40px",
-            maxWidth: "1000px",
-            margin: "0 auto"
-          }}>
-          <Col
-            style={{
-              flex: 1,
-              textAlign: "center",
-              maxWidth: "300px"
-            }}>
-            <h2> Verified Students </h2>
-            <p>
-              {" "}
-              Exclusive to the Mustang community. Secure,
-              student-only access.
-            </p>
-          </Col>
-          <Col
-            style={{
-              flex: 1,
-              textAlign: "center",
-              maxWidth: "300px"
-            }}>
-            <h2> On Campus </h2>
-            <p>
-              Your campus, your marketplace. Find specialized
-              help and gear just a short walk from your dorm.
-            </p>
-          </Col>
-          <Col
-            style={{
-              flex: 1,
-              textAlign: "center",
-              maxWidth: "300px"
-            }}>
-            <h2> n Categories </h2>
-            <p>
-              {" "}
-              Built for student life. Specialized categories
-              tailored to your major and dorm needs.
-            </p>
-          </Col>
-        </section>
-      </div>
+      <InformationSection/>
     </div>
   );
 }

@@ -13,8 +13,6 @@ import com.ServiceMarketplace.service_marketplace.service.UserService;
 
 import jakarta.validation.Valid;
 
-
-
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
@@ -30,6 +28,18 @@ public class AuthController {
 
         AuthResponse response = userService.registerUser(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+    @PostMapping("/login")
+    public ResponseEntity<String> login(@Valid @RequestBody RegisterRequest request){
+
+        String response = userService.verifyUser(request);
+
+        if (response.equals("failed")){
+            ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
+        }
+        
+        return ResponseEntity.status(HttpStatus.OK).body(response);
     }
     
 }

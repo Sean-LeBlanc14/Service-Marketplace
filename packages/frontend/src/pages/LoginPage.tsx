@@ -4,10 +4,12 @@ import NavLink from "../components/NavLink";
 import InformationSection from "../components/InformationSection";
 import FormContainer from "../components/FormContainer";
 import SubmitButton from "../components/SubmitButton";
+import { useNavigate } from "react-router-dom";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const navigate = useNavigate();
 
   const loginUser = async () => {
     const user = {
@@ -28,7 +30,10 @@ export default function LoginPage() {
       if (response.ok) {
         const data = await response.json();
 
-        console.log(data);
+        //Using local storage to store token for now, possibly use cookies in the future
+        localStorage.setItem("jwt_token", data.token);
+
+        navigate("/");
       }
     } catch (e) {
       console.error("An error occurred when logging in: ", e);

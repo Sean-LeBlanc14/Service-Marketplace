@@ -3,12 +3,15 @@ package com.ServiceMarketplace.service_marketplace.service;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import com.ServiceMarketplace.service_marketplace.dto.AuthResponse;
+import com.ServiceMarketplace.service_marketplace.dto.LoginRequest;
 import com.ServiceMarketplace.service_marketplace.dto.RegisterRequest;
+import com.ServiceMarketplace.service_marketplace.dto.UserProfile;
 import com.ServiceMarketplace.service_marketplace.exception.EmailAlreadyExistsException;
 import com.ServiceMarketplace.service_marketplace.model.User;
 import com.ServiceMarketplace.service_marketplace.repository.UserRepository;
@@ -20,10 +23,11 @@ public class UserService {
     private final PasswordEncoder passwordEncoder;
 
     @Autowired
-    AuthenticationManager authManager;
+    AuthenticationManager authenticationManager;
 
     @Autowired
-    private JWTService service;
+    JwtService jwtService;
+   
 
     public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
@@ -39,18 +43,30 @@ public class UserService {
         user.setEmail(request.getEmail());
         user.setPassword(passwordEncoder.encode(request.getPassword()));
 
+        String jwtToken = jwtService.generateToken(request.getEmail());
+
         User saved = userRepository.save(user);
-        return new AuthResponse(saved.getId(), saved.getEmail());
+        return new AuthResponse(saved.getId(), saved.getEmail(), jwtToken);
     }
 
-    public String verifyUser(RegisterRequest request){
+    public AuthResponse loginUser(LoginRequest request){
+        
+        authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword()));
 
-        Authentication authentication = authManager.authenticate(new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword()));
+        var user = userRepository.findByEmail(request.getEmail()).orElseThrow(() -> new UsernameNotFoundException("Email not found"));
 
-        if (authentication.isAuthenticated()){
-            return service.generateToken(request.getEmail());
-        }else{
-            return "failed";
-        }
+        String jwtToken = jwtService.generateToken(request.getEmail());
+
+        return new AuthResponse(user.getId(), user.getEmail(), jwtToken);
+
+    }
+
+    public UserProfile getUserProfile(UserDetails userDetails){
+
+        var user = userRepository.findByEmail(userDetails.getUsername())
+            .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+
+        return new UserProfile(user.getEmail(), user.getFirstName(), user.getLastName(), user.getMajor());
+        
     }
 }

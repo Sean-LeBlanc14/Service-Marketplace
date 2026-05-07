@@ -8,7 +8,7 @@ interface Provider {
 }
 
 interface Service {
-  id: number;
+  id: string;
   title: string;
   category: string;
   provider: Provider;
@@ -57,7 +57,7 @@ function ServiceCard({ service }: ServiceCardProps) {
           {service.tags.map((tag, index) => (
             <Badge
               bg="none"
-              key={index}
+              key={tag}
               style={{
                 backgroundColor: "#003831",
                 color: "white",

@@ -4,7 +4,7 @@ import type { Service } from "../components/ServiceCard";
 
 const services: Service[] = [
   {
-    id: 1,
+    id: "1",
     title: "Calculus & Statistics Tutoring",
     category: "tutoring",
     provider: { name: "Sarah Chen", avatar: "👩‍🎓", rating: 4.9, reviews: 47 },
@@ -14,7 +14,7 @@ const services: Service[] = [
     tags: ["Mathematics", "One-on-one", "Group sessions"],
   },
   {
-    id: 2,
+    id: "2",
     title: "Computer Repair & Setup",
     category: "tech",
     provider: { name: "Marcus Johnson", avatar: "👨‍💻", rating: 4.8, reviews: 63 },
@@ -24,7 +24,7 @@ const services: Service[] = [
     tags: ["Hardware", "Software", "Emergency service"],
   },
   {
-    id: 3,
+    id: "3",
     title: "Photography for Events",
     category: "photography",
     provider: { name: "Emily Rodriguez", avatar: "📸", rating: 5.0, reviews: 31 },
@@ -34,7 +34,7 @@ const services: Service[] = [
     tags: ["Events", "Portraits", "Editing included"],
   },
   {
-    id: 4,
+    id: "4",
     title: "Resume Review & Career Coaching",
     category: "finance",
     provider: { name: "David Park", avatar: "👔", rating: 4.9, reviews: 28 },
@@ -44,7 +44,7 @@ const services: Service[] = [
     tags: ["Resume", "Interview prep", "Career advice"],
   },
   {
-    id: 5,
+    id: "5",
     title: "Home-Cooked Meal Prep",
     category: "food",
     provider: { name: "Priya Patel", avatar: "👩‍🍳", rating: 4.7, reviews: 52 },
@@ -54,7 +54,7 @@ const services: Service[] = [
     tags: ["Healthy", "Custom orders", "Meal plans"],
   },
   {
-    id: 6,
+    id: "6",
     title: "Web Development & Design",
     category: "tech",
     provider: { name: "Alex Kim", avatar: "💻", rating: 4.9, reviews: 19 },
@@ -64,7 +64,7 @@ const services: Service[] = [
     tags: ["Web design", "React", "Portfolio"],
   },
   {
-    id: 7,
+    id: "7",
     title: "Sublet: 1BR Apartment Summer",
     category: "housing",
     provider: { name: "Jessica Martinez", avatar: "🏠", rating: 4.6, reviews: 8 },
@@ -74,7 +74,7 @@ const services: Service[] = [
     tags: ["Furnished", "Utilities included", "Pet-friendly"],
   },
   {
-    id: 8,
+    id: "8",
     title: "Python & Data Science Tutoring",
     category: "tutoring",
     provider: { name: "Ryan Thompson", avatar: "🐍", rating: 4.8, reviews: 34 },

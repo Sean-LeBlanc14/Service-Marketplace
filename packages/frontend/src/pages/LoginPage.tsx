@@ -70,7 +70,7 @@ export default function LoginPage() {
           label={"Login"}
           onClick={loginUser}
         />
-        link=<NavLink to= "/signup" label = "Create Account"/>
+        link=<NavLink to="/signup" label="Create Account" />
       />
 
       {/* Description Section*/}

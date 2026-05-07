@@ -25,6 +25,8 @@ public class User {
 
     private String major;
 
+    private String campus;
+
     @CreatedDate
     private Instant createdAt;
 
@@ -74,6 +76,14 @@ public class User {
 
     public void setMajor(String major){
         this.major = major;
+    }
+
+    public String getCampus(){
+        return this.campus;
+    }
+
+    public void setCampus(String campus){
+        this.campus = campus;
     }
 
     public Instant getCreatedAt() {

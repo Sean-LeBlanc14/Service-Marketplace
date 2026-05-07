@@ -5,12 +5,11 @@ interface NavLinkProps {
   label: string;
 }
 
-export default function NavLink({
-  to,
-  label
-}: NavLinkProps) {
+export default function NavLink({ to, label }: NavLinkProps) {
   return (
-    <Link to={to} style={{ fontSize: "0.9rem", color: "#003831" }}>
+    <Link
+      to={to}
+      style={{ fontSize: "0.9rem", color: "#003831" }}>
       {label}
     </Link>
   );

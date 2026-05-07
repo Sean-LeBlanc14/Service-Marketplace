@@ -31,8 +31,8 @@ export default function FormContainer({
           border: "1px solid #e0e0e0",
           boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
           backgroundColor: "white",
-          width: "100%",
-          maxWidth: "350px",
+          width: "90%",
+          maxWidth: "500px",
           margin: "20px auto"
         }}>
         {textField}

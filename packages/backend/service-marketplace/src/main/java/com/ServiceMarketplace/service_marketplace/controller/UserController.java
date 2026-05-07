@@ -21,12 +21,11 @@ public class UserController {
     private UserService userService;
 
     @GetMapping("/me")
-    public ResponseEntity<UserProfile> getMethodName(@AuthenticationPrincipal UserDetails userDetails) {
+    public ResponseEntity<UserProfile> getUserProfile(@AuthenticationPrincipal UserDetails userDetails) {
 
         UserProfile response = userService.getUserProfile(userDetails);
 
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }
-    
     
 }

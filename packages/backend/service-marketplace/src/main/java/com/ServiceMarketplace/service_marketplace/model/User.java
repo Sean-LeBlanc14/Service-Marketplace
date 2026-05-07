@@ -27,6 +27,8 @@ public class User {
 
     private String campus;
 
+    private boolean isVerified = false;
+
     @CreatedDate
     private Instant createdAt;
 
@@ -92,6 +94,14 @@ public class User {
 
     public void setCreatedAt(Instant createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public void setVerificationStatus(boolean status){
+        this.isVerified = status;
+    }
+
+    public boolean getVerificationStatus(){
+        return this.isVerified;
     }
 
     

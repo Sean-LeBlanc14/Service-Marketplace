@@ -14,16 +14,16 @@ public class RegisterRequest {
     @Size(min = 8)
     private String password;
 
-    @NotBlank
+    
     private String firstName;
 
-    @NotBlank
+    
     private String lastName;
 
-    @NotBlank
+    
     private String campus;
 
-    @NotBlank
+    
     private String major;
 
     public String getEmail() {

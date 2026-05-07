@@ -28,10 +28,12 @@ public class UserService {
     @Autowired
     JwtService jwtService;
    
+    private final EmailService emailService;
 
-    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder) {
+    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder, EmailService emailService) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
+        this.emailService = emailService;
     }
 
     public AuthResponse registerUser(RegisterRequest request) {
@@ -49,7 +51,10 @@ public class UserService {
 
         String jwtToken = jwtService.generateToken(request.getEmail());
 
+        emailService.sendVerificationEmail(user.getEmail());
+
         User saved = userRepository.save(user);
+
         return new AuthResponse(saved.getId(), saved.getEmail(), jwtToken);
     }
 
@@ -73,4 +78,5 @@ public class UserService {
         return new UserProfile(user.getEmail(), user.getFirstName(), user.getLastName(), user.getMajor());
         
     }
+
 }

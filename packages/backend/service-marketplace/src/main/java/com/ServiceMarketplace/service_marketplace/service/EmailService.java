@@ -43,8 +43,10 @@ public class EmailService {
         String html = generateEmailHtml(verificationCode);
 
         try{
+            helper.setFrom("servicemarket98@gmail.com");
             helper.setText(html, true);
             helper.setTo(email);
+            helper.setSubject("Verification Code");
         }catch(MessagingException e){
             System.out.println("ERROR: Failed to create the message: " + e.getMessage());
         }

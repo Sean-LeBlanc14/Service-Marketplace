@@ -19,6 +19,16 @@ public class User {
 
     private String password;
 
+    private String firstName;
+
+    private String lastName;
+
+    private String major;
+
+    private String campus;
+
+    private boolean isVerified = false;
+
     @CreatedDate
     private Instant createdAt;
 
@@ -46,12 +56,52 @@ public class User {
         this.password = password;
     }
 
+    public String getFirstName(){
+        return this.firstName;
+    }
+
+    public void setFirstName(String firstName){
+        this.firstName = firstName;
+    }
+
+    public String getLastName(){
+        return this.lastName;
+    }
+
+    public void setLastName(String lastName){
+        this.lastName = lastName;
+    }
+
+    public String getMajor(){
+        return this.major;
+    }
+
+    public void setMajor(String major){
+        this.major = major;
+    }
+
+    public String getCampus(){
+        return this.campus;
+    }
+
+    public void setCampus(String campus){
+        this.campus = campus;
+    }
+
     public Instant getCreatedAt() {
         return createdAt;
     }
 
     public void setCreatedAt(Instant createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public void setVerificationStatus(boolean status){
+        this.isVerified = status;
+    }
+
+    public boolean getVerificationStatus(){
+        return this.isVerified;
     }
 
     

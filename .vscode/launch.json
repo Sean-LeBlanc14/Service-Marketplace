@@ -2,6 +2,13 @@
   "configurations": [
     {
       "type": "java",
+      "name": "ServiceMarketplaceApplication",
+      "request": "launch",
+      "mainClass": "ServiceMarketplaceApplication",
+      "projectName": "service-marketplace"
+    },
+    {
+      "type": "java",
       "name": "Spring Boot-ServiceMarketplaceApplication<service-marketplace>",
       "request": "launch",
       "cwd": "${workspaceFolder}",

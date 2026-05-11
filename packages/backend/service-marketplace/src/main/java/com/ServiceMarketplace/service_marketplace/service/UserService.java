@@ -80,7 +80,7 @@ public class UserService {
             throw new BadCredentialsException("Invalid email or password.");
         }
 
-        var user = userRepository.findByEmail(request.getEmail()).orElseThrow(() -> new UsernameNotFoundException("Email not found"));
+        var user = userRepository.findByEmail(request.getEmail()).orElseThrow(() -> new UsernameNotFoundException("User not found"));
 
         String jwtToken = jwtService.generateToken(request.getEmail());
 

@@ -9,8 +9,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.ServiceMarketplace.service_marketplace.dto.ResendResponse;
 import com.ServiceMarketplace.service_marketplace.dto.VerificationRequest;
-import com.ServiceMarketplace.service_marketplace.dto.VerificationResponse;
 import com.ServiceMarketplace.service_marketplace.dto.VerifiedResponse;
 import com.ServiceMarketplace.service_marketplace.service.EmailService;
 import com.ServiceMarketplace.service_marketplace.service.JwtService;
@@ -48,21 +48,18 @@ public class VerificationController {
         return ResponseEntity.status(HttpStatus.OK).body(verified);
     }
 
-    @PutMapping("/resend/{id}")
-    public ResponseEntity<VerificationResponse> resendCode(@Valid @RequestBody VerificationRequest request,  HttpServletRequest servletRequest) {
+    @PutMapping("/resend")
+    public ResponseEntity<ResendResponse> resendCode(@Valid @RequestBody VerificationRequest request,  HttpServletRequest servletRequest) {
 
         String auth = servletRequest.getHeader("Authorization");
 
         String email = jwtService.extractEmail(auth.substring(7));
 
-        VerificationResponse response = verificationService.resendCode(request, email);
+        ResendResponse response = verificationService.resendCode(request, email);
 
         emailService.sendVerificationEmail(response.getEmail(), response.getCode());
         
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 
-    
-    
-    
 }

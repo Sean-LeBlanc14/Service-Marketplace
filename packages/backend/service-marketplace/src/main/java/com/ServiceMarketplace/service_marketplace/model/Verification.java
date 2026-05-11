@@ -14,7 +14,7 @@ public class Verification {
     private static final int EXPIRATION_MINUTES = 10;
 
     @Id
-    private String Id;
+    private String id;
 
     @Indexed(unique = true)
     @NotBlank
@@ -33,6 +33,10 @@ public class Verification {
 
     public String getEmail(){
         return this.email;
+    }
+
+    public String getId(){
+        return this.id;
     }
 
     public String getVerificationCode(){

@@ -4,10 +4,11 @@ import java.security.SecureRandom;
 import java.time.LocalDateTime;
 
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import com.ServiceMarketplace.service_marketplace.dto.ResendResponse;
 import com.ServiceMarketplace.service_marketplace.dto.VerificationRequest;
-import com.ServiceMarketplace.service_marketplace.dto.VerificationResponse;
 import com.ServiceMarketplace.service_marketplace.dto.VerifiedResponse;
 import com.ServiceMarketplace.service_marketplace.exception.InvalidVerificationCode;
 import com.ServiceMarketplace.service_marketplace.exception.VerificationCodeExpired;
@@ -23,14 +24,17 @@ public class VerificationService {
 
     private final UserRepository userRepository;
 
-    public VerificationService(VerificationRepository verificationRepository, UserRepository userRepository, EmailService emailService){
+    private final PasswordEncoder passwordEncoder;
+
+    public VerificationService(VerificationRepository verificationRepository, UserRepository userRepository, EmailService emailService, PasswordEncoder passwordEncoder){
         this.verificationRepository = verificationRepository;
         this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
     }
 
     public void createVerification(String email, String code){
 
-        Verification verification = new Verification(email, code);
+        Verification verification = new Verification(email, passwordEncoder.encode(code));
 
         verificationRepository.save(verification);
 
@@ -44,7 +48,7 @@ public class VerificationService {
             throw new VerificationCodeExpired();
         }
 
-        if (!request.getCode().equals(verification.getVerificationCode())){
+        if (!passwordEncoder.matches(request.getCode(), verification.getVerificationCode())){
             throw new InvalidVerificationCode();
         }
 
@@ -61,7 +65,7 @@ public class VerificationService {
         
     }
 
-    public VerificationResponse resendCode(VerificationRequest request, String email){
+    public ResendResponse resendCode(VerificationRequest request, String email){
 
         String newCode = generateVerificationCode();
 
@@ -71,7 +75,7 @@ public class VerificationService {
         verification.updateExpiryDate();
         verificationRepository.save(verification);
 
-        return new VerificationResponse(email, newCode);
+        return new ResendResponse(verification.getVerificationCode(), email, true);
     }
 
     public String generateVerificationCode(){
@@ -80,10 +84,6 @@ public class VerificationService {
         int randomNumber = secureRandom.nextInt(100000);
         
         return String.format("%06d", randomNumber);
-    }
-
-    public void delete(){
-        verificationRepository.deleteAll();
     }
 
 }

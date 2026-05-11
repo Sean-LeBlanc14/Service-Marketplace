@@ -69,13 +69,13 @@ public class VerificationService {
 
         String newCode = generateVerificationCode();
 
-        var verification = verificationRepository.findByEmail(newCode).orElseThrow(() -> new VerificationNotFound());
+        var verification = verificationRepository.findByEmail(email).orElseThrow(() -> new VerificationNotFound());
 
         verification.setVerificationCode(newCode);
         verification.updateExpiryDate();
         verificationRepository.save(verification);
 
-        return new ResendResponse(verification.getVerificationCode(), email, true);
+        return new ResendResponse(newCode, email, true);
     }
 
     public String generateVerificationCode(){

@@ -1,7 +1,8 @@
 package com.ServiceMarketplace.service_marketplace.service;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.InternalAuthenticationServiceException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -22,18 +23,22 @@ public class UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
 
-    @Autowired
     AuthenticationManager authenticationManager;
 
-    @Autowired
     JwtService jwtService;
    
     private final EmailService emailService;
 
-    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder, EmailService emailService) {
+    private final VerificationService verificationService;
+
+    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder, EmailService emailService, 
+        VerificationService verificationService, AuthenticationManager authenticationManager, JwtService jwtService) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.emailService = emailService;
+        this.verificationService = verificationService;
+        this.authenticationManager = authenticationManager;
+        this.jwtService = jwtService;
     }
 
     public AuthResponse registerUser(RegisterRequest request) {
@@ -51,7 +56,11 @@ public class UserService {
 
         String jwtToken = jwtService.generateToken(request.getEmail());
 
-        emailService.sendVerificationEmail(user.getEmail());
+        String code = verificationService.generateVerificationCode();
+
+        verificationService.createVerification(user.getEmail(), code);
+
+        emailService.sendVerificationEmail(user.getEmail(), code);
 
         User saved = userRepository.save(user);
 
@@ -60,7 +69,16 @@ public class UserService {
 
     public AuthResponse loginUser(LoginRequest request){
         
-        authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword()));
+        try {
+            authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(
+                    request.getEmail(), 
+                    request.getPassword()
+                )
+            );
+        } catch (BadCredentialsException | InternalAuthenticationServiceException e) {
+            throw new BadCredentialsException("Invalid email or password.");
+        }
 
         var user = userRepository.findByEmail(request.getEmail()).orElseThrow(() -> new UsernameNotFoundException("Email not found"));
 
@@ -75,7 +93,7 @@ public class UserService {
         var user = userRepository.findByEmail(userDetails.getUsername())
             .orElseThrow(() -> new UsernameNotFoundException("User not found"));
 
-        return new UserProfile(user.getEmail(), user.getFirstName(), user.getLastName(), user.getMajor());
+        return new UserProfile(user.getEmail(), user.getFirstName(), user.getLastName(), user.getMajor(), user.getCampus());
         
     }
 

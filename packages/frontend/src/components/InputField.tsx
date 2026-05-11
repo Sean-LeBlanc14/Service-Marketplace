@@ -1,4 +1,5 @@
 interface InputFieldProps {
+  value: string;
   label: string;
   type: string;
   placeHolder: string;
@@ -6,6 +7,7 @@ interface InputFieldProps {
 }
 
 export default function InputField({
+  value,
   label,
   type,
   placeHolder,
@@ -36,6 +38,7 @@ export default function InputField({
           padding: "12px",
           fontSize: "1rem"
         }}
+        value={value}
         type={type}
         placeholder={placeHolder}
         onChange={onChange}

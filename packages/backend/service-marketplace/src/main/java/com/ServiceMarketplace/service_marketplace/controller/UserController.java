@@ -1,6 +1,5 @@
 package com.ServiceMarketplace.service_marketplace.controller;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -14,11 +13,14 @@ import com.ServiceMarketplace.service_marketplace.service.UserService;
 
 
 @RestController
-@RequestMapping("/users")
+@RequestMapping("/api/users")
 public class UserController {
 
-    @Autowired
     private UserService userService;
+
+    public UserController(UserService userService){
+        this.userService = userService;
+    }
 
     @GetMapping("/me")
     public ResponseEntity<UserProfile> getUserProfile(@AuthenticationPrincipal UserDetails userDetails) {
@@ -27,5 +29,6 @@ public class UserController {
 
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }
+
     
 }

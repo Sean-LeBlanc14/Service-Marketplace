@@ -42,7 +42,7 @@ function SignupPage() {
       );
 
       if (response.ok) {
-        navigate("/");
+        navigate("/verify");
       } else if (response.status === 409) {
         setError("An account with this email already exists.");
       } else if (response.status === 400) {
@@ -78,6 +78,7 @@ function SignupPage() {
               }}>
               <div style={{ flex: 1 }}>
                 <InputField
+                  value={firstName}
                   label="First Name"
                   placeHolder="Your Name"
                   onChange={(e) => setFirstName(e.target.value)}
@@ -86,6 +87,7 @@ function SignupPage() {
 
               <div style={{ flex: 1 }}>
                 <InputField
+                  value={lastName}
                   label="Last Name"
                   placeHolder="Your Last Name"
                   onChange={(e) => setLastName(e.target.value)}
@@ -101,6 +103,7 @@ function SignupPage() {
               }}>
               <div style={{ flex: 1 }}>
                 <InputField
+                  value={major}
                   label="Major"
                   placeHolder="Your Major"
                   onChange={(e) => setMajor(e.target.value)}
@@ -129,12 +132,14 @@ function SignupPage() {
             </div>
 
             <InputField
+              value={email}
               label="Email"
               type="email"
               placeHolder="johndoe@calpoly.edu"
               onChange={(e) => setEmail(e.target.value)}
             />
             <InputField
+              value={password}
               label="Password"
               type="password"
               placeHolder="Password"

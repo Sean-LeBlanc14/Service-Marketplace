@@ -9,6 +9,8 @@ import { useNavigate } from "react-router-dom";
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+
+  const [ error, setError ] = useState("");
   const navigate = useNavigate();
 
   const loginUser = async () => {
@@ -34,9 +36,15 @@ export default function LoginPage() {
         localStorage.setItem("jwt_token", data.token);
 
         navigate("/");
+      }else if (response.status === 404){
+        setError("User not found");
+      }else if (response.status === 401){
+        setError("Invalid Email or Password!");
+      }else{
+        setError("Something went wrong, please try again.")
       }
-    } catch (e) {
-      console.error("An error occurred when logging in: ", e);
+    } catch{
+      setError("Unable to connect to the server, please try again.")
     }
   };
 
@@ -53,12 +61,14 @@ export default function LoginPage() {
         textField={
           <>
             <InputField
+              value={email}
               label="Email"
               type="email"
               placeHolder="johndoe@calpoly.edu"
               onChange={(e) => setEmail(e.target.value)}
             />{" "}
             <InputField
+              value={password}
               label="Password"
               type="password"
               placeHolder="Password"

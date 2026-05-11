@@ -39,11 +39,16 @@ public class Verification {
         return this.verificationCode;
     }
 
+    public void setVerificationCode(String code){
+        this.verificationCode = code;
+    }
+
     public LocalDateTime getExpiryDate(){
         return this.expiryDate;
     }
 
+    public void updateExpiryDate(){
+        this.expiryDate = LocalDateTime.now().plusMinutes(EXPIRATION_MINUTES);
+    }
 
-
-    
 }

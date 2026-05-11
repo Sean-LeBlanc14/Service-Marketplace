@@ -10,11 +10,14 @@ public class UserProfile {
 
     private String major;
 
-    public UserProfile(String email, String firstName, String lastName, String major){
+    private String campus;
+
+    public UserProfile(String email, String firstName, String lastName, String major, String campus){
         this.email = email;
         this.firstName = firstName;
         this.lastName = lastName;
         this.major = major;
+        this.campus = campus;
     }
 
     public String getEmail(){
@@ -31,5 +34,9 @@ public class UserProfile {
 
     public String getLastName(){
         return this.lastName;
+    }
+
+    public String getCampus(){
+        return this.campus;
     }
 }

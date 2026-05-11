@@ -1,8 +1,7 @@
 package com.ServiceMarketplace.service_marketplace.service;
 
-import java.security.SecureRandom;
-
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
@@ -19,10 +18,11 @@ public class EmailService {
     private JavaMailSender mailSender;
 
     @Autowired
-    private VerificationService verificationService;
-
-    @Autowired
     private TemplateEngine templateEngine;
+
+    @Value("${custom.app.sender.email}")
+    private String SENDER_EMAIL;
+
 
     public String generateEmailHtml(String code) {
         Context context = new Context();
@@ -30,36 +30,25 @@ public class EmailService {
         return templateEngine.process("verificationEmail", context);
     }
     
-    public void sendVerificationEmail(String email){
-
-        String verificationCode = generateVerificationCode();
-
-        verificationService.createVerification(email, verificationCode);
+    public void sendVerificationEmail(String email, String code){
 
         MimeMessage message = mailSender.createMimeMessage();
 
         MimeMessageHelper helper = new MimeMessageHelper(message, "utf-8");
 
-        String html = generateEmailHtml(verificationCode);
+        String html = generateEmailHtml(code);
 
         try{
-            helper.setFrom("servicemarket98@gmail.com");
+            helper.setFrom(SENDER_EMAIL);
             helper.setText(html, true);
             helper.setTo(email);
             helper.setSubject("Verification Code");
+            mailSender.send(message);
         }catch(MessagingException e){
+            
             System.out.println("ERROR: Failed to create the message: " + e.getMessage());
         }
 
-        mailSender.send(message);
-
     }
 
-    private String generateVerificationCode(){
-        SecureRandom secureRandom = new SecureRandom();
-
-        int randomNumber = secureRandom.nextInt(100000);
-        
-        return String.format("%06d", randomNumber);
-    }
 }

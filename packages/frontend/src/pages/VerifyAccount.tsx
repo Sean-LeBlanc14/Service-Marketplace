@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import FormContainer from "../components/FormContainer";
 import SubmitButton from "../components/SubmitButton";
@@ -10,6 +10,16 @@ export default function VerifyAccount() {
     const navigate = useNavigate();
     const location = useLocation();
     const { email, token } = location.state || {};
+
+    useEffect(() => {
+        if (!token) {
+            navigate("/signup");
+        }
+    }, [token, navigate]);
+
+    if (!token) {
+        return null;
+    }
 
     const handleChange = (index: number, value: string) => {
         if (!/^\d*$/.test(value)) return;

@@ -71,7 +71,7 @@ public class VerificationService {
 
         var verification = verificationRepository.findByEmail(email).orElseThrow(() -> new VerificationNotFound());
 
-        verification.setVerificationCode(newCode);
+        verification.setVerificationCode(passwordEncoder.encode(newCode));
         verification.updateExpiryDate();
         verificationRepository.save(verification);
 

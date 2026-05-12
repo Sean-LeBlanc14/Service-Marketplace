@@ -8,12 +8,11 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.ServiceMarketplace.service_marketplace.dto.AuthResponse;
+import com.ServiceMarketplace.service_marketplace.dto.LoginRequest;
 import com.ServiceMarketplace.service_marketplace.dto.RegisterRequest;
 import com.ServiceMarketplace.service_marketplace.service.UserService;
 
 import jakarta.validation.Valid;
-
-
 
 @RestController
 @RequestMapping("/api/auth")
@@ -30,6 +29,14 @@ public class AuthController {
 
         AuthResponse response = userService.registerUser(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+    @PostMapping("/login")
+    public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest request){
+
+        AuthResponse response = userService.loginUser(request);
+
+        return ResponseEntity.status(HttpStatus.OK).body(response);
     }
     
 }

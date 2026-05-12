@@ -4,6 +4,7 @@ import HomePage from "./pages/HomePage";
 import SignupPage from "./pages/SignupPage";
 import LoginPage from "./pages/LoginPage";
 import VerifyAccount from "./pages/VerifyAccount";
+import ProfilePage from "./pages/ProfilePage";
 
 function App() {
   return (
@@ -14,6 +15,7 @@ function App() {
           <Route path="login" element={<LoginPage />} />
           <Route path="verify" element={ <VerifyAccount/>}/>
           <Route index element={<HomePage />} />
+          <Route path="profile" element={<ProfilePage />} />
         </Route>
       </Routes>
     </BrowserRouter>

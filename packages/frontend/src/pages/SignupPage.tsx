@@ -42,7 +42,9 @@ function SignupPage() {
       );
 
       if (response.ok) {
-        navigate("/verify");
+        const data = await response.json();
+        localStorage.setItem("jwt_token", data.token);
+        navigate("/verify", { state: { email: data.email, token: data.token } });
       } else if (response.status === 409) {
         setError("An account with this email already exists.");
       } else if (response.status === 400) {

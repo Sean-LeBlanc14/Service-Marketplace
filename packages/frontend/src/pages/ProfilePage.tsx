@@ -1,4 +1,5 @@
-import { useMemo } from "react";
+import { useState } from "react";
+import type { FormEvent } from "react";
 import "./ProfilePage.css";
 
 const LISTINGS_STORAGE_KEY =
@@ -14,39 +15,6 @@ interface ServiceListing {
   tags: string[];
 }
 
-const defaultProfileServices: ServiceListing[] = [
-  {
-    id: "calculus-tutoring",
-    title: "Calculus Tutoring",
-    description:
-      "One-on-one support for Calculus I-III, linear algebra, and statistics with flexible evening availability.",
-    price: "25",
-    isHourly: true,
-    location: "Main Library or Online",
-    tags: ["Mathematics", "Tutoring", "Online"]
-  },
-  {
-    id: "resume-review",
-    title: "Resume Review",
-    description:
-      "Resume, cover letter, and interview prep for internships, campus roles, and first professional positions.",
-    price: "20",
-    isHourly: false,
-    location: "Student Center or Zoom",
-    tags: ["Career", "Resume", "Interview prep"]
-  },
-  {
-    id: "web-portfolio-help",
-    title: "Web Portfolio Help",
-    description:
-      "Portfolio setup and feedback for students who want a cleaner personal site or project showcase.",
-    price: "35",
-    isHourly: true,
-    location: "Remote collaboration",
-    tags: ["Web", "Portfolio", "Design"]
-  }
-];
-
 function formatPrice(price: string, isHourly: boolean) {
   const cleanPrice = price
     .replace(/^\$/, "")
@@ -55,6 +23,17 @@ function formatPrice(price: string, isHourly: boolean) {
   const displayPrice = cleanPrice ? `$${cleanPrice}` : "$0";
 
   return isHourly ? `${displayPrice}/hr` : displayPrice;
+}
+
+function cleanPrice(price: string) {
+  return price.replace(/^\$/, "").replace(/\/hr$/, "").trim();
+}
+
+function parseTags(tags: string) {
+  return tags
+    .split(",")
+    .map((tag) => tag.trim())
+    .filter(Boolean);
 }
 
 function normalizeStoredListings(
@@ -72,16 +51,12 @@ function normalizeStoredListings(
     .filter((listing) => listing.status !== "taken-down")
     .map((listing, index) => {
       const savedPrice = listing.price ?? "";
-      const cleanPrice = savedPrice
-        .replace(/^\$/, "")
-        .replace(/\/hr$/, "")
-        .trim();
 
       return {
         id: listing.id ?? `profile-service-${index}`,
         title: listing.title?.trim() ?? "",
         description: listing.description?.trim() ?? "",
-        price: cleanPrice,
+        price: cleanPrice(savedPrice),
         isHourly:
           listing.isHourly ?? savedPrice.endsWith("/hr"),
         location: listing.location?.trim() ?? "",
@@ -92,8 +67,7 @@ function normalizeStoredListings(
       (listing) =>
         listing.title &&
         listing.description &&
-        listing.price &&
-        listing.location
+        listing.price
     );
 }
 
@@ -103,22 +77,69 @@ function loadProfileServices() {
   );
 
   if (!storedListings) {
-    return defaultProfileServices;
+    return [];
   }
 
   try {
-    const services = normalizeStoredListings(storedListings);
-
-    return services.length > 0
-      ? services
-      : defaultProfileServices;
+    return normalizeStoredListings(storedListings);
   } catch {
-    return defaultProfileServices;
+    return [];
   }
 }
 
 function ProfilePage() {
-  const services = useMemo(() => loadProfileServices(), []);
+  const [services, setServices] = useState<ServiceListing[]>(
+    () => loadProfileServices()
+  );
+  const [title, setTitle] = useState("");
+  const [location, setLocation] = useState("");
+  const [description, setDescription] = useState("");
+  const [price, setPrice] = useState("");
+  const [tags, setTags] = useState("");
+  const [isHourly, setIsHourly] = useState(false);
+  const [isCreateFormOpen, setIsCreateFormOpen] =
+    useState(false);
+  const [formMessage, setFormMessage] = useState("");
+
+  function handleCreateListing(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setFormMessage("");
+
+    const nextTitle = title.trim();
+    const nextLocation = location.trim();
+    const nextDescription = description.trim();
+    const nextPrice = cleanPrice(price);
+    const nextTags = parseTags(tags);
+
+    if (!nextTitle || !nextDescription || !nextPrice) {
+      setFormMessage("Title, description, and price are required.");
+      return;
+    }
+
+    const nextListing: ServiceListing = {
+      id: `profile-service-${Date.now()}`,
+      title: nextTitle,
+      description: nextDescription,
+      price: nextPrice,
+      isHourly,
+      location: nextLocation,
+      tags: nextTags
+    };
+    const nextServices = [nextListing, ...services];
+
+    window.localStorage.setItem(
+      LISTINGS_STORAGE_KEY,
+      JSON.stringify(nextServices)
+    );
+    setServices(nextServices);
+    setTitle("");
+    setLocation("");
+    setDescription("");
+    setPrice("");
+    setTags("");
+    setIsHourly(false);
+    setFormMessage("Listing created.");
+  }
 
   return (
     <main className="profile-screen">
@@ -143,7 +164,284 @@ function ProfilePage() {
         <div className="section-heading">
           <h2>Services</h2>
           <p>Services shown on this profile.</p>
+          <button
+            type="button"
+            aria-controls="create-listing-form"
+            aria-expanded={isCreateFormOpen}
+            onClick={() => {
+              setIsCreateFormOpen(
+                (currentValue) => !currentValue
+              );
+              setFormMessage("");
+            }}
+            style={{
+              marginTop: "14px",
+              border: "none",
+              borderRadius: "8px",
+              padding: "12px 18px",
+              background: "#003831",
+              color: "#ffffff",
+              font: "inherit",
+              fontWeight: 700,
+              cursor: "pointer"
+            }}>
+            {isCreateFormOpen ? "Cancel" : "Create Listing"}
+          </button>
         </div>
+
+        {isCreateFormOpen && (
+          <form
+            id="create-listing-form"
+            aria-label="Create service listing"
+            onSubmit={handleCreateListing}
+            style={{
+              display: "grid",
+              gap: "12px",
+              width: "100%",
+              boxSizing: "border-box",
+              marginBottom: "24px",
+              border: "1px solid #dedede",
+              borderRadius: "8px",
+              padding: "20px",
+              background: "#ffffff"
+            }}>
+            <div
+              style={{
+                display: "grid",
+                gap: "6px"
+              }}>
+              <label
+                htmlFor="service-title"
+                style={{
+                  color: "#333333",
+                  fontWeight: 700
+                }}>
+                Title
+              </label>
+              <input
+                id="service-title"
+                value={title}
+                onChange={(event) =>
+                  setTitle(event.target.value)
+                }
+                placeholder="Service title"
+                style={{
+                  border: "1px solid #cfcfcf",
+                  borderRadius: "8px",
+                  padding: "12px",
+                  font: "inherit"
+                }}
+              />
+            </div>
+
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns:
+                  "repeat(auto-fit, minmax(150px, 1fr))",
+                gap: "12px",
+                alignItems: "end"
+              }}>
+              <div
+                style={{
+                  display: "grid",
+                  gap: "6px"
+                }}>
+                <label
+                  htmlFor="service-location"
+                  style={{
+                    color: "#333333",
+                    fontWeight: 700
+                  }}>
+                  Location
+                </label>
+                <input
+                  id="service-location"
+                  value={location}
+                  onChange={(event) =>
+                    setLocation(event.target.value)
+                  }
+                  placeholder="Main Library or Online"
+                  style={{
+                    border: "1px solid #cfcfcf",
+                    borderRadius: "8px",
+                    padding: "12px",
+                    font: "inherit"
+                  }}
+                />
+              </div>
+
+              <div
+                style={{
+                  display: "grid",
+                  gap: "6px"
+                }}>
+                <label
+                  htmlFor="service-price"
+                  style={{
+                    color: "#333333",
+                    fontWeight: 700
+                  }}>
+                  Price
+                </label>
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    border: "1px solid #cfcfcf",
+                    borderRadius: "8px",
+                    background: "#ffffff",
+                    overflow: "hidden"
+                  }}>
+                  <span
+                    aria-hidden="true"
+                    style={{
+                      paddingLeft: "12px",
+                      color: "#4d4d4d",
+                      fontWeight: 700
+                    }}>
+                    $
+                  </span>
+                  <input
+                    id="service-price"
+                    value={price}
+                    onChange={(event) =>
+                      setPrice(cleanPrice(event.target.value))
+                    }
+                    placeholder="25"
+                    inputMode="decimal"
+                    style={{
+                      minWidth: 0,
+                      flex: 1,
+                      border: "none",
+                      padding: "12px",
+                      font: "inherit",
+                      outline: "none"
+                    }}
+                  />
+                </div>
+              </div>
+
+              <label
+                htmlFor="service-hourly"
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "8px",
+                  minHeight: "50px",
+                  color: "#333333",
+                  fontWeight: 700
+                }}>
+                <input
+                  id="service-hourly"
+                  type="checkbox"
+                  checked={isHourly}
+                  onChange={(event) =>
+                    setIsHourly(event.target.checked)
+                  }
+                  style={{
+                    width: "18px",
+                    height: "18px",
+                    accentColor: "#003831"
+                  }}
+                />
+                Hourly
+              </label>
+            </div>
+
+            <div
+              style={{
+                display: "grid",
+                gap: "6px"
+              }}>
+              <label
+                htmlFor="service-tags"
+                style={{
+                  color: "#333333",
+                  fontWeight: 700
+                }}>
+                Tags
+              </label>
+              <input
+                id="service-tags"
+                value={tags}
+                onChange={(event) =>
+                  setTags(event.target.value)
+                }
+                placeholder="Tutoring, Online, Math"
+                style={{
+                  border: "1px solid #cfcfcf",
+                  borderRadius: "8px",
+                  padding: "12px",
+                  font: "inherit"
+                }}
+              />
+            </div>
+
+            <div
+              style={{
+                display: "grid",
+                gap: "6px"
+              }}>
+              <label
+                htmlFor="service-description"
+                style={{
+                  color: "#333333",
+                  fontWeight: 700
+                }}>
+                Description
+              </label>
+              <textarea
+                id="service-description"
+                value={description}
+                onChange={(event) =>
+                  setDescription(event.target.value)
+                }
+                placeholder="Describe the service you are offering."
+                rows={4}
+                style={{
+                  minHeight: "108px",
+                  resize: "vertical",
+                  border: "1px solid #cfcfcf",
+                  borderRadius: "8px",
+                  padding: "12px",
+                  font: "inherit"
+                }}
+              />
+            </div>
+
+            {formMessage && (
+              <p
+                role="status"
+                style={{
+                  margin: 0,
+                  color:
+                    formMessage === "Listing created."
+                      ? "#0d473f"
+                      : "#9f1239",
+                  fontWeight: 700
+                }}>
+                {formMessage}
+              </p>
+            )}
+
+            <button
+              type="submit"
+              style={{
+                justifySelf: "start",
+                border: "none",
+                borderRadius: "8px",
+                padding: "12px 18px",
+                background: "#003831",
+                color: "#ffffff",
+                font: "inherit",
+                fontWeight: 700,
+                cursor: "pointer"
+              }}>
+              Create Listing
+            </button>
+          </form>
+        )}
 
         {services.length === 0 ? (
           <p className="empty-state">
@@ -160,9 +458,11 @@ function ProfilePage() {
                   <p className="listing-description">
                     {service.description}
                   </p>
-                  <p className="listing-location">
-                    {service.location}
-                  </p>
+                  {service.location && (
+                    <p className="listing-location">
+                      {service.location}
+                    </p>
+                  )}
                   {service.tags.length > 0 && (
                     <div
                       className="listing-tags"

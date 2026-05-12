@@ -37,6 +37,17 @@ export default function VerifyAccount() {
         }
     };
 
+    const handlePaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
+        e.preventDefault();
+        const pasted = e.clipboardData.getData("text").replace(/\D/g, "").slice(0, 6);
+        const newCode = [...code];
+        pasted.split("").forEach((char, i) => {
+            newCode[i] = char;
+        });
+        setCode(newCode);
+        inputs.current[Math.min(pasted.length, 5)]?.focus();
+    };
+
     const handleSubmit = async (e: React.MouseEvent) => {
         e.preventDefault();
         setError("");
@@ -91,7 +102,7 @@ export default function VerifyAccount() {
         textField={
             <>
             <p style={{ textAlign: "center", color: "#555", margin: 0 }}>
-                We sent a 6-digit code to <strong>{email}</strong>
+                We sent a 6-digit code to <strong>{email}</strong> If you don't see it, check your junk or spam folder.
             </p>
             <div style={{ display: "flex", gap: "10px", justifyContent: "center" }}>
                 {code.map((digit, i) => (
@@ -104,6 +115,7 @@ export default function VerifyAccount() {
                     value={digit}
                     onChange={(e) => handleChange(i, e.target.value)}
                     onKeyDown={(e) => handleKeyDown(i, e)}
+                    onPaste={i === 0 ? handlePaste : undefined}
                     style={{
                     width: "45px",
                     height: "55px",

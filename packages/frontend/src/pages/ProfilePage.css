@@ -61,191 +61,6 @@
   margin-bottom: 18px;
 }
 
-.section-heading .primary-button {
-  margin-top: 14px;
-}
-
-.listing-form {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 16px;
-  padding: 20px;
-  border: 1px solid #d8d0c4;
-  border-radius: 8px;
-  background: #fffdf9;
-}
-
-.form-row {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.form-row-full,
-.form-error,
-.form-actions {
-  grid-column: 1 / -1;
-}
-
-.service-details-row {
-  display: grid;
-  grid-template-columns: minmax(260px, 1fr) minmax(260px, 360px);
-  align-items: end;
-  gap: 16px;
-}
-
-.pricing-details {
-  display: grid;
-  grid-template-columns: minmax(140px, 1fr) auto;
-  align-items: end;
-  gap: 12px;
-}
-
-.form-row label {
-  color: #263d36;
-  font-size: 14px;
-  font-weight: 700;
-}
-
-.form-row input,
-.form-row textarea {
-  width: 100%;
-  box-sizing: border-box;
-  border: 1px solid #cfc8bd;
-  border-radius: 6px;
-  padding: 11px 12px;
-  color: #161616;
-  background: #ffffff;
-  font: inherit;
-}
-
-.price-input {
-  display: flex;
-  align-items: center;
-  border: 1px solid #cfc8bd;
-  border-radius: 6px;
-  background: #ffffff;
-}
-
-.price-input span {
-  padding-left: 12px;
-  color: #263d36;
-  font-weight: 800;
-}
-
-.form-row .price-input input {
-  border: 0;
-  border-radius: 0 6px 6px 0;
-  padding-left: 6px;
-}
-
-.price-input:focus-within {
-  border-color: #0b5b49;
-  outline: 3px solid rgba(11, 91, 73, 0.16);
-}
-
-.form-row .price-input input:focus {
-  outline: none;
-}
-
-.form-row textarea {
-  resize: vertical;
-}
-
-.form-row input:focus,
-.form-row textarea:focus {
-  border-color: #0b5b49;
-  outline: 3px solid rgba(11, 91, 73, 0.16);
-}
-
-.form-error {
-  margin: 0;
-  color: #9f1d1d;
-  font-weight: 700;
-}
-
-.checkbox-row {
-  display: flex;
-  min-height: 42px;
-  align-items: center;
-  gap: 10px;
-  padding-bottom: 1px;
-  color: #263d36;
-  font-size: 14px;
-  font-weight: 800;
-}
-
-.checkbox-row input {
-  width: 18px;
-  height: 18px;
-  accent-color: #003831;
-}
-
-.form-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 10px;
-}
-
-.primary-button,
-.secondary-button,
-.listing-actions button {
-  min-height: 40px;
-  border-radius: 6px;
-  padding: 0 14px;
-  font-weight: 700;
-  cursor: pointer;
-}
-
-.primary-button {
-  border: 1px solid #003831;
-  background: #003831;
-  color: #ffffff;
-}
-
-.secondary-button,
-.listing-actions button {
-  border: 1px solid #cfc8bd;
-  background: #ffffff;
-  color: #263d36;
-}
-
-.listing-groups {
-  display: grid;
-  gap: 18px;
-  margin-top: 24px;
-}
-
-.listing-view-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-}
-
-.listing-view-actions button {
-  min-height: 40px;
-  border: 1px solid #cfc8bd;
-  border-radius: 6px;
-  padding: 0 14px;
-  background: #ffffff;
-  color: #263d36;
-  font-weight: 800;
-  cursor: pointer;
-}
-
-.listing-view-actions .active-view {
-  border-color: #003831;
-  background: #003831;
-  color: #ffffff;
-}
-
-.listing-group h3 {
-  margin: 0 0 14px;
-  color: #263d36;
-  font-size: 16px;
-  font-weight: 800;
-}
-
 .listing-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
@@ -254,7 +69,7 @@
 
 .listing-card {
   display: flex;
-  min-height: 280px;
+  min-height: 260px;
   flex-direction: column;
   justify-content: space-between;
   gap: 18px;
@@ -265,10 +80,6 @@
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
 
-.listing-card-muted {
-  background: #f1eee9;
-}
-
 .listing-card-heading {
   display: flex;
   align-items: flex-start;
@@ -276,7 +87,7 @@
   gap: 12px;
 }
 
-.listing-card h4 {
+.listing-card h3 {
   margin: 0;
   color: #161616;
   font-size: 20px;
@@ -342,18 +153,6 @@
   line-height: 1;
 }
 
-.listing-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-}
-
-.listing-actions button:last-child {
-  border-color: #003831;
-  background: #003831;
-  color: #ffffff;
-}
-
 @media (max-width: 720px) {
   .profile-screen {
     padding: 24px 18px;
@@ -368,24 +167,6 @@
     font-size: 34px;
   }
 
-  .listing-form {
-    grid-template-columns: 1fr;
-    padding: 16px;
-  }
-
-  .service-details-row {
-    grid-template-columns: 1fr;
-  }
-
-  .pricing-details {
-    grid-template-columns: minmax(0, 1fr) auto;
-  }
-
-  .checkbox-row {
-    min-height: 32px;
-    padding-bottom: 0;
-  }
-
   .listing-grid {
     grid-template-columns: 1fr;
   }
@@ -393,14 +174,5 @@
   .listing-card-footer {
     align-items: stretch;
     flex-direction: column;
-  }
-
-  .form-actions {
-    justify-content: stretch;
-  }
-
-  .primary-button,
-  .secondary-button {
-    flex: 1;
   }
 }

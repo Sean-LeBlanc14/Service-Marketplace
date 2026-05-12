@@ -40,6 +40,9 @@ public class VerificationController {
     public ResponseEntity<VerifiedResponse> verifyCode(@Valid @RequestBody VerificationRequest request, HttpServletRequest servletRequest) {
         
         String auth = servletRequest.getHeader("Authorization");
+        if (auth == null || !auth.startsWith("Bearer ")) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
 
         String email = jwtService.extractEmail(auth.substring(7));
 
@@ -52,6 +55,9 @@ public class VerificationController {
     public ResponseEntity<ResendResponse> resendCode(@Valid @RequestBody VerificationRequest request,  HttpServletRequest servletRequest) {
 
         String auth = servletRequest.getHeader("Authorization");
+        if (auth == null || !auth.startsWith("Bearer ")) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
 
         String email = jwtService.extractEmail(auth.substring(7));
 

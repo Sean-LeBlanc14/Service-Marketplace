@@ -5,11 +5,17 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.ServiceMarketplace.service_marketplace.dto.UpdateUserProfileRequest;
 import com.ServiceMarketplace.service_marketplace.dto.UserProfile;
 import com.ServiceMarketplace.service_marketplace.service.UserService;
+
+import jakarta.validation.Valid;
+
+import org.springframework.web.bind.annotation.RequestBody;
 
 
 @RestController
@@ -26,6 +32,14 @@ public class UserController {
     public ResponseEntity<UserProfile> getUserProfile(@AuthenticationPrincipal UserDetails userDetails) {
 
         UserProfile response = userService.getUserProfile(userDetails);
+
+        return ResponseEntity.status(HttpStatus.OK).body(response);
+    }
+
+    @PutMapping("/me")
+    public ResponseEntity<UserProfile> updateUserProfile(@AuthenticationPrincipal UserDetails userDetails, @Valid @RequestBody UpdateUserProfileRequest request) {
+
+        UserProfile response = userService.updateUserProfile(userDetails, request);
 
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }

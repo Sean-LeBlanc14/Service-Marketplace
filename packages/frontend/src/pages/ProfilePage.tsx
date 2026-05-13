@@ -1,9 +1,9 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { FormEvent } from "react";
 import "./ProfilePage.css";
 
-const LISTINGS_STORAGE_KEY =
-  "service-marketplace-profile-listings";
+const API_URL = "http://localhost:8080/api/users/me";
+const TOKEN_STORAGE_KEY = "jwt_token";
 
 interface ServiceListing {
   id: string;
@@ -15,6 +15,46 @@ interface ServiceListing {
   tags: string[];
 }
 
+interface UserProfile {
+  email: string;
+  firstName: string;
+  lastName: string;
+  major: string;
+  campus: string;
+  bio: string;
+  services: ServiceListing[];
+}
+
+interface ApiServiceListing {
+  id?: string;
+  title?: string;
+  description?: string;
+  price?: string;
+  isHourly?: boolean;
+  location?: string;
+  tags?: string[];
+}
+
+interface ApiUserProfile {
+  email?: string;
+  firstName?: string;
+  lastName?: string;
+  major?: string;
+  campus?: string;
+  bio?: string;
+  services?: ApiServiceListing[];
+}
+
+const emptyProfile: UserProfile = {
+  email: "",
+  firstName: "",
+  lastName: "",
+  major: "",
+  campus: "",
+  bio: "",
+  services: []
+};
+
 function formatPrice(price: string, isHourly: boolean) {
   const cleanPrice = price
     .replace(/^\$/, "")
@@ -25,137 +65,298 @@ function formatPrice(price: string, isHourly: boolean) {
   return isHourly ? `${displayPrice}/hr` : displayPrice;
 }
 
-function cleanPrice(price: string) {
-  return price.replace(/^\$/, "").replace(/\/hr$/, "").trim();
+function cleanText(value?: string) {
+  return value?.trim() ?? "";
 }
 
-function parseTags(tags: string) {
-  return tags
-    .split(",")
-    .map((tag) => tag.trim())
-    .filter(Boolean);
-}
-
-function normalizeStoredListings(
-  storedListings: string
+function normalizeServices(
+  services: ApiServiceListing[] | undefined
 ): ServiceListing[] {
-  const parsedListings = JSON.parse(storedListings) as Array<
-    Partial<ServiceListing> & { status?: string }
-  >;
-
-  if (!Array.isArray(parsedListings)) {
+  if (!Array.isArray(services)) {
     return [];
   }
 
-  return parsedListings
-    .filter((listing) => listing.status !== "taken-down")
-    .map((listing, index) => {
-      const savedPrice = listing.price ?? "";
-
-      return {
-        id: listing.id ?? `profile-service-${index}`,
-        title: listing.title?.trim() ?? "",
-        description: listing.description?.trim() ?? "",
-        price: cleanPrice(savedPrice),
-        isHourly:
-          listing.isHourly ?? savedPrice.endsWith("/hr"),
-        location: listing.location?.trim() ?? "",
-        tags: Array.isArray(listing.tags) ? listing.tags : []
-      };
-    })
-    .filter(
-      (listing) =>
-        listing.title &&
-        listing.description &&
-        listing.price
-    );
+  return services.map((service, index) => ({
+    id: cleanText(service.id) || `profile-service-${index}`,
+    title: cleanText(service.title),
+    description: cleanText(service.description),
+    price: cleanText(service.price),
+    isHourly: service.isHourly ?? false,
+    location: cleanText(service.location),
+    tags: Array.isArray(service.tags)
+      ? service.tags.map(cleanText).filter(Boolean)
+      : []
+  }));
 }
 
-function loadProfileServices() {
-  const storedListings = window.localStorage.getItem(
-    LISTINGS_STORAGE_KEY
-  );
-
-  if (!storedListings) {
-    return [];
-  }
-
-  try {
-    return normalizeStoredListings(storedListings);
-  } catch {
-    return [];
-  }
+function normalizeProfile(profile: ApiUserProfile): UserProfile {
+  return {
+    email: cleanText(profile.email),
+    firstName: cleanText(profile.firstName),
+    lastName: cleanText(profile.lastName),
+    major: cleanText(profile.major),
+    campus: cleanText(profile.campus),
+    bio: cleanText(profile.bio),
+    services: normalizeServices(profile.services)
+  };
 }
 
 function ProfilePage() {
-  const [services, setServices] = useState<ServiceListing[]>(
-    () => loadProfileServices()
-  );
-  const [title, setTitle] = useState("");
-  const [location, setLocation] = useState("");
-  const [description, setDescription] = useState("");
-  const [price, setPrice] = useState("");
-  const [tags, setTags] = useState("");
-  const [isHourly, setIsHourly] = useState(false);
-  const [isCreateFormOpen, setIsCreateFormOpen] =
-    useState(false);
-  const [formMessage, setFormMessage] = useState("");
+  const [profile, setProfile] =
+    useState<UserProfile>(emptyProfile);
+  const [bioDraft, setBioDraft] = useState("");
+  const [bioMessage, setBioMessage] = useState("");
+  const [error, setError] = useState("");
+  const [isEditingBio, setIsEditingBio] = useState(true);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
 
-  function handleCreateListing(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setFormMessage("");
+  useEffect(() => {
+    let isMounted = true;
+    const token = window.localStorage.getItem(TOKEN_STORAGE_KEY);
 
-    const nextTitle = title.trim();
-    const nextLocation = location.trim();
-    const nextDescription = description.trim();
-    const nextPrice = cleanPrice(price);
-    const nextTags = parseTags(tags);
-
-    if (!nextTitle || !nextDescription || !nextPrice) {
-      setFormMessage("Title, description, and price are required.");
+    if (!token) {
+      setError("Log in to view your profile.");
+      setIsLoading(false);
       return;
     }
 
-    const nextListing: ServiceListing = {
-      id: `profile-service-${Date.now()}`,
-      title: nextTitle,
-      description: nextDescription,
-      price: nextPrice,
-      isHourly,
-      location: nextLocation,
-      tags: nextTags
-    };
-    const nextServices = [nextListing, ...services];
+    async function loadProfile() {
+      try {
+        const response = await fetch(API_URL, {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        });
 
-    window.localStorage.setItem(
-      LISTINGS_STORAGE_KEY,
-      JSON.stringify(nextServices)
+        if (!response.ok) {
+          throw new Error("Could not load your profile.");
+        }
+
+        const data = (await response.json()) as ApiUserProfile;
+        const nextProfile = normalizeProfile(data);
+
+        if (isMounted) {
+          setProfile(nextProfile);
+          setBioDraft(nextProfile.bio);
+          setIsEditingBio(!nextProfile.bio);
+        }
+      } catch {
+        if (isMounted) {
+          setError("Could not load your profile.");
+        }
+      } finally {
+        if (isMounted) {
+          setIsLoading(false);
+        }
+      }
+    }
+
+    void loadProfile();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  async function handleBioSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+
+    const token = window.localStorage.getItem(TOKEN_STORAGE_KEY);
+    const nextBio = bioDraft.trim();
+
+    if (!token) {
+      setError("Log in to save your profile.");
+      return;
+    }
+
+    setIsSaving(true);
+    setError("");
+    setBioMessage("");
+
+    try {
+      const response = await fetch(API_URL, {
+        method: "PUT",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ bio: nextBio })
+      });
+
+      if (!response.ok) {
+        throw new Error("Could not save your bio.");
+      }
+
+      const data = (await response.json()) as ApiUserProfile;
+      const nextProfile = normalizeProfile(data);
+
+      setProfile(nextProfile);
+      setBioDraft(nextProfile.bio);
+      setIsEditingBio(!nextProfile.bio);
+      setBioMessage("Bio saved.");
+    } catch {
+      setError("Could not save your bio.");
+    } finally {
+      setIsSaving(false);
+    }
+  }
+
+  const displayName =
+    `${profile.firstName} ${profile.lastName}`.trim() ||
+    "Profile";
+
+  if (isLoading) {
+    return (
+      <main className="profile-screen">
+        <p className="empty-state">Loading profile...</p>
+      </main>
     );
-    setServices(nextServices);
-    setTitle("");
-    setLocation("");
-    setDescription("");
-    setPrice("");
-    setTags("");
-    setIsHourly(false);
-    setFormMessage("Listing created.");
+  }
+
+  if (error && !profile.email) {
+    return (
+      <main className="profile-screen">
+        <p className="empty-state">{error}</p>
+      </main>
+    );
   }
 
   return (
     <main className="profile-screen">
       <header className="profile-header">
-        <h1>Profile</h1>
-        <p>{services.length} services</p>
+        <div>
+          <h1>{displayName}</h1>
+          <p>{profile.email}</p>
+          {(profile.major || profile.campus) && (
+            <p>
+              {[profile.major, profile.campus]
+                .filter(Boolean)
+                .join(" - ")}
+            </p>
+          )}
+        </div>
+        <p>{profile.services.length} services</p>
       </header>
 
       <section
         className="profile-section profile-bio"
         aria-label="Bio">
         <h2>Bio</h2>
-        <p>
-          Your personal information can live here once signup
-          and login are ready.
-        </p>
+        {profile.bio ? (
+          <p>{profile.bio}</p>
+        ) : (
+          <p>Write a short bio for your profile.</p>
+        )}
+        {(bioMessage || error) && (
+          <p
+            role="status"
+            style={{
+              marginTop: "10px",
+              color: error ? "#9b1c31" : "#0d473f",
+              fontWeight: 700
+            }}>
+            {error || bioMessage}
+          </p>
+        )}
+        {isEditingBio ? (
+          <form
+            aria-label="Edit profile bio"
+            onSubmit={handleBioSubmit}
+            style={{
+              display: "grid",
+              gap: "12px",
+              marginTop: "16px"
+            }}>
+            <textarea
+              aria-label="Profile bio"
+              value={bioDraft}
+              onChange={(event) => {
+                setBioDraft(event.target.value);
+                setBioMessage("");
+                setError("");
+              }}
+              placeholder="Bio"
+              rows={4}
+              style={{
+                boxSizing: "border-box",
+                width: "100%",
+                minHeight: "110px",
+                resize: "vertical",
+                border: "1px solid #cfcfcf",
+                borderRadius: "8px",
+                padding: "12px",
+                font: "inherit"
+              }}
+            />
+            <div
+              style={{
+                display: "flex",
+                flexWrap: "wrap",
+                gap: "10px"
+              }}>
+              <button
+                type="submit"
+                disabled={isSaving}
+                style={{
+                  border: "none",
+                  borderRadius: "8px",
+                  padding: "12px 18px",
+                  background: "#003831",
+                  color: "#ffffff",
+                  font: "inherit",
+                  fontWeight: 700,
+                  cursor: "pointer"
+                }}>
+                {isSaving ? "Saving..." : "Save Bio"}
+              </button>
+              {profile.bio && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setBioDraft(profile.bio);
+                    setBioMessage("");
+                    setError("");
+                    setIsEditingBio(false);
+                  }}
+                  style={{
+                    border: "1px solid #b8b8b8",
+                    borderRadius: "8px",
+                    padding: "12px 18px",
+                    background: "#ffffff",
+                    color: "#161616",
+                    font: "inherit",
+                    fontWeight: 700,
+                    cursor: "pointer"
+                  }}>
+                  Cancel
+                </button>
+              )}
+            </div>
+          </form>
+        ) : (
+          <button
+            type="button"
+            onClick={() => {
+              setBioDraft(profile.bio);
+              setBioMessage("");
+              setError("");
+              setIsEditingBio(true);
+            }}
+            style={{
+              border: "none",
+              borderRadius: "8px",
+              marginTop: "16px",
+              padding: "12px 18px",
+              background: "#003831",
+              color: "#ffffff",
+              font: "inherit",
+              fontWeight: 700,
+              cursor: "pointer"
+            }}>
+            Edit Bio
+          </button>
+        )}
       </section>
 
       <section
@@ -164,292 +365,15 @@ function ProfilePage() {
         <div className="section-heading">
           <h2>Services</h2>
           <p>Services shown on this profile.</p>
-          <button
-            type="button"
-            aria-controls="create-listing-form"
-            aria-expanded={isCreateFormOpen}
-            onClick={() => {
-              setIsCreateFormOpen(
-                (currentValue) => !currentValue
-              );
-              setFormMessage("");
-            }}
-            style={{
-              marginTop: "14px",
-              border: "none",
-              borderRadius: "8px",
-              padding: "12px 18px",
-              background: "#003831",
-              color: "#ffffff",
-              font: "inherit",
-              fontWeight: 700,
-              cursor: "pointer"
-            }}>
-            {isCreateFormOpen ? "Cancel" : "Create Listing"}
-          </button>
         </div>
 
-        {isCreateFormOpen && (
-          <form
-            id="create-listing-form"
-            aria-label="Create service listing"
-            onSubmit={handleCreateListing}
-            style={{
-              display: "grid",
-              gap: "12px",
-              width: "100%",
-              boxSizing: "border-box",
-              marginBottom: "24px",
-              border: "1px solid #dedede",
-              borderRadius: "8px",
-              padding: "20px",
-              background: "#ffffff"
-            }}>
-            <div
-              style={{
-                display: "grid",
-                gap: "6px"
-              }}>
-              <label
-                htmlFor="service-title"
-                style={{
-                  color: "#333333",
-                  fontWeight: 700
-                }}>
-                Title
-              </label>
-              <input
-                id="service-title"
-                value={title}
-                onChange={(event) =>
-                  setTitle(event.target.value)
-                }
-                placeholder="Service title"
-                style={{
-                  border: "1px solid #cfcfcf",
-                  borderRadius: "8px",
-                  padding: "12px",
-                  font: "inherit"
-                }}
-              />
-            </div>
-
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns:
-                  "repeat(auto-fit, minmax(150px, 1fr))",
-                gap: "12px",
-                alignItems: "end"
-              }}>
-              <div
-                style={{
-                  display: "grid",
-                  gap: "6px"
-                }}>
-                <label
-                  htmlFor="service-location"
-                  style={{
-                    color: "#333333",
-                    fontWeight: 700
-                  }}>
-                  Location
-                </label>
-                <input
-                  id="service-location"
-                  value={location}
-                  onChange={(event) =>
-                    setLocation(event.target.value)
-                  }
-                  placeholder="Main Library or Online"
-                  style={{
-                    border: "1px solid #cfcfcf",
-                    borderRadius: "8px",
-                    padding: "12px",
-                    font: "inherit"
-                  }}
-                />
-              </div>
-
-              <div
-                style={{
-                  display: "grid",
-                  gap: "6px"
-                }}>
-                <label
-                  htmlFor="service-price"
-                  style={{
-                    color: "#333333",
-                    fontWeight: 700
-                  }}>
-                  Price
-                </label>
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    border: "1px solid #cfcfcf",
-                    borderRadius: "8px",
-                    background: "#ffffff",
-                    overflow: "hidden"
-                  }}>
-                  <span
-                    aria-hidden="true"
-                    style={{
-                      paddingLeft: "12px",
-                      color: "#4d4d4d",
-                      fontWeight: 700
-                    }}>
-                    $
-                  </span>
-                  <input
-                    id="service-price"
-                    value={price}
-                    onChange={(event) =>
-                      setPrice(cleanPrice(event.target.value))
-                    }
-                    placeholder="25"
-                    inputMode="decimal"
-                    style={{
-                      minWidth: 0,
-                      flex: 1,
-                      border: "none",
-                      padding: "12px",
-                      font: "inherit",
-                      outline: "none"
-                    }}
-                  />
-                </div>
-              </div>
-
-              <label
-                htmlFor="service-hourly"
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "8px",
-                  minHeight: "50px",
-                  color: "#333333",
-                  fontWeight: 700
-                }}>
-                <input
-                  id="service-hourly"
-                  type="checkbox"
-                  checked={isHourly}
-                  onChange={(event) =>
-                    setIsHourly(event.target.checked)
-                  }
-                  style={{
-                    width: "18px",
-                    height: "18px",
-                    accentColor: "#003831"
-                  }}
-                />
-                Hourly
-              </label>
-            </div>
-
-            <div
-              style={{
-                display: "grid",
-                gap: "6px"
-              }}>
-              <label
-                htmlFor="service-tags"
-                style={{
-                  color: "#333333",
-                  fontWeight: 700
-                }}>
-                Tags
-              </label>
-              <input
-                id="service-tags"
-                value={tags}
-                onChange={(event) =>
-                  setTags(event.target.value)
-                }
-                placeholder="Tutoring, Online, Math"
-                style={{
-                  border: "1px solid #cfcfcf",
-                  borderRadius: "8px",
-                  padding: "12px",
-                  font: "inherit"
-                }}
-              />
-            </div>
-
-            <div
-              style={{
-                display: "grid",
-                gap: "6px"
-              }}>
-              <label
-                htmlFor="service-description"
-                style={{
-                  color: "#333333",
-                  fontWeight: 700
-                }}>
-                Description
-              </label>
-              <textarea
-                id="service-description"
-                value={description}
-                onChange={(event) =>
-                  setDescription(event.target.value)
-                }
-                placeholder="Describe the service you are offering."
-                rows={4}
-                style={{
-                  minHeight: "108px",
-                  resize: "vertical",
-                  border: "1px solid #cfcfcf",
-                  borderRadius: "8px",
-                  padding: "12px",
-                  font: "inherit"
-                }}
-              />
-            </div>
-
-            {formMessage && (
-              <p
-                role="status"
-                style={{
-                  margin: 0,
-                  color:
-                    formMessage === "Listing created."
-                      ? "#0d473f"
-                      : "#9f1239",
-                  fontWeight: 700
-                }}>
-                {formMessage}
-              </p>
-            )}
-
-            <button
-              type="submit"
-              style={{
-                justifySelf: "start",
-                border: "none",
-                borderRadius: "8px",
-                padding: "12px 18px",
-                background: "#003831",
-                color: "#ffffff",
-                font: "inherit",
-                fontWeight: 700,
-                cursor: "pointer"
-              }}>
-              Create Listing
-            </button>
-          </form>
-        )}
-
-        {services.length === 0 ? (
+        {profile.services.length === 0 ? (
           <p className="empty-state">
             No services are listed on this profile yet.
           </p>
         ) : (
           <div className="listing-grid">
-            {services.map((service) => (
+            {profile.services.map((service) => (
               <article className="listing-card" key={service.id}>
                 <div>
                   <div className="listing-card-heading">
@@ -458,11 +382,9 @@ function ProfilePage() {
                   <p className="listing-description">
                     {service.description}
                   </p>
-                  {service.location && (
-                    <p className="listing-location">
-                      {service.location}
-                    </p>
-                  )}
+                  <p className="listing-location">
+                    {service.location}
+                  </p>
                   {service.tags.length > 0 && (
                     <div
                       className="listing-tags"

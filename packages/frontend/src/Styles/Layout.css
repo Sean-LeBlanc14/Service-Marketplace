@@ -1,0 +1,33 @@
+.app-wrapper {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+
+.layout-container {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+.sidebar-wrapper {
+  width: 200px;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+}
+
+.navbar-wrapper {
+  height: 60px;
+  width: 100%;
+  border-bottom: 1px solid #ddd;
+  background-color: white;
+  z-index: 1000;
+}
+
+.main-content {
+  flex-grow: 1;
+  padding: 20px;
+  background-color: #ffffff;
+  overflow-y: auto;
+}

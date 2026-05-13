@@ -17,12 +17,10 @@ export default function InputField({
 }: InputFieldProps) {
   return (
     <div className="input-container">
+      <label className="input-label">{label}</label>
 
-      <label className="input-label">
-        {label}
-      </label>
-
-      <input className="input-input"
+      <input
+        className="input-input"
         value={value}
         type={type}
         placeholder={placeHolder}

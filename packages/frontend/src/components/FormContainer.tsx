@@ -7,7 +7,6 @@ interface FormContainerProps {
   link: React.ReactNode;
 }
 
-
 export default function FormContainer({
   header,
   textField,

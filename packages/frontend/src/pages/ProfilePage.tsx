@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import "./ProfilePage.css";
+import "../Styles/ProfilePage.css";
 
 const LISTINGS_STORAGE_KEY =
   "service-marketplace-profile-listings";

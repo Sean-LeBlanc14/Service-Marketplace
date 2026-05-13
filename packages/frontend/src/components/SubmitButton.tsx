@@ -10,8 +10,7 @@ export default function SubmitButton({
   onClick
 }: SubmitButtonProps) {
   return (
-    <button className="button"
-    onClick={onClick}>
+    <button className="button" onClick={onClick}>
       {label}
     </button>
   );

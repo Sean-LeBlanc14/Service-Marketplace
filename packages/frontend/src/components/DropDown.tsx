@@ -16,9 +16,7 @@ export default function DropDown({
 }: DropDownProps) {
   return (
     <div>
-      <label className="drop-down-label">
-        {label}
-      </label>
+      <label className="drop-down-label">{label}</label>
       <select
         value={value}
         onChange={onChange}

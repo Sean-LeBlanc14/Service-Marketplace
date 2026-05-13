@@ -1,4 +1,5 @@
 import { Card, Badge } from "react-bootstrap";
+import "../Styles/ServiceCard.css";
 
 interface Provider {
   name: string;
@@ -24,110 +25,42 @@ interface ServiceCardProps {
 
 function ServiceCard({ service }: ServiceCardProps) {
   return (
-    <Card
-      style={{
-        borderRadius: "12px",
-        border: "1px solid #e0e0e0",
-        boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
-        height: "100%"
-      }}>
-      <Card.Body
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          gap: "8px"
-        }}>
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "flex-start"
-          }}>
-          <Card.Title
-            style={{
-              fontSize: "1.1rem",
-              fontWeight: "700",
-              marginBottom: 0
-            }}>
+    <Card className="service-card">
+      <Card.Body className="service-card-body">
+        <div className="service-card-header">
+          <Card.Title className="service-card-title">
             {service.title}
           </Card.Title>
-          <span style={{ fontSize: "1.5rem" }}>
+          <span className="service-provider-avatar">
             {service.provider.avatar}
           </span>
         </div>
 
-        <Card.Text
-          style={{
-            color: "#555",
-            fontSize: "0.9rem",
-            marginBottom: 0
-          }}>
+        <Card.Text className="service-description">
           {service.description}
         </Card.Text>
 
-        <div style={{ fontWeight: "600", fontSize: "0.95rem" }}>
+        <div className="service-provider-info">
           {service.provider.name}{" "}
-          <span style={{ color: "#f5a623" }}>
-            ★ {service.provider.rating}
-          </span>{" "}
-          <span style={{ color: "#888", fontWeight: "400" }}>
-            ({service.provider.reviews})
-          </span>
+          <span className="rating-star">★ {service.provider.rating}</span>{" "}
+          <span className="review-count">({service.provider.reviews})</span>
         </div>
 
-        <div style={{ color: "#666", fontSize: "0.85rem" }}>
+        <div className="service-location">
           📍 {service.location}
         </div>
 
-        <div
-          style={{
-            display: "flex",
-            flexWrap: "wrap",
-            gap: "6px"
-          }}>
-          {service.tags.map((tag, index) => (
-            <Badge
-              bg="none"
-              key={tag}
-              style={{
-                backgroundColor: "#003831",
-                color: "white",
-                fontWeight: "400",
-                fontSize: "0.8rem",
-                borderRadius: "20px",
-                padding: "4px 10px"
-              }}>
+        <div className="service-tags-container">
+          {service.tags.map((tag) => (
+            <Badge bg="none" key={tag} className="service-tag">
               {tag}
             </Badge>
           ))}
         </div>
 
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            marginTop: "auto",
-            paddingTop: "8px"
-          }}>
-          <span
-            style={{
-              fontSize: "1.3rem",
-              fontWeight: "700",
-              color: "#003831"
-            }}>
-            {service.price}
-          </span>
-          <button
-            style={{
-              backgroundColor: "#003831",
-              color: "white",
-              border: "none",
-              borderRadius: "8px",
-              padding: "8px 16px",
-              fontWeight: "600",
-              cursor: "pointer"
-            }}>
+        <div className="service-card-footer">
+          <span className="service-price">{service.price}</span>
+          <button className="btn-view-details">
             View Details
           </button>
         </div>

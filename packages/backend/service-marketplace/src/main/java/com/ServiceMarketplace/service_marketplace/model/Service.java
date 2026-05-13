@@ -1,5 +1,6 @@
 package com.ServiceMarketplace.service_marketplace.model;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
 
@@ -7,28 +8,36 @@ import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+
 @Document(collection = "services")
 public class Service {
 
     @Id
     private String id;
 
+    @NotBlank
     private String title;
 
+    @NotBlank
     private String category;
 
-    private String providerName;
+    @NotBlank
+    private String userId;
 
-    private String providerEmail;
+    @NotNull
+    private BigDecimal priceMin;
 
-    private double priceMin;
-
-    private double priceMax;
+    @NotNull
+    private BigDecimal priceMax;
 
     private String priceUnit;
 
+    @NotBlank
     private String description;
 
+    @NotBlank
     private String location;
 
     private List<String> tags;
@@ -45,17 +54,14 @@ public class Service {
     public String getCategory() { return category; }
     public void setCategory(String category) { this.category = category; }
 
-    public String getProviderName() { return providerName; }
-    public void setProviderName(String providerName) { this.providerName = providerName; }
+    public String getUserId() { return userId; }
+    public void setUserId(String userId) { this.userId = userId; }
 
-    public String getProviderEmail() { return providerEmail; }
-    public void setProviderEmail(String providerEmail) { this.providerEmail = providerEmail; }
+    public BigDecimal getPriceMin() { return priceMin; }
+    public void setPriceMin(BigDecimal priceMin) { this.priceMin = priceMin; }
 
-    public double getPriceMin() { return priceMin; }
-    public void setPriceMin(double priceMin) { this.priceMin = priceMin; }
-
-    public double getPriceMax() { return priceMax; }
-    public void setPriceMax(double priceMax) { this.priceMax = priceMax; }
+    public BigDecimal getPriceMax() { return priceMax; }
+    public void setPriceMax(BigDecimal priceMax) { this.priceMax = priceMax; }
 
     public String getPriceUnit() { return priceUnit; }
     public void setPriceUnit(String priceUnit) { this.priceUnit = priceUnit; }

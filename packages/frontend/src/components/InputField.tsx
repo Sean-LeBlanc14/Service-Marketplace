@@ -1,3 +1,5 @@
+import "../Styles/InputField.css";
+
 interface InputFieldProps {
   value: string;
   label: string;
@@ -14,30 +16,13 @@ export default function InputField({
   onChange
 }: InputFieldProps) {
   return (
-    <div
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        gap: "4px",
-        width: "100%",
-        textAlign: "left"
-      }}>
-      <label
-        style={{
-          fontSize: "0.9rem",
-          fontWeight: "600",
-          color: "#333"
-        }}>
+    <div className="input-container">
+
+      <label className="input-label">
         {label}
       </label>
 
-      <input
-        style={{
-          borderRadius: "8px",
-          border: "1px solid #ccc",
-          padding: "12px",
-          fontSize: "1rem"
-        }}
+      <input className="input-input"
         value={value}
         type={type}
         placeholder={placeHolder}

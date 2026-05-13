@@ -152,7 +152,9 @@ function ProfilePage() {
         ) : (
           <div className="listing-grid">
             {services.map((service) => (
-              <article className="listing-card" key={service.id}>
+              <article
+                className="listing-card"
+                key={service.id}>
                 <div>
                   <div className="listing-card-heading">
                     <h3>{service.title}</h3>

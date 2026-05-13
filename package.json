@@ -6,12 +6,15 @@
     "eslint": "^10.2.1",
     "prettier": "^3.8.3"
   },
+  "workspaces": [
+    "packages/frontend"
+  ],
   "scripts": {
-    "format": "prettier --write './**/*.{js,jsx,ts,tsx,css,md,json}' --config ./.prettierrc"
+    "format": "prettier --write './**/*.{js,jsx,ts,tsx,css,md,json}' --config ./.prettierrc",
+    "start": "npm run dev -w packages/frontend",
+    "back": "cd packages/backend/service-marketplace && mvn spring-boot:run"
   },
   "dependencies": {
-    "@azure/msal-browser": "^5.9.0",
-    "@azure/msal-react": "^5.3.2",
     "bootstrap": "^5.3.8",
     "react-bootstrap": "^2.10.10"
   }

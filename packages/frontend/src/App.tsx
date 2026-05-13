@@ -14,7 +14,7 @@ function App() {
           <Route path="signup" element={<SignupPage />} />
           <Route path="login" element={<LoginPage />} />
           <Route path="verify" element={ <VerifyAccount/>}/>
-          <Route index element={<HomePage />} />
+          <Route path ="homepage"element={<HomePage />} />
           <Route path="profile" element={<ProfilePage />} />
         </Route>
       </Routes>

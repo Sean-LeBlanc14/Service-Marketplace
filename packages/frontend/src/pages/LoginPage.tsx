@@ -10,7 +10,7 @@ export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
-  const [ error, setError ] = useState("");
+  const [error, setError] = useState("");
   const navigate = useNavigate();
 
   const loginUser = async () => {
@@ -35,16 +35,22 @@ export default function LoginPage() {
         //Using local storage to store token for now, possibly use cookies in the future
         localStorage.setItem("jwt_token", data.token);
 
-        navigate("/");
-      }else if (response.status === 404){
+        navigate("/homepage");
+      } else if (response.status === 404) {
         setError("User not found");
-      }else if (response.status === 401){
+        toast.error(error);
+      } else if (response.status === 401) {
         setError("Invalid Email or Password!");
-      }else{
-        setError("Something went wrong, please try again.")
+        toast.error(error);
+      } else {
+        setError("Something went wrong, please try again.");
+        toast.warn(error);
       }
-    } catch{
-      setError("Unable to connect to the server, please try again.")
+    } catch {
+      setError(
+        "Unable to connect to the server, please try again."
+      );
+      toast.error(error);
     }
   };
 
@@ -64,7 +70,7 @@ export default function LoginPage() {
               value={email}
               label="Email"
               type="email"
-              placeHolder="johndoe@calpoly.edu"
+              placeHolder="mustang@calpoly.edu"
               onChange={(e) => setEmail(e.target.value)}
             />{" "}
             <InputField

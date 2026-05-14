@@ -1,8 +1,6 @@
 package com.ServiceMarketplace.service_marketplace.model;
 
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.List;
 
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
@@ -30,8 +28,6 @@ public class User {
     private String campus;
 
     private String bio = "";
-
-    private List<UserServiceListing> services = new ArrayList<>();
 
     private boolean isVerified = false;
 
@@ -100,14 +96,6 @@ public class User {
 
     public void setBio(String bio){
         this.bio = bio;
-    }
-
-    public List<UserServiceListing> getServices(){
-        return this.services;
-    }
-
-    public void setServices(List<UserServiceListing> services){
-        this.services = services == null ? new ArrayList<>() : services;
     }
 
     public Instant getCreatedAt() {

@@ -1,8 +1,6 @@
 package com.ServiceMarketplace.service_marketplace.service;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -16,12 +14,11 @@ import org.springframework.stereotype.Service;
 import com.ServiceMarketplace.service_marketplace.dto.AuthResponse;
 import com.ServiceMarketplace.service_marketplace.dto.LoginRequest;
 import com.ServiceMarketplace.service_marketplace.dto.RegisterRequest;
+import com.ServiceMarketplace.service_marketplace.dto.ServiceDto;
 import com.ServiceMarketplace.service_marketplace.dto.UpdateUserProfileRequest;
-import com.ServiceMarketplace.service_marketplace.dto.UserServiceListingRequest;
 import com.ServiceMarketplace.service_marketplace.dto.UserProfile;
 import com.ServiceMarketplace.service_marketplace.exception.EmailAlreadyExistsException;
 import com.ServiceMarketplace.service_marketplace.model.User;
-import com.ServiceMarketplace.service_marketplace.model.UserServiceListing;
 import com.ServiceMarketplace.service_marketplace.repository.UserRepository;
 
 @Service
@@ -38,14 +35,18 @@ public class UserService {
 
     private final VerificationService verificationService;
 
+    private final ServiceService serviceService;
+
     public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder, EmailService emailService, 
-        VerificationService verificationService, AuthenticationManager authenticationManager, JwtService jwtService) {
+        VerificationService verificationService, AuthenticationManager authenticationManager, JwtService jwtService,
+        ServiceService serviceService) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.emailService = emailService;
         this.verificationService = verificationService;
         this.authenticationManager = authenticationManager;
         this.jwtService = jwtService;
+        this.serviceService = serviceService;
     }
 
     public AuthResponse registerUser(RegisterRequest request) {
@@ -113,10 +114,6 @@ public class UserService {
             user.setBio(clean(request.getBio()));
         }
 
-        if (request.getServices() != null) {
-            user.setServices(toUserServiceListings(request.getServices()));
-        }
-
         User saved = userRepository.save(user);
 
         return toUserProfile(saved);
@@ -125,48 +122,14 @@ public class UserService {
 
     private UserProfile toUserProfile(User user) {
         return new UserProfile(user.getEmail(), user.getFirstName(), user.getLastName(), user.getMajor(),
-            user.getCampus(), clean(user.getBio()), user.getServices());
+            user.getCampus(), clean(user.getBio()), getProfileServices(user.getId()));
     }
 
-    private List<UserServiceListing> toUserServiceListings(List<UserServiceListingRequest> requests) {
-        List<UserServiceListing> services = new ArrayList<>();
-
-        for (UserServiceListingRequest request : requests) {
-            UserServiceListing service = new UserServiceListing();
-            service.setId(clean(request.getId()));
-
-            if (service.getId().isBlank()) {
-                service.setId(UUID.randomUUID().toString());
-            }
-
-            service.setTitle(clean(request.getTitle()));
-            service.setDescription(clean(request.getDescription()));
-            service.setPrice(clean(request.getPrice()));
-            service.setIsHourly(request.getIsHourly());
-            service.setLocation(clean(request.getLocation()));
-            service.setTags(cleanTags(request.getTags()));
-            services.add(service);
-        }
-
-        return services;
-    }
-
-    private List<String> cleanTags(List<String> tags) {
-        List<String> cleanTags = new ArrayList<>();
-
-        if (tags == null) {
-            return cleanTags;
-        }
-
-        for (String tag : tags) {
-            String cleanTag = clean(tag);
-
-            if (!cleanTag.isBlank()) {
-                cleanTags.add(cleanTag);
-            }
-        }
-
-        return cleanTags;
+    private List<ServiceDto> getProfileServices(String userId) {
+        return serviceService.getAllServices()
+            .stream()
+            .filter(service -> userId.equals(service.getUserId()))
+            .toList();
     }
 
     private String clean(String value) {

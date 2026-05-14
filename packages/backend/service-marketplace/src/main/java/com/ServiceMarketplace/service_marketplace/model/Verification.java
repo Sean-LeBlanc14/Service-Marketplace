@@ -7,7 +7,9 @@ import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import jakarta.validation.constraints.NotBlank;
+import lombok.Data;
 
+@Data
 @Document(collection = "verification")
 public class Verification {
 
@@ -29,26 +31,6 @@ public class Verification {
         this.email = email;
         this.verificationCode = verificationCode;
         this.expiryDate = LocalDateTime.now().plusMinutes(EXPIRATION_MINUTES);
-    }
-
-    public String getEmail(){
-        return this.email;
-    }
-
-    public String getId(){
-        return this.id;
-    }
-
-    public String getVerificationCode(){
-        return this.verificationCode;
-    }
-
-    public void setVerificationCode(String code){
-        this.verificationCode = code;
-    }
-
-    public LocalDateTime getExpiryDate(){
-        return this.expiryDate;
     }
 
     public void updateExpiryDate(){

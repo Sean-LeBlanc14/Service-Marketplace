@@ -75,7 +75,7 @@ public class VerificationService {
         verification.updateExpiryDate();
         verificationRepository.save(verification);
 
-        return new ResendResponse(newCode, email, true);
+        return new ResendResponse(newCode, email);
     }
 
     public String generateVerificationCode(){

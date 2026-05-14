@@ -9,8 +9,9 @@ interface ServiceListing {
   id: string;
   title: string;
   description: string;
-  price: string;
-  isHourly: boolean;
+  priceMin: string;
+  priceMax: string;
+  priceUnit: string;
   location: string;
   tags: string[];
 }
@@ -29,8 +30,9 @@ interface ApiServiceListing {
   id?: string;
   title?: string;
   description?: string;
-  price?: string;
-  isHourly?: boolean;
+  priceMin?: number | string | null;
+  priceMax?: number | string | null;
+  priceUnit?: string | null;
   location?: string;
   tags?: string[];
 }
@@ -55,18 +57,38 @@ const emptyProfile: UserProfile = {
   services: []
 };
 
-function formatPrice(price: string, isHourly: boolean) {
-  const cleanPrice = price
-    .replace(/^\$/, "")
-    .replace(/\/hr$/, "")
-    .trim();
-  const displayPrice = cleanPrice ? `$${cleanPrice}` : "$0";
-
-  return isHourly ? `${displayPrice}/hr` : displayPrice;
-}
-
 function cleanText(value?: string) {
   return value?.trim() ?? "";
+}
+
+function cleanPriceValue(value?: number | string | null) {
+  return value == null ? "" : String(value).trim();
+}
+
+function formatCurrency(value: string) {
+  const amount = Number(value);
+
+  if (!Number.isFinite(amount)) {
+    return "$0";
+  }
+
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+    maximumFractionDigits: Number.isInteger(amount) ? 0 : 2
+  }).format(amount);
+}
+
+function formatPrice(service: ServiceListing) {
+  const minPrice = service.priceMin || service.priceMax;
+  const maxPrice = service.priceMax || service.priceMin;
+  const displayPrice =
+    minPrice && maxPrice && minPrice !== maxPrice
+      ? `${formatCurrency(minPrice)} - ${formatCurrency(maxPrice)}`
+      : formatCurrency(minPrice || maxPrice);
+  const cleanUnit = service.priceUnit.replace(/^\/+/, "");
+
+  return cleanUnit ? `${displayPrice}/${cleanUnit}` : displayPrice;
 }
 
 function normalizeServices(
@@ -80,8 +102,9 @@ function normalizeServices(
     id: cleanText(service.id) || `profile-service-${index}`,
     title: cleanText(service.title),
     description: cleanText(service.description),
-    price: cleanText(service.price),
-    isHourly: service.isHourly ?? false,
+    priceMin: cleanPriceValue(service.priceMin),
+    priceMax: cleanPriceValue(service.priceMax),
+    priceUnit: cleanText(service.priceUnit ?? undefined),
     location: cleanText(service.location),
     tags: Array.isArray(service.tags)
       ? service.tags.map(cleanText).filter(Boolean)
@@ -104,20 +127,22 @@ function normalizeProfile(profile: ApiUserProfile): UserProfile {
 function ProfilePage() {
   const [profile, setProfile] =
     useState<UserProfile>(emptyProfile);
+  const [authToken] = useState(() =>
+    window.localStorage.getItem(TOKEN_STORAGE_KEY)
+  );
   const [bioDraft, setBioDraft] = useState("");
   const [bioMessage, setBioMessage] = useState("");
-  const [error, setError] = useState("");
+  const [error, setError] = useState(() =>
+    authToken ? "" : "Log in to view your profile."
+  );
   const [isEditingBio, setIsEditingBio] = useState(true);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(Boolean(authToken));
   const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
     let isMounted = true;
-    const token = window.localStorage.getItem(TOKEN_STORAGE_KEY);
 
-    if (!token) {
-      setError("Log in to view your profile.");
-      setIsLoading(false);
+    if (!authToken) {
       return;
     }
 
@@ -125,7 +150,7 @@ function ProfilePage() {
       try {
         const response = await fetch(API_URL, {
           headers: {
-            Authorization: `Bearer ${token}`
+            Authorization: `Bearer ${authToken}`
           }
         });
 
@@ -157,7 +182,7 @@ function ProfilePage() {
     return () => {
       isMounted = false;
     };
-  }, []);
+  }, [authToken]);
 
   async function handleBioSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -396,12 +421,7 @@ function ProfilePage() {
                   )}
                 </div>
                 <div className="listing-card-footer">
-                  <strong>
-                    {formatPrice(
-                      service.price,
-                      service.isHourly
-                    )}
-                  </strong>
+                  <strong>{formatPrice(service)}</strong>
                 </div>
               </article>
             ))}

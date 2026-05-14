@@ -1,6 +1,5 @@
 package com.ServiceMarketplace.service_marketplace.service;
 
-import java.security.Key;
 import java.util.Date;
 import java.util.function.Function;
 
@@ -32,14 +31,14 @@ public class JwtService {
                 .compact();
     }
 
-    private Key getSigningKey(){
+    private SecretKey getSigningKey(){
         byte[] keyBytes = Decoders.BASE64.decode(SECRET_KEY);
         return Keys.hmacShaKeyFor(keyBytes);
     }
 
     public <T> T extractClaim(String token, Function<Claims, T> claimsResolver){
         final Claims claims = Jwts.parser()
-                    .verifyWith((SecretKey) getSigningKey())
+                    .verifyWith(getSigningKey())
                     .build()
                     .parseSignedClaims(token)
                     .getPayload();
@@ -47,7 +46,7 @@ public class JwtService {
     }
 
     public String extractEmail(String token){
-        return Jwts.parser().verifyWith((SecretKey) getSigningKey()).build().parseSignedClaims(token).getPayload().getSubject();
+        return extractClaim(token, Claims::getSubject);
     }
 
     public boolean isTokenValid(String token, String email){

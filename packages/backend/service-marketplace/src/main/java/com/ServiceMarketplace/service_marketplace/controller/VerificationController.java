@@ -24,11 +24,11 @@ import jakarta.validation.Valid;
 @RequestMapping("/api/verification")
 public class VerificationController {
 
-    private VerificationService verificationService;
+    private final VerificationService verificationService;
 
-    private EmailService emailService;
+    private final EmailService emailService;
 
-    private JwtService jwtService;
+    private final JwtService jwtService;
 
     public VerificationController(VerificationService verificationService, EmailService emailService, JwtService jwtService){
         this.verificationService = verificationService;
@@ -36,15 +36,21 @@ public class VerificationController {
         this.jwtService = jwtService;
     }
 
+    private String extractEmailFromRequest(HttpServletRequest request) {
+        String auth = request.getHeader("Authorization");
+        if (auth == null || !auth.startsWith("Bearer ")) {
+            return null;
+        }
+        return jwtService.extractEmail(auth.substring(7));
+    }
+
     @PostMapping("/code")
     public ResponseEntity<VerifiedResponse> verifyCode(@Valid @RequestBody VerificationRequest request, HttpServletRequest servletRequest) {
         
-        String auth = servletRequest.getHeader("Authorization");
-        if (auth == null || !auth.startsWith("Bearer ")) {
+        String email = extractEmailFromRequest(servletRequest);
+        if (email == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
-
-        String email = jwtService.extractEmail(auth.substring(7));
 
         VerifiedResponse verified = verificationService.verifyCode(request, email);
 
@@ -54,12 +60,10 @@ public class VerificationController {
     @PutMapping("/resend")
     public ResponseEntity<ResendResponse> resendCode(@Valid @RequestBody VerificationRequest request,  HttpServletRequest servletRequest) {
 
-        String auth = servletRequest.getHeader("Authorization");
-        if (auth == null || !auth.startsWith("Bearer ")) {
+        String email = extractEmailFromRequest(servletRequest);
+        if (email == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
-
-        String email = jwtService.extractEmail(auth.substring(7));
 
         ResendResponse response = verificationService.resendCode(request, email);
 

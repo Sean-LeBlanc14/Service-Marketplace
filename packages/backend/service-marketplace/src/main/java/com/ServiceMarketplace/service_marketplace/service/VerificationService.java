@@ -26,7 +26,7 @@ public class VerificationService {
 
     private final PasswordEncoder passwordEncoder;
 
-    public VerificationService(VerificationRepository verificationRepository, UserRepository userRepository, EmailService emailService, PasswordEncoder passwordEncoder){
+    public VerificationService(VerificationRepository verificationRepository, UserRepository userRepository, PasswordEncoder passwordEncoder){
         this.verificationRepository = verificationRepository;
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
@@ -81,7 +81,7 @@ public class VerificationService {
     public String generateVerificationCode(){
         SecureRandom secureRandom = new SecureRandom();
 
-        int randomNumber = secureRandom.nextInt(100000);
+        int randomNumber = secureRandom.nextInt(1000000);
         
         return String.format("%06d", randomNumber);
     }

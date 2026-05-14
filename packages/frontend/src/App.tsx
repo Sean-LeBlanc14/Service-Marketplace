@@ -7,6 +7,7 @@ import VerifyAccount from "./pages/VerifyAccount";
 import ProfilePage from "./pages/ProfilePage";
 import Settings from "./pages/Settings";
 import ServiceRequests from "./pages/ServiceRequests";
+import { ToastContainer } from "react-toastify";
 
 function App() {
   return (
@@ -17,11 +18,19 @@ function App() {
           <Route path="homepage" element={<HomePage />} />
           <Route path="profile" element={<ProfilePage />} />
           <Route path="settings" element={<Settings />} />
-          <Route path="requests" element={<ServiceRequests/>}/>
+          <Route
+            path="requests"
+            element={<ServiceRequests />}
+          />
         </Route>
         <Route path="signup" element={<SignupPage />} />
         <Route path="login" element={<LoginPage />} />
       </Routes>
+      <ToastContainer
+        position="top-right"
+        autoClose={3000}
+        theme="colored"
+      />
     </BrowserRouter>
   );
 }

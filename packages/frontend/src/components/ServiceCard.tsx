@@ -42,8 +42,12 @@ function ServiceCard({ service }: ServiceCardProps) {
 
         <div className="service-provider-info">
           {service.provider.name}{" "}
-          <span className="rating-star">★ {service.provider.rating}</span>{" "}
-          <span className="review-count">({service.provider.reviews})</span>
+          <span className="rating-star">
+            ★ {service.provider.rating}
+          </span>{" "}
+          <span className="review-count">
+            ({service.provider.reviews})
+          </span>
         </div>
 
         <div className="service-location">

@@ -35,23 +35,22 @@ export default function LoginPage() {
 
         //Using local storage to store token for now, possibly use cookies in the future
         localStorage.setItem("jwt_token", data.token);
-
         navigate("/homepage");
-      } else if (response.status === 404) {
-        setError("User not found");
-        toast.error(error);
       } else if (response.status === 401) {
         setError("Invalid Email or Password!");
-        toast.error(error);
       } else {
         setError("Something went wrong, please try again.");
         toast.warn(error);
+      }
+
+      if (error) {
+        toast.error(error);
       }
     } catch {
       setError(
         "Unable to connect to the server, please try again."
       );
-      toast.error(error);
+      toast.warn(error);
     }
   };
 

@@ -6,6 +6,7 @@ import InformationSection from "../components/InformationSection";
 import FormContainer from "../components/FormContainer";
 import SubmitButton from "../components/SubmitButton";
 import DropDown from "../components/DropDown";
+import { toast } from "react-toastify";
 
 function SignupPage() {
   const [email, setEmail] = useState("");
@@ -56,10 +57,15 @@ function SignupPage() {
       } else {
         setError("Something went wrong. Please try again.");
       }
+
+      if (error) {
+        toast.error(error);
+      }
     } catch {
       setError(
         "Unable to connect to the server. Please try again."
       );
+      toast.warn(error);
     }
   };
 

@@ -1,5 +1,8 @@
 package com.ServiceMarketplace.service_marketplace.controller;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -12,6 +15,8 @@ import com.ServiceMarketplace.service_marketplace.dto.LoginRequest;
 import com.ServiceMarketplace.service_marketplace.dto.RegisterRequest;
 import com.ServiceMarketplace.service_marketplace.service.UserService;
 
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 
 @RestController
@@ -38,5 +43,18 @@ public class AuthController {
 
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }
+
+    @PostMapping("/logout")
+    public ResponseEntity<Map<String,String>> logout(HttpServletRequest request, HttpServletResponse response) {
+        
+        String res = userService.logoutUser(request, response);
+
+        Map<String, String> body = new HashMap<>();
+
+        body.put("Message", res);
+
+        return ResponseEntity.status(HttpStatus.OK).body(body);
+    }
+    
     
 }

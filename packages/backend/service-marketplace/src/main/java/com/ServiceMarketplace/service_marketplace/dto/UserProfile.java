@@ -1,9 +1,6 @@
 package com.ServiceMarketplace.service_marketplace.dto;
 
-import java.util.ArrayList;
 import java.util.List;
-
-import com.ServiceMarketplace.service_marketplace.model.UserServiceListing;
 
 //Add more fields in the future
 public class UserProfile {
@@ -20,16 +17,16 @@ public class UserProfile {
 
     private String bio;
 
-    private List<UserServiceListing> services = new ArrayList<>();
+    private List<ServiceDto> services;
 
-    public UserProfile(String email, String firstName, String lastName, String major, String campus, String bio, List<UserServiceListing> services){
+    public UserProfile(String email, String firstName, String lastName, String major, String campus, String bio, List<ServiceDto> services){
         this.email = email;
         this.firstName = firstName;
         this.lastName = lastName;
         this.major = major;
         this.campus = campus;
         this.bio = bio;
-        this.services = services == null ? new ArrayList<>() : services;
+        this.services = services == null ? List.of() : services;
     }
 
     public String getEmail(){
@@ -56,7 +53,7 @@ public class UserProfile {
         return this.bio;
     }
 
-    public List<UserServiceListing> getServices(){
+    public List<ServiceDto> getServices(){
         return this.services;
     }
 }

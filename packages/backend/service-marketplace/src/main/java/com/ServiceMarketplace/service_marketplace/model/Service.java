@@ -6,6 +6,7 @@ import java.util.List;
 
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.index.Indexed; 
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import jakarta.validation.constraints.NotBlank;
@@ -22,9 +23,11 @@ public class Service {
     @NotBlank
     private String title;
 
+    @Indexed
     @NotBlank
     private String category;
 
+    @Indexed
     @NotBlank
     private String userId;
 

@@ -87,4 +87,17 @@ public class ServiceServiceTest {
         assertEquals(0, result.size());
         verify(serviceRepository).findByCategory("nonexistent");
     }
+
+    @Test
+    void getServicesByUserId_returnsUserServices() {
+        Service s1 = createMockService("1", "tutoring");
+
+        when(serviceRepository.findByUserId("user123")).thenReturn(List.of(s1));
+
+        List<ServiceDto> result = serviceService.getServicesByUserId("user123");
+
+        assertEquals(1, result.size());
+        assertEquals("user123", result.get(0).getUserId());
+        verify(serviceRepository).findByUserId("user123");
+    }
 }

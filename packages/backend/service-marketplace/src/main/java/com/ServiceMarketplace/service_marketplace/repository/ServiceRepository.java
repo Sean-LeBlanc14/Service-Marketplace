@@ -11,4 +11,6 @@ import com.ServiceMarketplace.service_marketplace.model.Service;
 public interface ServiceRepository extends MongoRepository<Service, String> {
     
     List<Service> findByCategory(String category);
+
+    List<Service> findByUserId(String userId);
 }

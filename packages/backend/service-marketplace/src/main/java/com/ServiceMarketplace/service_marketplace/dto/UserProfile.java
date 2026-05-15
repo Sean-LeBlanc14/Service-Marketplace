@@ -1,5 +1,7 @@
 package com.ServiceMarketplace.service_marketplace.dto;
 
+import java.util.List;
+
 import lombok.Value;
 
 @Value
@@ -14,5 +16,9 @@ public class UserProfile {
     private String major;
 
     private String campus;
+
+    private String bio;
+
+    private List<ServiceDto> services;
 
 }

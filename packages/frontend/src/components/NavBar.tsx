@@ -2,8 +2,11 @@ import "../Styles/NavBar.css";
 import SearchBar from "./SearchBar";
 import { useState } from "react";
 import { FaBell } from "react-icons/fa";
+import "../assets/logo.png"
 
 export default function NavBar() {
+
+  const imagePath = "../assets/logo.png";
   const [query, setQuery] = useState("");
 
   const search = async () => {
@@ -16,8 +19,7 @@ export default function NavBar() {
 
   return (
     <nav className="navbar-container">
-      {/*Place holder for logo*/}
-      <p> Logo</p>
+      <img src={imagePath}/>
 
       <SearchBar
         value={query}

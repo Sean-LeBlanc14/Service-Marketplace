@@ -135,7 +135,7 @@ function ProfilePage() {
   const [error, setError] = useState(() =>
     authToken ? "" : "Log in to view your profile."
   );
-  const [isEditingBio, setIsEditingBio] = useState(true);
+  const [isEditingBio, setIsEditingBio] = useState(false);
   const [isLoading, setIsLoading] = useState(Boolean(authToken));
   const [isSaving, setIsSaving] = useState(false);
 
@@ -164,7 +164,7 @@ function ProfilePage() {
         if (isMounted) {
           setProfile(nextProfile);
           setBioDraft(nextProfile.bio);
-          setIsEditingBio(!nextProfile.bio);
+          setIsEditingBio(false);
         }
       } catch {
         if (isMounted) {
@@ -187,10 +187,9 @@ function ProfilePage() {
   async function handleBioSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
-    const token = window.localStorage.getItem(TOKEN_STORAGE_KEY);
     const nextBio = bioDraft.trim();
 
-    if (!token) {
+    if (!authToken) {
       setError("Log in to save your profile.");
       return;
     }
@@ -201,9 +200,9 @@ function ProfilePage() {
 
     try {
       const response = await fetch(API_URL, {
-        method: "PUT",
+        method: "PATCH",
         headers: {
-          Authorization: `Bearer ${token}`,
+          Authorization: `Bearer ${authToken}`,
           "Content-Type": "application/json"
         },
         body: JSON.stringify({ bio: nextBio })
@@ -218,7 +217,7 @@ function ProfilePage() {
 
       setProfile(nextProfile);
       setBioDraft(nextProfile.bio);
-      setIsEditingBio(!nextProfile.bio);
+      setIsEditingBio(false);
       setBioMessage("Bio saved.");
     } catch {
       setError("Could not save your bio.");
@@ -335,28 +334,26 @@ function ProfilePage() {
                 }}>
                 {isSaving ? "Saving..." : "Save Bio"}
               </button>
-              {profile.bio && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setBioDraft(profile.bio);
-                    setBioMessage("");
-                    setError("");
-                    setIsEditingBio(false);
-                  }}
-                  style={{
-                    border: "1px solid #b8b8b8",
-                    borderRadius: "8px",
-                    padding: "12px 18px",
-                    background: "#ffffff",
-                    color: "#161616",
-                    font: "inherit",
-                    fontWeight: 700,
-                    cursor: "pointer"
-                  }}>
-                  Cancel
-                </button>
-              )}
+              <button
+                type="button"
+                onClick={() => {
+                  setBioDraft(profile.bio);
+                  setBioMessage("");
+                  setError("");
+                  setIsEditingBio(false);
+                }}
+                style={{
+                  border: "1px solid #b8b8b8",
+                  borderRadius: "8px",
+                  padding: "12px 18px",
+                  background: "#ffffff",
+                  color: "#161616",
+                  font: "inherit",
+                  fontWeight: 700,
+                  cursor: "pointer"
+                }}>
+                Cancel
+              </button>
             </div>
           </form>
         ) : (

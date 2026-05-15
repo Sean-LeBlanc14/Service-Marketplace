@@ -44,4 +44,11 @@ public class ServiceService {
             .map(this::toDto)
             .collect(Collectors.toList());
     }
+
+    public List<ServiceDto> getServicesByUserId(String userId) {
+        return serviceRepository.findByUserId(userId)
+            .stream()
+            .map(this::toDto)
+            .collect(Collectors.toList());
+    }
 }

@@ -126,10 +126,7 @@ public class UserService {
     }
 
     private List<ServiceDto> getProfileServices(String userId) {
-        return serviceService.getAllServices()
-            .stream()
-            .filter(service -> userId.equals(service.getUserId()))
-            .toList();
+        return serviceService.getServicesByUserId(userId);
     }
 
     private String clean(String value) {

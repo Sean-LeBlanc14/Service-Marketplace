@@ -5,12 +5,17 @@ import com.ServiceMarketplace.service_marketplace.dto.RegisterRequest;
 import com.ServiceMarketplace.service_marketplace.exception.EmailAlreadyExistsException;
 import com.ServiceMarketplace.service_marketplace.model.User;
 import com.ServiceMarketplace.service_marketplace.repository.UserRepository;
+import com.ServiceMarketplace.service_marketplace.service.EmailService;
+import com.ServiceMarketplace.service_marketplace.service.JwtService;
+import com.ServiceMarketplace.service_marketplace.service.ServiceService;
 import com.ServiceMarketplace.service_marketplace.service.UserService;
+import com.ServiceMarketplace.service_marketplace.service.VerificationService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -26,6 +31,21 @@ public class UserServiceTest {
     @Mock
     private PasswordEncoder passwordEncoder;
 
+    @Mock
+    private EmailService emailService;
+
+    @Mock
+    private VerificationService verificationService;
+
+    @Mock
+    private AuthenticationManager authenticationManager;
+
+    @Mock
+    private JwtService jwtService;
+
+    @Mock
+    private ServiceService serviceService;
+
     @InjectMocks
     private UserService userService;
 
@@ -37,6 +57,8 @@ public class UserServiceTest {
 
         when(userRepository.existsByEmail(request.getEmail())).thenReturn(false);
         when(passwordEncoder.encode(request.getPassword())).thenReturn("hashedpassword");
+        when(jwtService.generateToken(request.getEmail())).thenReturn("jwt-token");
+        when(verificationService.generateVerificationCode()).thenReturn("123456");
         when(userRepository.save(any(User.class))).thenAnswer(i -> {
             User u = i.getArgument(0);
             u.setId("abc123");
@@ -47,6 +69,9 @@ public class UserServiceTest {
 
         assertEquals("test@university.edu", response.getEmail());
         assertEquals("abc123", response.getId());
+        assertEquals("jwt-token", response.getToken());
+        verify(verificationService).createVerification(request.getEmail(), "123456");
+        verify(emailService).sendVerificationEmail(request.getEmail(), "123456");
         verify(userRepository).save(any(User.class));
     }
 

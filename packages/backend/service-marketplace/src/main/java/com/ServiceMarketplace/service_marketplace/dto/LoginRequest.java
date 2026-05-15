@@ -3,7 +3,9 @@ package com.ServiceMarketplace.service_marketplace.dto;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
+import lombok.Value;
 
+@Value
 public class LoginRequest {
     
     @NotBlank
@@ -14,11 +16,4 @@ public class LoginRequest {
     @Size(min=8)
     private String password;
 
-    public String getEmail(){
-        return this.email;
-    }
-
-    public String getPassword(){
-        return this.password;
-    }
 }

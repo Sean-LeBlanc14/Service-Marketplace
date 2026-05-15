@@ -6,13 +6,15 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import io.jsonwebtoken.JwtException;
+import org.springframework.dao.IncorrectResultSizeDataAccessException;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
     
     @ExceptionHandler(EmailAlreadyExistsException.class)
-    public ResponseEntity<String> handleEmailAlreadyExists(EmailAlreadyExistsException ex) {
-        return ResponseEntity.status(HttpStatus.CONFLICT).body(ex.getMessage());
+    public ResponseEntity<String> handleEmailAlreadyExists(EmailAlreadyExistsException e) {
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
     }
 
     @ExceptionHandler(VerificationCodeExpired.class)
@@ -35,14 +37,14 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
     }
 
-    @ExceptionHandler(io.jsonwebtoken.JwtException.class)
-    public ResponseEntity<String> handleJwtException(io.jsonwebtoken.JwtException e) {
+    @ExceptionHandler(JwtException.class)
+    public ResponseEntity<String> handleJwtException(JwtException e) {
 
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(e.getMessage());
     }
 
-    @ExceptionHandler(org.springframework.dao.IncorrectResultSizeDataAccessException.class)
-    public ResponseEntity<String> handleDuplicateData(Exception e) {
+    @ExceptionHandler(IncorrectResultSizeDataAccessException.class)
+    public ResponseEntity<String> handleDuplicateData(IncorrectResultSizeDataAccessException e) {
 
         return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
     }
@@ -50,6 +52,11 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(AuthenticationException.class)
     public ResponseEntity<String> handleInvalidCredentials(Exception e){
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(e.getMessage());
+    }
+
+    @ExceptionHandler(EmailSendException.class)
+    public ResponseEntity<String> handleEmailSendException(EmailSendException e) {
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
     }
     
 }

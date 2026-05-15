@@ -1,5 +1,7 @@
 package com.ServiceMarketplace.service_marketplace.service;
 
+import java.util.List;
+
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.InternalAuthenticationServiceException;
@@ -12,6 +14,8 @@ import org.springframework.stereotype.Service;
 import com.ServiceMarketplace.service_marketplace.dto.AuthResponse;
 import com.ServiceMarketplace.service_marketplace.dto.LoginRequest;
 import com.ServiceMarketplace.service_marketplace.dto.RegisterRequest;
+import com.ServiceMarketplace.service_marketplace.dto.ServiceDto;
+import com.ServiceMarketplace.service_marketplace.dto.UpdateUserProfileRequest;
 import com.ServiceMarketplace.service_marketplace.dto.UserProfile;
 import com.ServiceMarketplace.service_marketplace.exception.EmailAlreadyExistsException;
 import com.ServiceMarketplace.service_marketplace.model.User;
@@ -31,14 +35,18 @@ public class UserService {
 
     private final VerificationService verificationService;
 
+    private final ServiceService serviceService;
+
     public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder, EmailService emailService, 
-        VerificationService verificationService, AuthenticationManager authenticationManager, JwtService jwtService) {
+        VerificationService verificationService, AuthenticationManager authenticationManager, JwtService jwtService,
+        ServiceService serviceService) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.emailService = emailService;
         this.verificationService = verificationService;
         this.authenticationManager = authenticationManager;
         this.jwtService = jwtService;
+        this.serviceService = serviceService;
     }
 
     public AuthResponse registerUser(RegisterRequest request) {
@@ -93,8 +101,36 @@ public class UserService {
         var user = userRepository.findByEmail(userDetails.getUsername())
             .orElseThrow(() -> new UsernameNotFoundException("User not found"));
 
-        return new UserProfile(user.getEmail(), user.getFirstName(), user.getLastName(), user.getMajor(), user.getCampus());
+        return toUserProfile(user);
         
+    }
+
+    public UserProfile updateUserProfile(UserDetails userDetails, UpdateUserProfileRequest request){
+
+        var user = userRepository.findByEmail(userDetails.getUsername())
+            .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+
+        if (request.getBio() != null) {
+            user.setBio(clean(request.getBio()));
+        }
+
+        User saved = userRepository.save(user);
+
+        return toUserProfile(saved);
+        
+    }
+
+    private UserProfile toUserProfile(User user) {
+        return new UserProfile(user.getEmail(), user.getFirstName(), user.getLastName(), user.getMajor(),
+            user.getCampus(), clean(user.getBio()), getProfileServices(user.getId()));
+    }
+
+    private List<ServiceDto> getProfileServices(String userId) {
+        return serviceService.getServicesByUserId(userId);
+    }
+
+    private String clean(String value) {
+        return value == null ? "" : value.trim();
     }
 
 }

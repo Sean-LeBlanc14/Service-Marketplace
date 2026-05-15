@@ -32,6 +32,8 @@ public class User {
 
     private String campus;
 
+    private String bio = "";
+
     @Getter(AccessLevel.NONE)
     @Setter(AccessLevel.NONE)
     private boolean isVerified = false;

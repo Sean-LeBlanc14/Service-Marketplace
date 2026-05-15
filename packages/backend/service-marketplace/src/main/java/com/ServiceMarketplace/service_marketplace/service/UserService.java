@@ -23,10 +23,10 @@ public class UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
 
-    AuthenticationManager authenticationManager;
+    private final AuthenticationManager authenticationManager;
 
-    JwtService jwtService;
-   
+    private final JwtService jwtService;
+
     private final EmailService emailService;
 
     private final VerificationService verificationService;

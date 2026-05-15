@@ -27,7 +27,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter{
     private final UserDetailsService userDetailsService;
 
     @Qualifier("handlerExceptionResolver")
-    private HandlerExceptionResolver handlerExceptionResolver;
+    private final HandlerExceptionResolver handlerExceptionResolver;
 
     public JwtAuthenticationFilter(JwtService jwtService, UserDetailsService userDetailsService, HandlerExceptionResolver handlerExceptionResolver) {
         this.jwtService = jwtService;
@@ -41,7 +41,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter{
         
         try{
 
-                String authHeader = request.getHeader("Authorization");
+            String authHeader = request.getHeader("Authorization");
 
             if (authHeader != null && authHeader.startsWith("Bearer ")){
                 String token = getToken(authHeader);

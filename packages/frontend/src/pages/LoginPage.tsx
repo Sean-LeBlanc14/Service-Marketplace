@@ -6,6 +6,7 @@ import FormContainer from "../components/FormContainer";
 import SubmitButton from "../components/SubmitButton";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
+import "../Styles/LoginPage.css";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -55,15 +56,10 @@ export default function LoginPage() {
   };
 
   return (
-    <div
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        backgroundColor: "white"
-      }}>
+    <div className="login-container">
       {/*Login Box*/}
       <FormContainer
-        header={"Welcome to Service Market Place"}
+        header={"Welcome to Poly Services"}
         textField={
           <>
             <InputField

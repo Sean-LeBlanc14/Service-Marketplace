@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import type { FormEvent } from "react";
-import "./ProfilePage.css";
+import "../Styles/ProfilePage.css";
 
 const API_URL = "http://localhost:8080/api/users/me";
 const TOKEN_STORAGE_KEY = "jwt_token";
@@ -88,7 +88,9 @@ function formatPrice(service: ServiceListing) {
       : formatCurrency(minPrice || maxPrice);
   const cleanUnit = service.priceUnit.replace(/^\/+/, "");
 
-  return cleanUnit ? `${displayPrice}/${cleanUnit}` : displayPrice;
+  return cleanUnit
+    ? `${displayPrice}/${cleanUnit}`
+    : displayPrice;
 }
 
 function normalizeServices(
@@ -112,7 +114,9 @@ function normalizeServices(
   }));
 }
 
-function normalizeProfile(profile: ApiUserProfile): UserProfile {
+function normalizeProfile(
+  profile: ApiUserProfile
+): UserProfile {
   return {
     email: cleanText(profile.email),
     firstName: cleanText(profile.firstName),
@@ -136,7 +140,9 @@ function ProfilePage() {
     authToken ? "" : "Log in to view your profile."
   );
   const [isEditingBio, setIsEditingBio] = useState(false);
-  const [isLoading, setIsLoading] = useState(Boolean(authToken));
+  const [isLoading, setIsLoading] = useState(
+    Boolean(authToken)
+  );
   const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
@@ -184,7 +190,9 @@ function ProfilePage() {
     };
   }, [authToken]);
 
-  async function handleBioSubmit(event: FormEvent<HTMLFormElement>) {
+  async function handleBioSubmit(
+    event: FormEvent<HTMLFormElement>
+  ) {
     event.preventDefault();
 
     const nextBio = bioDraft.trim();
@@ -396,7 +404,9 @@ function ProfilePage() {
         ) : (
           <div className="listing-grid">
             {profile.services.map((service) => (
-              <article className="listing-card" key={service.id}>
+              <article
+                className="listing-card"
+                key={service.id}>
                 <div>
                   <div className="listing-card-heading">
                     <h3>{service.title}</h3>

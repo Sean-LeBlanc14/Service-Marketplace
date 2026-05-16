@@ -1,4 +1,4 @@
-import "../Styles/SubmitButton.css";
+import "./Styles/SubmitButton.css";
 
 interface SubmitButtonProps {
   label: string;

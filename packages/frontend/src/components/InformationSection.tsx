@@ -1,5 +1,5 @@
 import { Col } from "react-bootstrap";
-import "../Styles/InformationSection.css";
+import "./Styles/InformationSection.css";
 
 export default function InformationSection() {
   return (

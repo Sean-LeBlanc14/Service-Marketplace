@@ -3,6 +3,8 @@ import { useNavigate, useLocation } from "react-router-dom";
 import FormContainer from "../components/FormContainer";
 import SubmitButton from "../components/SubmitButton";
 import { toast } from "react-toastify";
+import "../Styles/VerifyAccount.css";
+import { ResendTimerLink } from "../components/ResendTimerLink";
 
 export default function VerifyAccount() {
   const [code, setCode] = useState<string[]>([
@@ -87,7 +89,7 @@ export default function VerifyAccount() {
       );
 
       if (response.ok) {
-        navigate("/");
+        navigate("/homepage");
       } else if (response.status === 401) {
         setError("Session expired. Please sign up again.");
       } else if (response.status === 400) {
@@ -131,21 +133,11 @@ export default function VerifyAccount() {
       header="Verify Your Email"
       textField={
         <>
-          <p
-            style={{
-              textAlign: "center",
-              color: "#555",
-              margin: 0
-            }}>
+          <p className="message-text">
             We sent a 6-digit code to <strong>{email}</strong>{" "}
             If you don't see it, check your junk or spam folder.
           </p>
-          <div
-            style={{
-              display: "flex",
-              gap: "10px",
-              justifyContent: "center"
-            }}>
+          <div className="code-container">
             {code.map((digit, i) => (
               <input
                 key={i}
@@ -159,16 +151,7 @@ export default function VerifyAccount() {
                 }
                 onKeyDown={(e) => handleKeyDown(i, e)}
                 onPaste={i === 0 ? handlePaste : undefined}
-                style={{
-                  width: "45px",
-                  height: "55px",
-                  textAlign: "center",
-                  fontSize: "1.5rem",
-                  borderRadius: "8px",
-                  border: "1px solid #e0e0e0",
-                  boxShadow: "0 2px 6px rgba(0,0,0,0.06)",
-                  outline: "none"
-                }}
+                className="code-input"
               />
             ))}
           </div>
@@ -177,17 +160,7 @@ export default function VerifyAccount() {
       submitButton={
         <SubmitButton label="Verify" onClick={handleSubmit} />
       }
-      link={
-        <span
-          onClick={handleResend}
-          style={{
-            fontSize: "0.9rem",
-            color: "#003831",
-            cursor: "pointer"
-          }}>
-          Resend code
-        </span>
-      }
+      link={<ResendTimerLink onResend={handleResend} />}
     />
   );
 }

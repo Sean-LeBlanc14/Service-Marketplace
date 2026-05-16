@@ -19,3 +19,12 @@
   max-width: 500px;
   margin: 20px auto;
 }
+
+.form-heading {
+  padding-top: 10px;
+  font-family: "Utopia", "Georgia", serif;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #1e4d2b;
+}

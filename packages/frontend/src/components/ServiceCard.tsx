@@ -1,5 +1,5 @@
 import { Card, Badge } from "react-bootstrap";
-import "../Styles/ServiceCard.css";
+import "./Styles/ServiceCard.css";
 
 interface Provider {
   name: string;

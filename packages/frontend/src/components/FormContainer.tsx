@@ -1,4 +1,4 @@
-import "../Styles/FormContainer.css";
+import "./Styles/FormContainer.css";
 
 interface FormContainerProps {
   header: string;
@@ -15,7 +15,7 @@ export default function FormContainer({
 }: FormContainerProps) {
   return (
     <section className="form-section">
-      <h1>{header}</h1>
+      <h1 className="form-heading">{header}</h1>
       <div className="form-field">
         {textField}
 

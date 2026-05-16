@@ -1,6 +1,7 @@
 import { Container, Row, Col } from "react-bootstrap";
 import ServiceCard from "../components/ServiceCard";
 import type { Service } from "../components/ServiceCard";
+import "../Styles/HomePage.css";
 
 const services: Service[] = [
   {
@@ -135,30 +136,12 @@ const services: Service[] = [
 
 function HomePage() {
   return (
-    <div
-      style={{
-        backgroundColor: "#f4f4f4",
-        minHeight: "100vh",
-        padding: "40px 0"
-      }}>
+    <div className="homepage-wrapper">
       <Container>
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            marginBottom: "24px"
-          }}>
-          <h1
-            style={{
-              fontWeight: "700",
-              fontSize: "1.8rem",
-              margin: 0
-            }}>
-            Campus Services
-          </h1>
+        <div className="heading-container">
+          <h1 className="heading">Campus Services</h1>
         </div>
-        <p style={{ color: "#666", marginBottom: "24px" }}>
+        <p className="subheading">
           {services.length} services found
         </p>
         <Row>
@@ -168,7 +151,7 @@ function HomePage() {
               xs={12}
               md={6}
               lg={4}
-              style={{ marginBottom: "24px" }}>
+              className="service-padding">
               <ServiceCard service={service} />
             </Col>
           ))}

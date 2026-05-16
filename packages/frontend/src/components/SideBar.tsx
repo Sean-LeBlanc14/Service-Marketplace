@@ -5,10 +5,12 @@ import {
 } from "react-icons/fa";
 import { HiUser } from "react-icons/hi2";
 import { FaGear } from "react-icons/fa6";
-import { NavLink, useNavigate } from "react-router-dom";
+import { FiMessageCircle } from "react-icons/fi";
+import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
-import "../Styles/Sidebar.css";
+import "./Styles/Sidebar.css";
 import { useState } from "react";
+import NavigationButton from "./NavigationButton";
 
 export default function SideBar() {
   const navigate = useNavigate();
@@ -16,6 +18,12 @@ export default function SideBar() {
   const [error, setError] = useState("");
 
   const handleLogout = async () => {
+    const confirmed = window.confirm(
+      "Are you sure you want to logout?"
+    );
+
+    if (!confirmed) return;
+
     try {
       const response = await fetch(
         "http://localhost:8080/api/auth/logout",
@@ -46,44 +54,42 @@ export default function SideBar() {
 
   return (
     <aside className="sidebar-container">
-      <div className="main-container">
-        <NavLink
-          to="/homepage"
-          className={({ isActive }) =>
-            isActive ? "icon-button selected" : "icon-button"
-          }>
-          <FaHome />
-          <span>Home</span>
-        </NavLink>
+      <div className="sidebar-navigation">
+        <div className="logo-container">
+          <p className="logo-text-serif">Poly Services</p>
+        </div>
 
-        <NavLink
-          to="/profile"
-          className={({ isActive }) =>
-            isActive ? "icon-button selected" : "icon-button"
-          }>
-          <HiUser />
-          <span>Profile</span>
-        </NavLink>
+        <NavigationButton
+          to={"/homepage"}
+          label={"Home"}
+          icon={<FaHome />}
+        />
 
-        <NavLink
-          to="/requests"
-          className={({ isActive }) =>
-            isActive ? "icon-button selected" : "icon-button"
-          }>
-          <FaMoneyBill />
-          <span>Services</span>
-        </NavLink>
+        <NavigationButton
+          to={"/profile"}
+          label={"Profile"}
+          icon={<HiUser />}
+        />
+
+        <NavigationButton
+          to={"/requests"}
+          label={"Service Dashboard"}
+          icon={<FaMoneyBill />}
+        />
+
+        <NavigationButton
+          to="/inbox"
+          label="Messages"
+          icon={<FiMessageCircle />}
+        />
       </div>
 
-      <div className="settings-container">
-        <NavLink
-          to="/settings"
-          className={({ isActive }) =>
-            isActive ? "icon-button selected" : "icon-button"
-          }>
-          <FaGear />
-          <span>Settings</span>
-        </NavLink>
+      <div className="sidebar-bottom">
+        <NavigationButton
+          to={"/settings"}
+          label="Settings"
+          icon={<FaGear />}
+        />
 
         <button
           className="logout-button"

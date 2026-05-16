@@ -7,6 +7,7 @@ import FormContainer from "../components/FormContainer";
 import SubmitButton from "../components/SubmitButton";
 import DropDown from "../components/DropDown";
 import { toast } from "react-toastify";
+import "../Styles/SignupPage.css";
 
 function SignupPage() {
   const [email, setEmail] = useState("");
@@ -32,6 +33,10 @@ function SignupPage() {
       campus: campus,
       major: major
     };
+    if (!email.endsWith("@calpoly.edu")) {
+      toast.error("Please use a valid Cal Poly email");
+      return;
+    }
     try {
       const response = await fetch(
         "http://localhost:8080/api/auth/register",
@@ -70,23 +75,13 @@ function SignupPage() {
   };
 
   return (
-    <div
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        backgroundColor: "white"
-      }}>
+    <div className="signup-container">
       <FormContainer
-        header={"Welcome to Service Market Place"}
+        header={"Welcome to Poly Services"}
         textField={
           <>
-            <div
-              style={{
-                display: "flex",
-                flexDirection: "row",
-                gap: "10px"
-              }}>
-              <div style={{ flex: 1 }}>
+            <div className="field-container">
+              <div className="user-field">
                 <InputField
                   value={firstName}
                   label="First Name"
@@ -95,7 +90,7 @@ function SignupPage() {
                 />
               </div>
 
-              <div style={{ flex: 1 }}>
+              <div className="user-field">
                 <InputField
                   value={lastName}
                   label="Last Name"
@@ -105,13 +100,8 @@ function SignupPage() {
               </div>
             </div>
 
-            <div
-              style={{
-                display: "flex",
-                flexDirection: "row",
-                gap: "10px"
-              }}>
-              <div style={{ flex: 1 }}>
+            <div className="field-container">
+              <div className="user-field">
                 <InputField
                   value={major}
                   label="Major"
@@ -120,7 +110,7 @@ function SignupPage() {
                 />
               </div>
 
-              <div style={{ flex: 1 }}>
+              <div className="user-field">
                 <DropDown
                   label="Campus"
                   value={campus}

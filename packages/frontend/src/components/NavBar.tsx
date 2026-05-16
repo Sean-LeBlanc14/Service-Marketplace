@@ -1,12 +1,9 @@
-import "../Styles/NavBar.css";
+import "./Styles/NavBar.css";
 import SearchBar from "./SearchBar";
 import { useState } from "react";
-import { FaBell } from "react-icons/fa";
-import "../assets/logo.png"
+import { FaBell, FaCalendarAlt } from "react-icons/fa";
 
 export default function NavBar() {
-
-  const imagePath = "../assets/logo.png";
   const [query, setQuery] = useState("");
 
   const search = async () => {
@@ -18,19 +15,26 @@ export default function NavBar() {
   };
 
   return (
-    <nav className="navbar-container">
-      <img src={imagePath}/>
+    <nav className="navbar">
+      <div className="navbar-search">
+        <SearchBar
+          value={query}
+          placeholder="Search for Services"
+          onChange={setQuery}
+          onSearch={search}
+        />
+      </div>
 
-      <SearchBar
-        value={query}
-        placeholder="Search for Services"
-        onChange={setQuery}
-        onSearch={search}
-      />
+      <div className="navbar-buttons">
+        {/*Will function as a dropdown*/}
+        <button className="notification-icon">
+          <FaBell size={25} />
+        </button>
 
-      <button className="notification-icon">
-        <FaBell size={20} />
-      </button>
+        <button className="calendar-icon">
+          <FaCalendarAlt size={25} />
+        </button>
+      </div>
     </nav>
   );
 }

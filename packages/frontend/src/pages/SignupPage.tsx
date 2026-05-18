@@ -14,7 +14,6 @@ function SignupPage() {
   const [lastName, setLastName] = useState("");
   const [major, setMajor] = useState("");
   type CampusType = "San Luis Obispo" | "Maritime Academy" | "";
-  const campusOptions = ["San Luis Obispo", "Maritime Academy"];
   const [campus, setCampus] = useState<CampusType>("");
   const [error, setError] = useState("");
   const navigate = useNavigate();
@@ -82,6 +81,7 @@ function SignupPage() {
                 <InputField
                   value={firstName}
                   label="First Name"
+                  type="text"
                   placeHolder="Your Name"
                   onChange={(e) => setFirstName(e.target.value)}
                 />
@@ -91,6 +91,7 @@ function SignupPage() {
                 <InputField
                   value={lastName}
                   label="Last Name"
+                  type="text"
                   placeHolder="Your Last Name"
                   onChange={(e) => setLastName(e.target.value)}
                 />
@@ -107,6 +108,7 @@ function SignupPage() {
                 <InputField
                   value={major}
                   label="Major"
+                  type="text"
                   placeHolder="Your Major"
                   onChange={(e) => setMajor(e.target.value)}
                 />
@@ -128,7 +130,7 @@ function SignupPage() {
                       </option>
                     </>
                   }
-                  onChange={(e) => setCampus(e.target.value)}
+                  onChange={(e) => setCampus(e.target.value as CampusType)}
                 />
               </div>
             </div>
@@ -158,6 +160,18 @@ function SignupPage() {
           label="Already have an account?"
         />
       />
+      {error && (
+        <p
+          role="alert"
+          style={{
+            color: "#9b1c31",
+            fontWeight: 700,
+            margin: "0 auto 24px",
+            maxWidth: "420px"
+          }}>
+          {error}
+        </p>
+      )}
 
       <InformationSection />
     </div>

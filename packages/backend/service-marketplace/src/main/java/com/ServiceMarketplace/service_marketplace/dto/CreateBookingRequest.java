@@ -13,9 +13,6 @@ public class CreateBookingRequest {
     @NotBlank
     private String serviceId;
 
-    @NotBlank
-    private String customerId;
-
     @NotNull
     private BigDecimal agreedPrice;
 

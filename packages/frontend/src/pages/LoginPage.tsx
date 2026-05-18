@@ -41,7 +41,6 @@ export default function LoginPage() {
         setError("Invalid Email or Password!");
       } else {
         setError("Something went wrong, please try again.");
-        toast.warn(error);
       }
 
       if (error) {
@@ -52,6 +51,7 @@ export default function LoginPage() {
         "Unable to connect to the server, please try again."
       );
       toast.warn(error);
+      
     }
   };
 

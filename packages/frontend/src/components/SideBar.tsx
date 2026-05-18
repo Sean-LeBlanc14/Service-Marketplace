@@ -48,7 +48,7 @@ export default function SideBar() {
       }
     } catch (e) {
       console.error("Logout error: ", e);
-      toast.error("A network error occurred.");
+      toast.warn("A network error occurred.");
     }
   };
 

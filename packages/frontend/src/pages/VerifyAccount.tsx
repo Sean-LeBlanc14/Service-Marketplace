@@ -72,6 +72,7 @@ export default function VerifyAccount() {
     const fullCode = code.join("");
     if (fullCode.length < 6) {
       setError("Please enter the full 6-digit code.");
+      toast.error(error);
       return;
     }
 

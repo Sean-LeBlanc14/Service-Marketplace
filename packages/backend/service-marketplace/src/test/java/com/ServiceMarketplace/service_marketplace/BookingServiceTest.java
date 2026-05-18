@@ -23,6 +23,7 @@ import com.ServiceMarketplace.service_marketplace.model.BookingStatus;
 import com.ServiceMarketplace.service_marketplace.model.Service;
 import com.ServiceMarketplace.service_marketplace.repository.BookingRepository;
 import com.ServiceMarketplace.service_marketplace.repository.ServiceRepository;
+import com.ServiceMarketplace.service_marketplace.service.BookingService;
 
 @ExtendWith(MockitoExtension.class)
 class BookingServiceTest {

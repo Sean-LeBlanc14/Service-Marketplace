@@ -82,6 +82,18 @@ export default function LoginPage() {
         />
         link=<NavLink to="/signup" label="Create Account" />
       />
+      {error && (
+        <p
+          role="alert"
+          style={{
+            color: "#9b1c31",
+            fontWeight: 700,
+            margin: "0 auto 24px",
+            maxWidth: "420px"
+          }}>
+          {error}
+        </p>
+      )}
 
       {/* Description Section*/}
       <InformationSection />

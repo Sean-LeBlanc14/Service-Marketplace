@@ -5,10 +5,20 @@ import java.time.Instant;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import lombok.Value;
 
-public record CreateBookingRequest(
-    @NotBlank String serviceId,
-    @NotBlank String customerId,
-    @NotNull BigDecimal agreedPrice,
-    @NotNull Instant scheduledAt
-) {}
+@Value
+public class CreateBookingRequest {
+
+    @NotBlank
+    private String serviceId;
+
+    @NotBlank
+    private String customerId;
+
+    @NotNull
+    private BigDecimal agreedPrice;
+
+    @NotNull
+    private Instant scheduledAt;
+}

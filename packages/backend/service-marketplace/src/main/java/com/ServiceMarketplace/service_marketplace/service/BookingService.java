@@ -23,24 +23,24 @@ public class BookingService {
 
     public Booking createBooking(CreateBookingRequest request) {
         com.ServiceMarketplace.service_marketplace.model.Service service = serviceRepository
-            .findById(request.serviceId())
-            .orElseThrow(() -> new ResourceNotFoundException("Service", request.serviceId()));
+            .findById(request.getServiceId())
+            .orElseThrow(() -> new ResourceNotFoundException("Service", request.getServiceId()));
 
-        if (request.agreedPrice().compareTo(service.getPriceMin()) < 0 ||
-            request.agreedPrice().compareTo(service.getPriceMax()) > 0) {
+        if (request.getAgreedPrice().compareTo(service.getPriceMin()) < 0 ||
+            request.getAgreedPrice().compareTo(service.getPriceMax()) > 0) {
             throw new InvalidPriceException(
                 "Agreed price must be between " + service.getPriceMin() + " and " + service.getPriceMax()
             );
         }
 
         Booking booking = new Booking();
-        booking.setServiceId(request.serviceId());
-        booking.setCustomerId(request.customerId());
+        booking.setServiceId(request.getServiceId());
+        booking.setCustomerId(request.getCustomerId());
         booking.setProviderId(service.getUserId());
         booking.setServiceTitle(service.getTitle());
-        booking.setAgreedPrice(request.agreedPrice());
+        booking.setAgreedPrice(request.getAgreedPrice());
         booking.setPriceUnit(service.getPriceUnit());
-        booking.setScheduledAt(request.scheduledAt());
+        booking.setScheduledAt(request.getScheduledAt());
         booking.setStatus(BookingStatus.PENDING_PAYMENT);
 
         return bookingRepository.save(booking);

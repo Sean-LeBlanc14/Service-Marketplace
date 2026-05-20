@@ -31,8 +31,11 @@ export default function LoginPage() {
         }
       );
 
-      if (response.ok) {
-        const data = await response.json();
+      if (!response.ok) {
+        return;
+      }
+
+      const data = await response.json();
 
         //Using local storage to store token for now, possibly use cookies in the future
         localStorage.setItem("jwt_token", data.token);

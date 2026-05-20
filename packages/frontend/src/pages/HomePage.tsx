@@ -1,149 +1,252 @@
+import { useEffect, useState } from "react";
 import { Container, Row, Col } from "react-bootstrap";
+import { Link } from "react-router-dom";
 import ServiceCard from "../components/ServiceCard";
 import type { Service } from "../components/ServiceCard";
 import "../Styles/HomePage.css";
 
-const services: Service[] = [
-  {
-    id: "1",
-    title: "Calculus & Statistics Tutoring",
-    category: "tutoring",
-    provider: {
-      name: "Sarah Chen",
-      avatar: "👩‍🎓",
-      rating: 4.9,
-      reviews: 47
-    },
-    price: "$25/hr",
-    description:
-      "Math major offering help with Calc I-III, Linear Algebra, and Statistics. 3 years of tutoring experience with proven results.",
-    location: "Main Library or Online",
-    tags: ["Mathematics", "One-on-one", "Group sessions"]
-  },
-  {
-    id: "2",
-    title: "Computer Repair & Setup",
-    category: "tech",
-    provider: {
-      name: "Marcus Johnson",
-      avatar: "👨‍💻",
-      rating: 4.8,
-      reviews: 63
-    },
-    price: "$30-50",
-    description:
-      "Fast computer repairs, software installation, virus removal, and hardware upgrades. Same-day service available.",
-    location: "On-campus or dorm visits",
-    tags: ["Hardware", "Software", "Emergency service"]
-  },
-  {
-    id: "3",
-    title: "Photography for Events",
-    category: "photography",
-    provider: {
-      name: "Emily Rodriguez",
-      avatar: "📸",
-      rating: 5.0,
-      reviews: 31
-    },
-    price: "$100-200",
-    description:
-      "Professional photography for formals, club events, headshots, and grad photos. High-quality edits included.",
-    location: "Anywhere on campus",
-    tags: ["Events", "Portraits", "Editing included"]
-  },
-  {
-    id: "4",
-    title: "Resume Review & Career Coaching",
-    category: "finance",
-    provider: {
-      name: "David Park",
-      avatar: "👔",
-      rating: 4.9,
-      reviews: 28
-    },
-    price: "$20/session",
-    description:
-      "Former McKinsey intern helping with resumes, cover letters, interview prep, and career strategy.",
-    location: "Student Center or Zoom",
-    tags: ["Resume", "Interview prep", "Career advice"]
-  },
-  {
-    id: "5",
-    title: "Home-Cooked Meal Prep",
-    category: "food",
-    provider: {
-      name: "Priya Patel",
-      avatar: "👩‍🍳",
-      rating: 4.7,
-      reviews: 52
-    },
-    price: "$15-25/meal",
-    description:
-      "Healthy, homemade meals delivered to your dorm. Vegetarian, vegan, and dietary restrictions accommodated.",
-    location: "Campus delivery",
-    tags: ["Healthy", "Custom orders", "Meal plans"]
-  },
-  {
-    id: "6",
-    title: "Web Development & Design",
-    category: "tech",
-    provider: {
-      name: "Alex Kim",
-      avatar: "💻",
-      rating: 4.9,
-      reviews: 19
-    },
-    price: "$40/hr",
-    description:
-      "Build websites for clubs, personal portfolios, or small businesses. React, WordPress, and custom solutions.",
-    location: "Remote collaboration",
-    tags: ["Web design", "React", "Portfolio"]
-  },
-  {
-    id: "7",
-    title: "Sublet: 1BR Apartment Summer",
-    category: "housing",
-    provider: {
-      name: "Jessica Martinez",
-      avatar: "🏠",
-      rating: 4.6,
-      reviews: 8
-    },
-    price: "$800/month",
-    description:
-      "Furnished 1-bedroom apartment 5 min walk from campus. Available June-August. Utilities included.",
-    location: "123 College Ave",
-    tags: ["Furnished", "Utilities included", "Pet-friendly"]
-  },
-  {
-    id: "8",
-    title: "Python & Data Science Tutoring",
-    category: "tutoring",
-    provider: {
-      name: "Ryan Thompson",
-      avatar: "🐍",
-      rating: 4.8,
-      reviews: 34
-    },
-    price: "$30/hr",
-    description:
-      "CS grad student specializing in Python, machine learning, data analysis, and pandas/numpy libraries.",
-    location: "Engineering Building or Online",
-    tags: ["Python", "ML", "Data Science"]
+const SERVICES_API_URL = "http://localhost:8080/api/services";
+const USER_PROFILE_API_URL = "http://localhost:8080/api/users/me";
+const TOKEN_STORAGE_KEY = "jwt_token";
+
+interface ApiService {
+  id?: string;
+  title?: string;
+  category?: string;
+  userId?: string;
+  providerName?: string;
+  priceMin?: number | string | null;
+  priceMax?: number | string | null;
+  priceUnit?: string | null;
+  description?: string;
+  location?: string;
+  tags?: string[] | null;
+}
+
+interface ApiUserProfile {
+  email?: string;
+  firstName?: string;
+  lastName?: string;
+  services?: ApiService[];
+}
+
+function cleanText(value?: string | null) {
+  return value?.trim() ?? "";
+}
+
+function cleanPriceValue(value?: number | string | null) {
+  return value == null ? "" : String(value).trim();
+}
+
+function formatCurrency(value: string) {
+  const amount = Number(value);
+
+  if (!Number.isFinite(amount)) {
+    return "$0";
   }
-];
+
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+    maximumFractionDigits: Number.isInteger(amount) ? 0 : 2
+  }).format(amount);
+}
+
+function formatPrice(service: ApiService) {
+  const minPrice = cleanPriceValue(service.priceMin);
+  const maxPrice = cleanPriceValue(service.priceMax);
+  const displayPrice =
+    minPrice && maxPrice && minPrice !== maxPrice
+      ? `${formatCurrency(minPrice)} - ${formatCurrency(maxPrice)}`
+      : formatCurrency(minPrice || maxPrice);
+  const priceUnit = cleanText(service.priceUnit).replace(/^\/+/, "");
+
+  return priceUnit ? `${displayPrice}/${priceUnit}` : displayPrice;
+}
+
+function getInitials(name: string) {
+  const words = name
+    .split(/\s+/)
+    .map((word) => word.replace(/[^a-zA-Z0-9]/g, ""))
+    .filter(Boolean);
+
+  if (words.length === 0) {
+    return "SC";
+  }
+
+  return words
+    .slice(0, 2)
+    .map((word) => word[0])
+    .join("")
+    .toUpperCase();
+}
+
+function getProfileDisplayName(profile: ApiUserProfile) {
+  return `${cleanText(profile.firstName)} ${cleanText(profile.lastName)}`.trim()
+    || cleanText(profile.email);
+}
+
+function getProfileServiceNames(profile: ApiUserProfile) {
+  const displayName = getProfileDisplayName(profile);
+  const services = Array.isArray(profile.services) ? profile.services : [];
+
+  if (!displayName) {
+    return new Map<string, string>();
+  }
+
+  return new Map(
+    services
+      .map((service) => cleanText(service.id))
+      .filter(Boolean)
+      .map((serviceId) => [serviceId, displayName])
+  );
+}
+
+function normalizeService(
+  service: ApiService,
+  index: number,
+  providerNameByServiceId = new Map<string, string>()
+): Service {
+  const tags = Array.isArray(service.tags)
+    ? service.tags.map(cleanText).filter(Boolean)
+    : [];
+  const id = cleanText(service.id) || `service-${index}`;
+  const providerName =
+    cleanText(service.providerName) ||
+    providerNameByServiceId.get(id) ||
+    "Service creator";
+
+  return {
+    id,
+    title: cleanText(service.title) || "Untitled service",
+    category: cleanText(service.category) || "general",
+    provider: {
+      name: providerName,
+      avatar: getInitials(providerName),
+      rating: 0,
+      reviews: 0
+    },
+    price: formatPrice(service),
+    description: cleanText(service.description),
+    location: cleanText(service.location) || "Campus",
+    tags
+  };
+}
 
 function HomePage() {
+  const [services, setServices] = useState<Service[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    let isMounted = true;
+
+    async function loadServices() {
+      try {
+        const authToken = localStorage.getItem(TOKEN_STORAGE_KEY);
+
+        if (!authToken) {
+          if (isMounted) {
+            setServices([]);
+            setError("Log in to view campus services.");
+          }
+
+          return;
+        }
+
+        const authHeaders = {
+          Authorization: `Bearer ${authToken}`
+        };
+
+        const response = await fetch(SERVICES_API_URL, {
+          headers: authHeaders
+        });
+
+        if (response.status === 401 || response.status === 403) {
+          throw new Error("Log in to view campus services.");
+        }
+
+        if (!response.ok) {
+          throw new Error("Could not load services.");
+        }
+
+        const data = (await response.json()) as ApiService[];
+        let providerNameByServiceId = new Map<string, string>();
+
+        try {
+          const profileResponse = await fetch(USER_PROFILE_API_URL, {
+            headers: authHeaders
+          });
+
+          if (profileResponse.ok) {
+            const profile = (await profileResponse.json()) as ApiUserProfile;
+            providerNameByServiceId = getProfileServiceNames(profile);
+          }
+        } catch {
+          providerNameByServiceId = new Map<string, string>();
+        }
+
+        const nextServices = Array.isArray(data)
+          ? data.map((service, index) =>
+              normalizeService(service, index, providerNameByServiceId)
+            )
+          : [];
+
+        if (isMounted) {
+          setServices(nextServices);
+          setError("");
+        }
+      } catch (loadError) {
+        if (isMounted) {
+          setError(
+            loadError instanceof Error
+              ? loadError.message
+              : "Could not load services."
+          );
+        }
+      } finally {
+        if (isMounted) {
+          setIsLoading(false);
+        }
+      }
+    }
+
+    void loadServices();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const requiresLogin = error === "Log in to view campus services.";
+
   return (
     <div className="homepage-wrapper">
       <Container>
-        <div className="heading-container">
-          <h1 className="heading">Campus Services</h1>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "16px", marginBottom: "24px" }}>
+          <h1 style={{ fontWeight: "700", fontSize: "1.8rem", margin: 0 }}>Campus Services</h1>
         </div>
-        <p className="subheading">
-          {services.length} services found
-        </p>
+
+        {isLoading ? (
+          <p style={{ color: "#666", marginBottom: "24px" }}>Loading services...</p>
+        ) : (
+          <p style={{ color: error ? "#9b1c31" : "#666", marginBottom: "24px" }}>
+            {error || `${services.length} services found`}
+          </p>
+        )}
+
+        {!isLoading && requiresLogin && (
+          <Link
+            to="/login"
+            style={{ color: "#003831", fontWeight: 700 }}>
+            Log in
+          </Link>
+        )}
+
+        {!isLoading && !error && services.length === 0 && (
+          <p style={{ color: "#666" }}>No services have been listed yet.</p>
+        )}
+
         <Row>
           {services.map((service) => (
             <Col

@@ -15,12 +15,10 @@ function SignupPage() {
   const [major, setMajor] = useState("");
   type CampusType = "San Luis Obispo" | "Maritime Academy" | "";
   const [campus, setCampus] = useState<CampusType>("");
-  const [error, setError] = useState("");
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError("");
 
     const user = {
       email: email,
@@ -40,23 +38,15 @@ function SignupPage() {
         }
       );
 
-      if (response.ok) {
-        const data = await response.json();
-        localStorage.setItem("jwt_token", data.token);
-        navigate("/verify", { state: { email: data.email, token: data.token } });
-      } else if (response.status === 409) {
-        setError("An account with this email already exists.");
-      } else if (response.status === 400) {
-        setError(
-          "Please enter a valid email and a password of at least 8 characters."
-        );
-      } else {
-        setError("Something went wrong. Please try again.");
+      if (!response.ok) {
+        return;
       }
+
+      const data = await response.json();
+      localStorage.setItem("jwt_token", data.token);
+      navigate("/verify", { state: { email: data.email, token: data.token } });
     } catch {
-      setError(
-        "Unable to connect to the server. Please try again."
-      );
+      // Toast error handling is provided by the shared UI layer.
     }
   };
 
@@ -160,18 +150,6 @@ function SignupPage() {
           label="Already have an account?"
         />
       />
-      {error && (
-        <p
-          role="alert"
-          style={{
-            color: "#9b1c31",
-            fontWeight: 700,
-            margin: "0 auto 24px",
-            maxWidth: "420px"
-          }}>
-          {error}
-        </p>
-      )}
 
       <InformationSection />
     </div>

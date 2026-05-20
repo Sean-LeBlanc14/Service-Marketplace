@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Container, Row, Col } from "react-bootstrap";
+import { Link } from "react-router-dom";
 import ServiceCard from "../components/ServiceCard";
 import type { Service } from "../components/ServiceCard";
 
@@ -142,7 +143,27 @@ function HomePage() {
     async function loadServices() {
       try {
         const authToken = localStorage.getItem(TOKEN_STORAGE_KEY);
-        const response = await fetch(SERVICES_API_URL);
+
+        if (!authToken) {
+          if (isMounted) {
+            setServices([]);
+            setError("Log in to view campus services.");
+          }
+
+          return;
+        }
+
+        const authHeaders = {
+          Authorization: `Bearer ${authToken}`
+        };
+
+        const response = await fetch(SERVICES_API_URL, {
+          headers: authHeaders
+        });
+
+        if (response.status === 401 || response.status === 403) {
+          throw new Error("Log in to view campus services.");
+        }
 
         if (!response.ok) {
           throw new Error("Could not load services.");
@@ -151,21 +172,17 @@ function HomePage() {
         const data = (await response.json()) as ApiService[];
         let providerNameByServiceId = new Map<string, string>();
 
-        if (authToken) {
-          try {
-            const profileResponse = await fetch(USER_PROFILE_API_URL, {
-              headers: {
-                Authorization: `Bearer ${authToken}`
-              }
-            });
+        try {
+          const profileResponse = await fetch(USER_PROFILE_API_URL, {
+            headers: authHeaders
+          });
 
-            if (profileResponse.ok) {
-              const profile = (await profileResponse.json()) as ApiUserProfile;
-              providerNameByServiceId = getProfileServiceNames(profile);
-            }
-          } catch {
-            providerNameByServiceId = new Map<string, string>();
+          if (profileResponse.ok) {
+            const profile = (await profileResponse.json()) as ApiUserProfile;
+            providerNameByServiceId = getProfileServiceNames(profile);
           }
+        } catch {
+          providerNameByServiceId = new Map<string, string>();
         }
 
         const nextServices = Array.isArray(data)
@@ -178,9 +195,13 @@ function HomePage() {
           setServices(nextServices);
           setError("");
         }
-      } catch {
+      } catch (loadError) {
         if (isMounted) {
-          setError("Could not load services.");
+          setError(
+            loadError instanceof Error
+              ? loadError.message
+              : "Could not load services."
+          );
         }
       } finally {
         if (isMounted) {
@@ -196,6 +217,8 @@ function HomePage() {
     };
   }, []);
 
+  const requiresLogin = error === "Log in to view campus services.";
+
   return (
     <div style={{ backgroundColor: "#f4f4f4", minHeight: "100vh", padding: "40px 0" }}>
       <Container>
@@ -209,6 +232,14 @@ function HomePage() {
           <p style={{ color: error ? "#9b1c31" : "#666", marginBottom: "24px" }}>
             {error || `${services.length} services found`}
           </p>
+        )}
+
+        {!isLoading && requiresLogin && (
+          <Link
+            to="/login"
+            style={{ color: "#003831", fontWeight: 700 }}>
+            Log in
+          </Link>
         )}
 
         {!isLoading && !error && services.length === 0 && (

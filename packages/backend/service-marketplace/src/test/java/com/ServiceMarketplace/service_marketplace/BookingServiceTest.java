@@ -17,6 +17,7 @@ import static org.mockito.Mockito.when;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.core.userdetails.UserDetails;
 
+import com.ServiceMarketplace.service_marketplace.dto.BookingResponse;
 import com.ServiceMarketplace.service_marketplace.dto.CreateBookingRequest;
 import com.ServiceMarketplace.service_marketplace.exception.InvalidPriceException;
 import com.ServiceMarketplace.service_marketplace.exception.ResourceNotFoundException;
@@ -79,7 +80,7 @@ class BookingServiceTest {
         when(serviceRepository.findById("service-123")).thenReturn(Optional.of(mockService));
         when(bookingRepository.save(any(Booking.class))).thenAnswer(inv -> inv.getArgument(0));
 
-        Booking result = bookingService.createBooking(request, userDetails);
+        BookingResponse result = bookingService.createBooking(request, userDetails);
 
         assertThat(result.getServiceId()).isEqualTo("service-123");
         assertThat(result.getCustomerId()).isEqualTo("customer-789");

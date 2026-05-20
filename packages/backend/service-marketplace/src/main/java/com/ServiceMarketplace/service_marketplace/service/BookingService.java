@@ -4,6 +4,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
+import com.ServiceMarketplace.service_marketplace.dto.BookingResponse;
 import com.ServiceMarketplace.service_marketplace.dto.CreateBookingRequest;
 import com.ServiceMarketplace.service_marketplace.exception.InvalidPriceException;
 import com.ServiceMarketplace.service_marketplace.exception.ResourceNotFoundException;
@@ -26,7 +27,7 @@ public class BookingService {
         this.userRepository = userRepository;
     }
 
-    public Booking createBooking(CreateBookingRequest request, UserDetails userDetails) {
+    public BookingResponse createBooking(CreateBookingRequest request, UserDetails userDetails) {
         var customer = userRepository.findByEmail(userDetails.getUsername())
             .orElseThrow(() -> new UsernameNotFoundException("User not found"));
 
@@ -51,6 +52,22 @@ public class BookingService {
         booking.setScheduledAt(request.getScheduledAt());
         booking.setStatus(BookingStatus.PENDING_PAYMENT);
 
-        return bookingRepository.save(booking);
+        Booking saved = bookingRepository.save(booking);
+        return toBookingResponse(saved);
+    }
+
+    private BookingResponse toBookingResponse(Booking booking) {
+        return new BookingResponse(
+            booking.getId(),
+            booking.getServiceId(),
+            booking.getServiceTitle(),
+            booking.getCustomerId(),
+            booking.getProviderId(),
+            booking.getAgreedPrice(),
+            booking.getPriceUnit(),
+            booking.getScheduledAt(),
+            booking.getStatus(),
+            booking.getCreatedAt()
+        );
     }
 }

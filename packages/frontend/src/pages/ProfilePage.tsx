@@ -455,7 +455,7 @@ function ProfilePage() {
             <h2>Bio</h2>
             <p>Profile bio shown with your services.</p>
           </div>
-          {!isEditingBio && (
+          {!isEditingBio && ( //testing
             <button
               type="button"
               className="section-action-button"

@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.ServiceMarketplace.service_marketplace.dto.BookingResponse;
+import com.ServiceMarketplace.service_marketplace.dto.CreateBookingResponse;
 import com.ServiceMarketplace.service_marketplace.dto.CreateBookingRequest;
 import com.ServiceMarketplace.service_marketplace.service.BookingService;
 
@@ -26,10 +26,10 @@ public class BookingController {
     }
 
     @PostMapping
-    public ResponseEntity<BookingResponse> createBooking(
+    public ResponseEntity<CreateBookingResponse> createBooking(
             @Valid @RequestBody CreateBookingRequest request,
             @AuthenticationPrincipal UserDetails userDetails) {
-        BookingResponse response = bookingService.createBooking(request, userDetails);
+        CreateBookingResponse response = bookingService.createBooking(request, userDetails);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 }

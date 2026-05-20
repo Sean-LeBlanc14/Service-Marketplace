@@ -6,6 +6,7 @@ import org.springframework.stereotype.Service;
 
 import com.ServiceMarketplace.service_marketplace.dto.BookingResponse;
 import com.ServiceMarketplace.service_marketplace.dto.CreateBookingRequest;
+import com.ServiceMarketplace.service_marketplace.dto.CreateBookingResponse;
 import com.ServiceMarketplace.service_marketplace.exception.InvalidPriceException;
 import com.ServiceMarketplace.service_marketplace.exception.ResourceNotFoundException;
 import com.ServiceMarketplace.service_marketplace.model.Booking;
@@ -20,14 +21,16 @@ public class BookingService {
     private final BookingRepository bookingRepository;
     private final ServiceRepository serviceRepository;
     private final UserRepository userRepository;
+    private final PaymentService paymentService;
 
-    public BookingService(BookingRepository bookingRepository, ServiceRepository serviceRepository, UserRepository userRepository) {
+    public BookingService(BookingRepository bookingRepository, ServiceRepository serviceRepository, UserRepository userRepository, PaymentService paymentService) {
         this.bookingRepository = bookingRepository;
         this.serviceRepository = serviceRepository;
         this.userRepository = userRepository;
+        this.paymentService = paymentService;
     }
 
-    public BookingResponse createBooking(CreateBookingRequest request, UserDetails userDetails) {
+    public CreateBookingResponse createBooking(CreateBookingRequest request, UserDetails userDetails) {
         var customer = userRepository.findByEmail(userDetails.getUsername())
             .orElseThrow(() -> new UsernameNotFoundException("User not found"));
 
@@ -42,6 +45,12 @@ public class BookingService {
             );
         }
 
+        String clientSecret = paymentService.createPaymentIntent(
+            request.getAgreedPrice(),
+            request.getServiceId(),
+            customer.getId()
+        );
+
         Booking booking = new Booking();
         booking.setServiceId(request.getServiceId());
         booking.setCustomerId(customer.getId());
@@ -53,7 +62,8 @@ public class BookingService {
         booking.setStatus(BookingStatus.PENDING_PAYMENT);
 
         Booking saved = bookingRepository.save(booking);
-        return toBookingResponse(saved);
+
+        return new CreateBookingResponse(toBookingResponse(saved), clientSecret);
     }
 
     private BookingResponse toBookingResponse(Booking booking) {

@@ -10,6 +10,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import static org.mockito.Mockito.verify;
@@ -17,8 +18,8 @@ import static org.mockito.Mockito.when;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.core.userdetails.UserDetails;
 
-import com.ServiceMarketplace.service_marketplace.dto.BookingResponse;
 import com.ServiceMarketplace.service_marketplace.dto.CreateBookingRequest;
+import com.ServiceMarketplace.service_marketplace.dto.CreateBookingResponse;
 import com.ServiceMarketplace.service_marketplace.exception.InvalidPriceException;
 import com.ServiceMarketplace.service_marketplace.exception.ResourceNotFoundException;
 import com.ServiceMarketplace.service_marketplace.model.Booking;
@@ -29,6 +30,7 @@ import com.ServiceMarketplace.service_marketplace.repository.BookingRepository;
 import com.ServiceMarketplace.service_marketplace.repository.ServiceRepository;
 import com.ServiceMarketplace.service_marketplace.repository.UserRepository;
 import com.ServiceMarketplace.service_marketplace.service.BookingService;
+import com.ServiceMarketplace.service_marketplace.service.PaymentService;
 
 @ExtendWith(MockitoExtension.class)
 class BookingServiceTest {
@@ -41,6 +43,9 @@ class BookingServiceTest {
 
     @Mock
     private UserRepository userRepository;
+
+    @Mock
+    private PaymentService paymentService;
 
     @Mock
     private UserDetails userDetails;
@@ -78,17 +83,20 @@ class BookingServiceTest {
 
         when(userRepository.findByEmail("student@calpoly.edu")).thenReturn(Optional.of(mockCustomer));
         when(serviceRepository.findById("service-123")).thenReturn(Optional.of(mockService));
+        when(paymentService.createPaymentIntent(any(), eq("service-123"), eq("customer-789")))
+            .thenReturn("pi_test_secret_123");
         when(bookingRepository.save(any(Booking.class))).thenAnswer(inv -> inv.getArgument(0));
 
-        BookingResponse result = bookingService.createBooking(request, userDetails);
+        CreateBookingResponse result = bookingService.createBooking(request, userDetails);
 
-        assertThat(result.getServiceId()).isEqualTo("service-123");
-        assertThat(result.getCustomerId()).isEqualTo("customer-789");
-        assertThat(result.getProviderId()).isEqualTo("provider-456");
-        assertThat(result.getServiceTitle()).isEqualTo("Math Tutoring");
-        assertThat(result.getAgreedPrice()).isEqualByComparingTo("50.00");
-        assertThat(result.getPriceUnit()).isEqualTo("per hour");
-        assertThat(result.getStatus()).isEqualTo(BookingStatus.PENDING_PAYMENT);
+        assertThat(result.getBooking().getServiceId()).isEqualTo("service-123");
+        assertThat(result.getBooking().getCustomerId()).isEqualTo("customer-789");
+        assertThat(result.getBooking().getProviderId()).isEqualTo("provider-456");
+        assertThat(result.getBooking().getServiceTitle()).isEqualTo("Math Tutoring");
+        assertThat(result.getBooking().getAgreedPrice()).isEqualByComparingTo("50.00");
+        assertThat(result.getBooking().getPriceUnit()).isEqualTo("per hour");
+        assertThat(result.getBooking().getStatus()).isEqualTo(BookingStatus.PENDING_PAYMENT);
+        assertThat(result.getClientSecret()).isEqualTo("pi_test_secret_123");
         verify(bookingRepository).save(any(Booking.class));
     }
 

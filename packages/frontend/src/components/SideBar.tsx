@@ -9,13 +9,12 @@ import { FiMessageCircle } from "react-icons/fi";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import "./Styles/SideBar.css";
-import { useState } from "react";
 import NavigationButton from "./NavigationButton";
+import { API_ENDPOINTS } from "../utils/api";
 
 export default function SideBar() {
   const navigate = useNavigate();
-  const token = localStorage.getItem("jwt_token");
-  const [error, setError] = useState("");
+  
 
   const handleLogout = async () => {
     const confirmed = window.confirm(
@@ -25,8 +24,9 @@ export default function SideBar() {
     if (!confirmed) return;
 
     try {
+      const token = localStorage.getItem("jwt_token");
       const response = await fetch(
-        "http://localhost:8080/api/auth/logout",
+       API_ENDPOINTS.auth.logout ,
         {
           method: "POST",
           headers: {
@@ -39,16 +39,16 @@ export default function SideBar() {
         localStorage.removeItem("jwt_token");
         toast.success("Successfully logged out");
         navigate("/login");
-      } else {
-        setError("Could not logout, please try again.");
+      } else if (response.status === 401){
+        // Backend sends a 401 if the user is not logged in to begin with
+        navigate("/login");
+      }else {
+        toast.error("Could not logout, please try again.");
       }
 
-      if (error) {
-        toast.error(error);
-      }
     } catch (e) {
       console.error("Logout error: ", e);
-      toast.warn("A network error occurred.");
+      toast.warning("A network error occurred.");
     }
   };
 

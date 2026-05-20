@@ -17,6 +17,20 @@
   margin: 0;
 }
 
+.status-message {
+  color: #666;
+  margin-bottom: 24px;
+}
+
+.status-message-error {
+  color: #9b1c31;
+}
+
+.login-link {
+  color: #003831;
+  font-weight: 700;
+}
+
 .subheading {
   color: #666;
   margin-bottom: 24px;

@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
 import type { FormEvent } from "react";
 import "../Styles/ProfilePage.css";
+import { API_ENDPOINTS } from "../utils/api";
+import { toast } from "react-toastify";
 
-const API_URL = "http://localhost:8080/api/users/me";
-const SERVICES_API_URL = "http://localhost:8080/api/services";
 const TOKEN_STORAGE_KEY = "jwt_token";
 
 const SERVICE_CATEGORY_OPTIONS = [
@@ -166,7 +166,6 @@ function ProfilePage() {
   const [isSaving, setIsSaving] = useState(false);
   const [serviceDescription, setServiceDescription] =
     useState("");
-  const [serviceError, setServiceError] = useState("");
   const [serviceMessage, setServiceMessage] = useState("");
   const [serviceTitle, setServiceTitle] = useState("");
   const [serviceCategory, setServiceCategory] = useState("");
@@ -192,14 +191,14 @@ function ProfilePage() {
 
     async function loadProfile() {
       try {
-        const response = await fetch(API_URL, {
+        const response = await fetch(API_ENDPOINTS.user.profile, {
           headers: {
             Authorization: `Bearer ${authToken}`
           }
         });
 
         if (!response.ok) {
-          throw new Error("Could not load your profile.");
+          toast.error("Could not load your profile.");
         }
 
         const data = (await response.json()) as ApiUserProfile;
@@ -212,7 +211,7 @@ function ProfilePage() {
         }
       } catch {
         if (isMounted) {
-          setError("Could not load your profile.");
+          toast.error("Could not load your profile.");
         }
       } finally {
         if (isMounted) {
@@ -236,7 +235,7 @@ function ProfilePage() {
     const nextBio = bioDraft.trim();
 
     if (!authToken) {
-      setError("Log in to save your profile.");
+      toast.error("Log in to save your profile.");
       return;
     }
 
@@ -245,7 +244,7 @@ function ProfilePage() {
     setBioMessage("");
 
     try {
-      const response = await fetch(API_URL, {
+      const response = await fetch(API_ENDPOINTS.user.profile, {
         method: "PATCH",
         headers: {
           Authorization: `Bearer ${authToken}`,
@@ -255,7 +254,7 @@ function ProfilePage() {
       });
 
       if (!response.ok) {
-        throw new Error("Could not save your bio.");
+        toast.error("Could not save your bio.");
       }
 
       const data = (await response.json()) as ApiUserProfile;
@@ -266,7 +265,7 @@ function ProfilePage() {
       setIsEditingBio(false);
       setBioMessage("Bio saved.");
     } catch {
-      setError("Could not save your bio.");
+      toast.error("Could not save your bio.");
     } finally {
       setIsSaving(false);
     }
@@ -278,11 +277,11 @@ function ProfilePage() {
     event.preventDefault();
 
     if (!authToken) {
-      setServiceError("Log in to create a listing.");
+      toast.error("Log in to create a listing.");
       return;
     }
 
-    setServiceError("");
+    toast.error("");
     setServiceMessage("");
 
     try {
@@ -298,7 +297,7 @@ function ProfilePage() {
       let priceMax = 0;
 
       if (!serviceCategory) {
-        setServiceError("Choose a category.");
+        toast.error("Choose a category.");
         return;
       }
 
@@ -307,12 +306,12 @@ function ProfilePage() {
         priceMax = priceMin;
 
         if (!priceText) {
-          setServiceError("Enter a price.");
+          toast.error("Enter a price.");
           return;
         }
 
         if (!Number.isFinite(priceMin)) {
-          setServiceError("Enter a valid price.");
+          toast.error("Enter a valid price.");
           return;
         }
       } else {
@@ -320,23 +319,23 @@ function ProfilePage() {
         priceMax = Number(maxPriceText);
 
         if (!minPriceText || !maxPriceText) {
-          setServiceError("Enter both a minimum and maximum price.");
+          toast.error("Enter both a minimum and maximum price.");
           return;
         }
 
         if (!Number.isFinite(priceMin) || !Number.isFinite(priceMax)) {
-          setServiceError("Enter valid prices.");
+          toast.error("Enter valid prices.");
           return;
         }
 
         if (priceMax < priceMin) {
-          setServiceError("Price max must be greater than or equal to price min.");
+          toast.error("Price max must be greater than or equal to price min.");
           return;
         }
       }
 
       if (!locationText) {
-        setServiceError("Enter a location.");
+        toast.error("Enter a location.");
         return;
       }
 
@@ -353,7 +352,7 @@ function ProfilePage() {
 
       setIsCreatingService(true);
 
-      const response = await fetch(SERVICES_API_URL, {
+      const response = await fetch(API_ENDPOINTS.services.services, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${authToken}`,
@@ -363,7 +362,7 @@ function ProfilePage() {
       });
 
       if (!response.ok) {
-        throw new Error("Could not create listing.");
+        toast.error("Could not create listing.");
       }
 
       const data = (await response.json()) as ApiServiceListing;
@@ -389,7 +388,7 @@ function ProfilePage() {
       setServiceMessage("Listing created.");
       setIsServiceFormOpen(false);
     } catch {
-      setServiceError("Could not create listing.");
+      toast.error("Could not create listing.");
     } finally {
       setIsCreatingService(false);
     }
@@ -406,7 +405,6 @@ function ProfilePage() {
     setServicePriceUnit("");
     setServiceLocation("");
     setServiceTags("");
-    setServiceError("");
     setIsServiceFormOpen(false);
   }
 
@@ -477,11 +475,7 @@ function ProfilePage() {
         {(bioMessage || error) && (
           <p
             role="status"
-            style={{
-              marginTop: "10px",
-              color: error ? "#9b1c31" : "#0d473f",
-              fontWeight: 700
-            }}>
+            className={`bio-status ${error ? "form-error" : "form-success"}`}>
             {error || bioMessage}
           </p>
         )}
@@ -489,11 +483,7 @@ function ProfilePage() {
           <form
             aria-label="Edit profile bio"
             onSubmit={handleBioSubmit}
-            style={{
-              display: "grid",
-              gap: "12px",
-              marginTop: "16px"
-            }}>
+            className="bio-form">
             <textarea
               aria-label="Profile bio"
               value={bioDraft}
@@ -504,55 +494,23 @@ function ProfilePage() {
               }}
               placeholder="Bio"
               rows={4}
-              style={{
-                boxSizing: "border-box",
-                width: "100%",
-                minHeight: "110px",
-                resize: "vertical",
-                border: "1px solid #cfcfcf",
-                borderRadius: "8px",
-                padding: "12px",
-                font: "inherit"
-              }}
+              className="bio-textarea"
             />
-            <div
-              style={{
-                display: "flex",
-                flexWrap: "wrap",
-                gap: "10px"
-              }}>
+            <div className="bio-form-actions">
               <button
                 type="submit"
                 disabled={isSaving}
-                style={{
-                  border: "none",
-                  borderRadius: "8px",
-                  padding: "12px 18px",
-                  background: "#003831",
-                  color: "#ffffff",
-                  font: "inherit",
-                  fontWeight: 700,
-                  cursor: "pointer"
-                }}>
+                className="bio-submit-button">
                 {isSaving ? "Saving..." : "Save Bio"}
               </button>
               <button
                 type="button"
+                className="secondary-button"
                 onClick={() => {
                   setBioDraft(profile.bio);
                   setBioMessage("");
                   setError("");
                   setIsEditingBio(false);
-                }}
-                style={{
-                  border: "1px solid #b8b8b8",
-                  borderRadius: "8px",
-                  padding: "12px 18px",
-                  background: "#ffffff",
-                  color: "#161616",
-                  font: "inherit",
-                  fontWeight: 700,
-                  cursor: "pointer"
                 }}>
                 Cancel
               </button>
@@ -574,7 +532,6 @@ function ProfilePage() {
               type="button"
               className="section-action-button"
               onClick={() => {
-                setServiceError("");
                 setServiceMessage("");
                 setServiceLocation("");
                 setIsServiceFormOpen(true);
@@ -602,7 +559,6 @@ function ProfilePage() {
                   value={serviceTitle}
                   onChange={(event) => {
                     setServiceTitle(event.target.value);
-                    setServiceError("");
                     setServiceMessage("");
                   }}
                   placeholder="Calculus tutoring"
@@ -616,7 +572,6 @@ function ProfilePage() {
                   value={serviceCategory}
                   onChange={(event) => {
                     setServiceCategory(event.target.value);
-                    setServiceError("");
                     setServiceMessage("");
                   }}
                   required>
@@ -648,7 +603,6 @@ function ProfilePage() {
                     aria-pressed={servicePricingType === "flat"}
                     onClick={() => {
                       setServicePricingType("flat");
-                      setServiceError("");
                       setServiceMessage("");
                     }}>
                     Flat Price
@@ -661,7 +615,6 @@ function ProfilePage() {
                     aria-pressed={servicePricingType === "range"}
                     onClick={() => {
                       setServicePricingType("range");
-                      setServiceError("");
                       setServiceMessage("");
                     }}>
                     Range
@@ -682,7 +635,6 @@ function ProfilePage() {
                       value={servicePrice}
                       onChange={(event) => {
                         setServicePrice(event.target.value);
-                        setServiceError("");
                         setServiceMessage("");
                       }}
                       min="0"
@@ -700,7 +652,6 @@ function ProfilePage() {
                         value={serviceMinPrice}
                         onChange={(event) => {
                           setServiceMinPrice(event.target.value);
-                          setServiceError("");
                           setServiceMessage("");
                         }}
                         min="0"
@@ -717,7 +668,6 @@ function ProfilePage() {
                         value={serviceMaxPrice}
                         onChange={(event) => {
                           setServiceMaxPrice(event.target.value);
-                          setServiceError("");
                           setServiceMessage("");
                         }}
                         min="0"
@@ -736,7 +686,6 @@ function ProfilePage() {
                     value={servicePriceUnit}
                     onChange={(event) => {
                       setServicePriceUnit(event.target.value);
-                      setServiceError("");
                       setServiceMessage("");
                     }}
                     placeholder="e.g. hour, session, meal"
@@ -751,7 +700,6 @@ function ProfilePage() {
                 value={serviceDescription}
                 onChange={(event) => {
                   setServiceDescription(event.target.value);
-                  setServiceError("");
                   setServiceMessage("");
                 }}
                 placeholder="Describe what you are offering"
@@ -766,7 +714,6 @@ function ProfilePage() {
                 value={serviceLocation}
                 onChange={(event) => {
                   setServiceLocation(event.target.value);
-                  setServiceError("");
                   setServiceMessage("");
                 }}
                 placeholder="Campus or address"
@@ -780,19 +727,12 @@ function ProfilePage() {
                 value={serviceTags}
                 onChange={(event) => {
                   setServiceTags(event.target.value);
-                  setServiceError("");
                   setServiceMessage("");
                 }}
                 placeholder="e.g. tutoring, math, calculus"
                 rows={2}
               />
             </label>
-
-            {serviceError && (
-              <p role="status" className="form-error">
-                {serviceError}
-              </p>
-            )}
 
             <div className="service-form-actions">
               <button

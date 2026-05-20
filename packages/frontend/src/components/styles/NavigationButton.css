@@ -1,29 +1,29 @@
 .icon-button {
   background-color: transparent;
-  color: #333;
+  color: var(--text-primary);
   border: none;
   cursor: pointer;
   font-size: large;
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: var(--gap-lg);
   padding: 10px 15px;
   width: 100%;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   text-decoration: none;
-  transition: all 0.2s ease;
+  transition: all var(--transition-normal);
 }
 
 .icon-button:hover {
-  color: #2a6a3b;
-  background-color: #f8f9fa;
+  color: var(--hover-green);
+  background-color: var(--bg-hover-light);
 }
 
 .icon-button.selected {
-  background-color: #e9f0eb;
-  color: #2a6a3b;
+  background-color: var(--bg-hover-success);
+  color: var(--hover-green);
   font-weight: bold;
-  border-left: 4px solid #2a6a3b;
+  border-left: 4px solid var(--hover-green);
   border-top-left-radius: 0;
   border-bottom-left-radius: 0;
 }

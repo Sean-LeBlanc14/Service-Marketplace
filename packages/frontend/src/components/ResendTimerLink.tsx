@@ -11,36 +11,29 @@ const LOCAL_STORAGE_KEY = "polyServices_auth_cooldown_end";
 export const ResendTimerLink: React.FC<
   ResendTimerLinkProps
 > = ({ onResend }) => {
-  const [timeLeft, setTimeLeft] = useState<number>(0);
-  const [isSending, setIsSending] = useState<boolean>(false);
-  const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const [timeLeft, setTimeLeft] = useState<number>(() => {
+    const savedEndTime = localStorage.getItem(LOCAL_STORAGE_KEY);
+    if (!savedEndTime) return 0;
 
-  useEffect(() => {
-    const savedEndTime = localStorage.getItem(
-      LOCAL_STORAGE_KEY
-    );
-    if (savedEndTime) {
-      const remaining = parseInt(savedEndTime, 10) - Date.now();
-      if (remaining > 0) {
-        setTimeLeft(remaining);
-        startCountdown(parseInt(savedEndTime, 10));
-      } else {
-        localStorage.removeItem(LOCAL_STORAGE_KEY);
-      }
+    const endTime = parseInt(savedEndTime, 10);
+    const remaining = endTime - Date.now();
+
+    if (remaining > 0) {
+      return remaining;
     }
-    return () => {
-      if (intervalRef.current)
-        clearInterval(intervalRef.current);
-    };
-  }, []);
+
+    localStorage.removeItem(LOCAL_STORAGE_KEY);
+    return 0;
+  });
+  const [isSending, setIsSending] = useState<boolean>(false);
+  const intervalRef = useRef<number | null>(null);
 
   const startCountdown = (endTime: number) => {
-    if (intervalRef.current) clearInterval(intervalRef.current);
-    intervalRef.current = setInterval(() => {
+    if (intervalRef.current !== null) window.clearInterval(intervalRef.current);
+    intervalRef.current = window.setInterval(() => {
       const remaining = endTime - Date.now();
       if (remaining <= 0) {
-        if (intervalRef.current)
-          clearInterval(intervalRef.current);
+        if (intervalRef.current !== null) window.clearInterval(intervalRef.current);
         setTimeLeft(0);
         localStorage.removeItem(LOCAL_STORAGE_KEY);
       } else {
@@ -48,6 +41,25 @@ export const ResendTimerLink: React.FC<
       }
     }, 1000);
   };
+
+  useEffect(() => {
+    const savedEndTime = localStorage.getItem(LOCAL_STORAGE_KEY);
+    if (savedEndTime) {
+      const endTime = parseInt(savedEndTime, 10);
+      const remaining = endTime - Date.now();
+      if (remaining > 0) {
+        startCountdown(endTime);
+      } else {
+        localStorage.removeItem(LOCAL_STORAGE_KEY);
+      }
+    }
+
+    return () => {
+      if (intervalRef.current !== null) window.clearInterval(intervalRef.current);
+    };
+  }, []);
+
+  
 
   const handleTriggerClick = async () => {
     if (timeLeft > 0 || isSending) return;
@@ -79,23 +91,26 @@ export const ResendTimerLink: React.FC<
 
   if (isSending) {
     return (
-      <span className="resend-button loading">Sending...</span>
+      <button type="button" className="resend-button loading" disabled>
+        Sending...
+      </button>
     );
   }
 
   if (timeLeft > 0) {
     return (
-      <span className="resend-button disabled-timer">
+      <button type="button" className="resend-button disabled-timer" disabled>
         Resend code in {formatTime(timeLeft)}
-      </span>
+      </button>
     );
   }
 
   return (
-    <span
+    <button
+      type="button"
       onClick={handleTriggerClick}
       className="resend-button">
       Resend code
-    </span>
+    </button>
   );
 };

@@ -5,6 +5,7 @@ import SubmitButton from "../components/SubmitButton";
 import { toast } from "react-toastify";
 import "../Styles/VerifyAccount.css";
 import { ResendTimerLink } from "../components/ResendTimerLink";
+import { API_ENDPOINTS } from "../utils/api";
 
 export default function VerifyAccount() {
   const [code, setCode] = useState<string[]>([
@@ -78,7 +79,7 @@ export default function VerifyAccount() {
 
     try {
       const response = await fetch(
-        "http://localhost:8080/api/verification/code",
+        API_ENDPOINTS.verification.verify,
         {
           method: "POST",
           headers: {
@@ -92,28 +93,24 @@ export default function VerifyAccount() {
       if (response.ok) {
         navigate("/homepage");
       } else if (response.status === 401) {
-        setError("Session expired. Please sign up again.");
+        toast.error("Session expired. Please sign up again.");
       } else if (response.status === 400) {
-        setError("Invalid verification code.");
+        toast.error("Invalid verification code.");
       } else {
-        setError("Something went wrong. Please try again.");
+        toast.error("Something went wrong. Please try again.");
       }
 
-      if (error) {
-        toast.error(error);
-      }
     } catch {
-      setError(
+      toast.warning(
         "Unable to connect to the server. Please try again."
       );
-      toast.warn(error);
     }
   };
 
   const handleResend = async () => {
     try {
       await fetch(
-        "http://localhost:8080/api/verification/resend",
+        API_ENDPOINTS.verification.resend,
         {
           method: "PUT",
           headers: {
@@ -124,8 +121,7 @@ export default function VerifyAccount() {
         }
       );
     } catch {
-      setError("Unable to resend code. Please try again.");
-      toast.warn(error);
+      toast.warning("Unable to resend code. Please try again.");
     }
   };
 

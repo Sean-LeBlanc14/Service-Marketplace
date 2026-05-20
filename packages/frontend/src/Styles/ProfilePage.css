@@ -4,7 +4,7 @@
   width: 100%;
   padding: 32px;
   background: #f6f3ee;
-  color: #161616;
+  color: var(--text-primary);
   text-align: left;
 }
 
@@ -19,7 +19,7 @@
 
 .profile-screen h1 {
   margin: 0;
-  color: #161616;
+  color: var(--text-primary);
   font-size: 40px;
   font-weight: 500;
   letter-spacing: 0;
@@ -51,6 +51,57 @@
 .empty-state {
   margin: 8px 0 0;
   color: #5b5b5b;
+}
+
+.bio-status {
+  margin-top: 10px;
+  font-weight: 700;
+}
+
+.bio-form {
+  display: grid;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.bio-textarea {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 110px;
+  resize: vertical;
+  border: 1px solid #cfcfcf;
+  border-radius: 8px;
+  padding: 12px;
+  font: inherit;
+}
+
+.bio-form-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.bio-form-actions button {
+  justify-self: start;
+  border: none;
+  border-radius: 8px;
+  padding: 12px 18px;
+  background: #003831;
+  color: #ffffff;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.bio-form-actions .secondary-button {
+  border: 1px solid #b8b8b8;
+  background: #ffffff;
+  color: #161616;
+}
+
+.bio-form-actions button:disabled {
+  cursor: not-allowed;
+  opacity: 0.65;
 }
 
 .services-section {

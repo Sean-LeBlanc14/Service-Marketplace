@@ -4,9 +4,8 @@ import { Link } from "react-router-dom";
 import ServiceCard from "../components/ServiceCard";
 import type { Service } from "../components/ServiceCard";
 import "../Styles/HomePage.css";
+import { API_ENDPOINTS } from "../utils/api";
 
-const SERVICES_API_URL = "http://localhost:8080/api/services";
-const USER_PROFILE_API_URL = "http://localhost:8080/api/users/me";
 const TOKEN_STORAGE_KEY = "jwt_token";
 
 interface ApiService {
@@ -158,7 +157,7 @@ function HomePage() {
           Authorization: `Bearer ${authToken}`
         };
 
-        const response = await fetch(SERVICES_API_URL, {
+        const response = await fetch(API_ENDPOINTS.services.services, {
           headers: authHeaders
         });
 
@@ -174,7 +173,7 @@ function HomePage() {
         let providerNameByServiceId = new Map<string, string>();
 
         try {
-          const profileResponse = await fetch(USER_PROFILE_API_URL, {
+          const profileResponse = await fetch(API_ENDPOINTS.user.profile, {
             headers: authHeaders
           });
 
@@ -223,14 +222,14 @@ function HomePage() {
   return (
     <div className="homepage-wrapper">
       <Container>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "16px", marginBottom: "24px" }}>
-          <h1 style={{ fontWeight: "700", fontSize: "1.8rem", margin: 0 }}>Campus Services</h1>
+        <div className="heading-container">
+          <h1 className="heading">Campus Services</h1>
         </div>
 
         {isLoading ? (
-          <p style={{ color: "#666", marginBottom: "24px" }}>Loading services...</p>
+          <p className="status-message">Loading services...</p>
         ) : (
-          <p style={{ color: error ? "#9b1c31" : "#666", marginBottom: "24px" }}>
+          <p className={error ? "status-message status-message-error" : "status-message"}>
             {error || `${services.length} services found`}
           </p>
         )}
@@ -238,13 +237,13 @@ function HomePage() {
         {!isLoading && requiresLogin && (
           <Link
             to="/login"
-            style={{ color: "#003831", fontWeight: 700 }}>
+            className="login-link">
             Log in
           </Link>
         )}
 
         {!isLoading && !error && services.length === 0 && (
-          <p style={{ color: "#666" }}>No services have been listed yet.</p>
+          <p className="status-message">No services have been listed yet.</p>
         )}
 
         <Row>

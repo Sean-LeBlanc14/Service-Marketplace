@@ -1,7 +1,7 @@
 .input-container {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: var(--gap-xs);
   width: 100%;
   text-align: left;
 }
@@ -9,16 +9,16 @@
 .input-label {
   font-size: 0.9rem;
   font-weight: 600;
-  color: #333;
+  color: var(--text-primary);
 }
 
 .input-input {
-  border-radius: 8px;
-  border: 1px solid #ccc;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-medium);
   padding: 12px;
   font-size: 1rem;
 }
 
 .input-input::placeholder {
-  color: #9b9b9b;
+  color: var(--text-placeholder);
 }

@@ -1,15 +1,16 @@
 .button {
   width: 100%;
   padding: 12px;
-  background-color: #003831;
-  color: white;
+  background-color: var(--primary-teal);
+  color: var(--bg-white);
   border: none;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   cursor: pointer;
   font-weight: bold;
+  transition: all var(--transition-normal);
 }
 
 .button:hover {
   scale: 1.01;
-  background-color: #023c35;
+  background-color: var(--primary-teal-hover);
 }

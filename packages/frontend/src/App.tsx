@@ -6,9 +6,10 @@ import LoginPage from "./pages/LoginPage";
 import VerifyAccount from "./pages/VerifyAccount";
 import ProfilePage from "./pages/ProfilePage";
 import Settings from "./pages/Settings";
-import ServiceRequests from "./pages/ServiceRequests";
 import { ToastContainer } from "react-toastify";
 import Inbox from "./pages/Inbox";
+import LandingPage from "./pages/LandingPage";
+import ServiceDashboard from "./pages/ServiceDashboard";
 
 function App() {
   return (
@@ -20,10 +21,11 @@ function App() {
           <Route path="settings" element={<Settings />} />
           <Route
             path="requests"
-            element={<ServiceRequests />}
+            element={<ServiceDashboard />}
           />
-          <Route path="/inbox" element={<Inbox />} />
+          <Route path="inbox" element={<Inbox />} />
         </Route>
+        <Route index element={<LandingPage/>}/>
         <Route path="verify" element={<VerifyAccount />} />
         <Route path="signup" element={<SignupPage />} />
         <Route path="login" element={<LoginPage />} />

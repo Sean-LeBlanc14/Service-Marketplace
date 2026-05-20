@@ -7,12 +7,12 @@ import SubmitButton from "../components/SubmitButton";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import "../Styles/LoginPage.css";
+import { API_ENDPOINTS } from "../utils/api";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
-  const [error, setError] = useState("");
   const navigate = useNavigate();
 
   const loginUser = async () => {
@@ -23,7 +23,7 @@ export default function LoginPage() {
 
     try {
       const response = await fetch(
-        "http://localhost:8080/api/auth/login",
+        API_ENDPOINTS.auth.login,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -31,9 +31,7 @@ export default function LoginPage() {
         }
       );
 
-      if (!response.ok) {
-        return;
-      }
+      if (response.ok) {
 
       const data = await response.json();
 
@@ -41,20 +39,15 @@ export default function LoginPage() {
         localStorage.setItem("jwt_token", data.token);
         navigate("/homepage");
       } else if (response.status === 401) {
-        setError("Invalid Email or Password!");
+        toast.error("Invalid Email or Password!");
       } else {
-        setError("Something went wrong, please try again.");
+        toast.error("Something went wrong, please try again.");
       }
 
-      if (error) {
-        toast.error(error);
-      }
-    } catch {
-      setError(
+      } catch {
+      toast.warning(
         "Unable to connect to the server, please try again."
       );
-      toast.warn(error);
-      
     }
   };
 

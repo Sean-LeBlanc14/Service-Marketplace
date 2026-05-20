@@ -8,6 +8,7 @@ import SubmitButton from "../components/SubmitButton";
 import DropDown from "../components/DropDown";
 import { toast } from "react-toastify";
 import "../Styles/SignupPage.css";
+import { API_ENDPOINTS } from "../utils/api";
 
 function SignupPage() {
   const [email, setEmail] = useState("");
@@ -36,7 +37,7 @@ function SignupPage() {
     }
     try {
       const response = await fetch(
-        "http://localhost:8080/api/auth/register",
+        API_ENDPOINTS.auth.signup,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -51,23 +52,19 @@ function SignupPage() {
           state: { email: data.email, token: data.token }
         });
       } else if (response.status === 409) {
-        setError("An account with this email already exists.");
+        toast.error("An account with this email already exists.");
       } else if (response.status === 400) {
-        setError(
+        toast.error(
           "Please enter a valid email and a password of at least 8 characters."
         );
       } else {
-        setError("Something went wrong. Please try again.");
+        toast.error("Something went wrong. Please try again.");
       }
 
-      if (error) {
-        toast.error(error);
-      }
     } catch {
-      setError(
+      toast.warning(
         "Unable to connect to the server. Please try again."
       );
-      toast.warn(error);
     }
   };
 

@@ -1,9 +1,10 @@
 .navbar {
   height: 70px;
   margin-top: 10px;
+  display: flex;
   justify-content: space-evenly;
   padding-bottom: 10px;
-  border-bottom: 1px solid #eee;
+  border-bottom: 1px solid var(--border-light);
 }
 
 .navbar-search {
@@ -17,7 +18,7 @@
   flex-direction: row;
   align-items: center;
   margin-right: 0 auto;
-  gap: 20px;
+  gap: var(--gap-xl);
   padding-right: 40px;
 }
 
@@ -25,16 +26,16 @@
   background: none;
   border: none;
   cursor: pointer;
-  color: #333;
+  color: var(--text-primary);
   display: flex;
   align-items: center;
-  transition: color 0.2s;
+  transition: color var(--transition-fast);
 }
 
 .notification-icon:hover {
   scale: 1.01;
-  color: #2a6a3b;
-  background-color: #f8f9fa;
+  color: var(--hover-green);
+  background-color: var(--bg-hover-light);
 }
 
 .calendar-icon {
@@ -43,12 +44,12 @@
   cursor: pointer;
   display: flex;
   align-items: center;
-  color: #333;
-  transition: color 0.2s;
+  color: var(--text-primary);
+  transition: color var(--transition-fast);
 }
 
 .calendar-icon:hover {
   scale: 1.01;
-  color: #2a6a3b;
-  background-color: #f8f9fa;
+  color: var(--hover-green);
+  background-color: var(--bg-hover-light);
 }

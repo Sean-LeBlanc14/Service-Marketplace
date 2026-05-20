@@ -1,7 +1,7 @@
 .input-container {
   display: flex;
   flex-direction: column;
-  gap: var(--gap-xs);
+  gap: 4px;
   width: 100%;
   text-align: left;
 }
@@ -13,12 +13,12 @@
 }
 
 .input-input {
-  border-radius: var(--radius-md);
-  border: 1px solid var(--border-medium);
+  border-radius: 8px;
+  border: 1px solid #ccc;
   padding: 12px;
   font-size: 1rem;
 }
 
 .input-input::placeholder {
-  color: var(--text-placeholder);
+  color: #9b9b9b;
 }

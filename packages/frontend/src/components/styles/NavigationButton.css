@@ -6,24 +6,24 @@
   font-size: large;
   display: flex;
   align-items: center;
-  gap: var(--gap-lg);
+  gap: 10px;
   padding: 10px 15px;
   width: 100%;
-  border-radius: var(--radius-md);
+  border-radius: 8px;
   text-decoration: none;
-  transition: all var(--transition-normal);
+  transition: all 0.2s ease;
 }
 
 .icon-button:hover {
-  color: var(--hover-green);
-  background-color: var(--bg-hover-light);
+  color: #2a6a3b;
+  background-color: #f8f9fa;
 }
 
 .icon-button.selected {
-  background-color: var(--bg-hover-success);
-  color: var(--hover-green);
+  background-color: #e9f0eb;
+  color: #2a6a3b;
   font-weight: bold;
-  border-left: 4px solid var(--hover-green);
+  border-left: 4px solid #2a6a3b;
   border-top-left-radius: 0;
   border-bottom-left-radius: 0;
 }

@@ -428,7 +428,7 @@ function ProfilePage() {
     );
   }
 
-  return (
+   return (
     <main className="profile-screen">
       <header className="profile-header">
         <div>
@@ -475,7 +475,7 @@ function ProfilePage() {
         {(bioMessage || error) && (
           <p
             role="status"
-            className={`bio-status ${error ? "form-error" : "form-success"}`}>
+            className={`status-message ${error ? "form-error" : "form-success"}`}>
             {error || bioMessage}
           </p>
         )}
@@ -500,7 +500,7 @@ function ProfilePage() {
               <button
                 type="submit"
                 disabled={isSaving}
-                className="bio-submit-button">
+                className="primary-button">
                 {isSaving ? "Saving..." : "Save Bio"}
               </button>
               <button

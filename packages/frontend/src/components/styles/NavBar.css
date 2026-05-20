@@ -4,7 +4,7 @@
   display: flex;
   justify-content: space-evenly;
   padding-bottom: 10px;
-  border-bottom: 1px solid var(--border-light);
+  border-bottom: 1px solid #eee;
 }
 
 .navbar-search {
@@ -18,7 +18,7 @@
   flex-direction: row;
   align-items: center;
   margin-right: 0 auto;
-  gap: var(--gap-xl);
+  gap: 20px;
   padding-right: 40px;
 }
 
@@ -29,13 +29,13 @@
   color: var(--text-primary);
   display: flex;
   align-items: center;
-  transition: color var(--transition-fast);
+  transition: color 0.2s;
 }
 
 .notification-icon:hover {
   scale: 1.01;
-  color: var(--hover-green);
-  background-color: var(--bg-hover-light);
+  color: #2a6a3b;
+  background-color: #f8f9fa;
 }
 
 .calendar-icon {
@@ -45,11 +45,11 @@
   display: flex;
   align-items: center;
   color: var(--text-primary);
-  transition: color var(--transition-fast);
+  transition: color 0.2s;
 }
 
 .calendar-icon:hover {
   scale: 1.01;
-  color: var(--hover-green);
-  background-color: var(--bg-hover-light);
+  color: #2a6a3b;
+  background-color: #f8f9fa;
 }

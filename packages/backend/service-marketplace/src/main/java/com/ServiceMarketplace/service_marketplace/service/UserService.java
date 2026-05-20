@@ -6,12 +6,9 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.InternalAuthenticationServiceException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.web.authentication.logout.SecurityContextLogoutHandler;
 import org.springframework.stereotype.Service;
 
 import com.ServiceMarketplace.service_marketplace.dto.AuthResponse;
@@ -23,9 +20,6 @@ import com.ServiceMarketplace.service_marketplace.dto.UserProfile;
 import com.ServiceMarketplace.service_marketplace.exception.EmailAlreadyExistsException;
 import com.ServiceMarketplace.service_marketplace.model.User;
 import com.ServiceMarketplace.service_marketplace.repository.UserRepository;
-
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 
 @Service
 public class UserService {
@@ -42,6 +36,7 @@ public class UserService {
     private final VerificationService verificationService;
 
     private final ServiceService serviceService;
+
 
     public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder, EmailService emailService, 
         VerificationService verificationService, AuthenticationManager authenticationManager, JwtService jwtService,
@@ -100,18 +95,6 @@ public class UserService {
 
         return new AuthResponse(user.getId(), user.getEmail(), jwtToken);
 
-    }
-
-    public String logoutUser(HttpServletRequest request, HttpServletResponse response){
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-
-        if (auth != null){
-            new SecurityContextLogoutHandler().logout(request, response, auth);
-        }
-
-        //No error handling needed, jwt filter processes request
-
-        return "Success";
     }
 
     public UserProfile getUserProfile(UserDetails userDetails){

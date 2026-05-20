@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import "./Styles/ResendTimer.css";
 
 interface ResendTimerLinkProps {
   onResend: () => Promise<void> | void;

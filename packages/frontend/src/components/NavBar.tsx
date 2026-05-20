@@ -26,7 +26,7 @@ export default function NavBar() {
       </div>
 
       <div className="navbar-buttons">
-        {/*Will function as a dropdown*/}
+        {/*TODO:  Modal Notification and calendar views*/}
         <button className="notification-icon">
           <FaBell size={25} />
         </button>

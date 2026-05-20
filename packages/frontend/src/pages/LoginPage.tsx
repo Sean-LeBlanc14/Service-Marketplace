@@ -57,7 +57,6 @@ export default function LoginPage() {
 
   return (
     <div className="login-container">
-      {/*Login Box*/}
       <FormContainer
         header={"Welcome to Poly Services"}
         textField={
@@ -85,7 +84,6 @@ export default function LoginPage() {
         link=<NavLink to="/signup" label="Create Account" />
       />
 
-      {/* Description Section*/}
       <InformationSection />
     </div>
   );

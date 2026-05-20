@@ -8,7 +8,7 @@ import { FaGear } from "react-icons/fa6";
 import { FiMessageCircle } from "react-icons/fi";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
-import "./Styles/Sidebar.css";
+import "./Styles/SideBar.css";
 import { useState } from "react";
 import NavigationButton from "./NavigationButton";
 

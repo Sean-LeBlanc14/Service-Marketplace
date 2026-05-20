@@ -10,7 +10,6 @@ export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
-  const [ error, setError ] = useState("");
   const navigate = useNavigate();
 
   const loginUser = async () => {
@@ -29,22 +28,18 @@ export default function LoginPage() {
         }
       );
 
-      if (response.ok) {
-        const data = await response.json();
-
-        //Using local storage to store token for now, possibly use cookies in the future
-        localStorage.setItem("jwt_token", data.token);
-
-        navigate("/");
-      }else if (response.status === 404){
-        setError("User not found");
-      }else if (response.status === 401){
-        setError("Invalid Email or Password!");
-      }else{
-        setError("Something went wrong, please try again.")
+      if (!response.ok) {
+        return;
       }
-    } catch{
-      setError("Unable to connect to the server, please try again.")
+
+      const data = await response.json();
+
+      //Using local storage to store token for now, possibly use cookies in the future
+      localStorage.setItem("jwt_token", data.token);
+
+      navigate("/");
+    } catch {
+      // Toast error handling is provided by the shared UI layer.
     }
   };
 

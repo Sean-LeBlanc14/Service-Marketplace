@@ -14,14 +14,11 @@ function SignupPage() {
   const [lastName, setLastName] = useState("");
   const [major, setMajor] = useState("");
   type CampusType = "San Luis Obispo" | "Maritime Academy" | "";
-  const campusOptions = ["San Luis Obispo", "Maritime Academy"];
   const [campus, setCampus] = useState<CampusType>("");
-  const [error, setError] = useState("");
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError("");
 
     const user = {
       email: email,
@@ -41,23 +38,15 @@ function SignupPage() {
         }
       );
 
-      if (response.ok) {
-        const data = await response.json();
-        localStorage.setItem("jwt_token", data.token);
-        navigate("/verify", { state: { email: data.email, token: data.token } });
-      } else if (response.status === 409) {
-        setError("An account with this email already exists.");
-      } else if (response.status === 400) {
-        setError(
-          "Please enter a valid email and a password of at least 8 characters."
-        );
-      } else {
-        setError("Something went wrong. Please try again.");
+      if (!response.ok) {
+        return;
       }
+
+      const data = await response.json();
+      localStorage.setItem("jwt_token", data.token);
+      navigate("/verify", { state: { email: data.email, token: data.token } });
     } catch {
-      setError(
-        "Unable to connect to the server. Please try again."
-      );
+      // Toast error handling is provided by the shared UI layer.
     }
   };
 
@@ -82,6 +71,7 @@ function SignupPage() {
                 <InputField
                   value={firstName}
                   label="First Name"
+                  type="text"
                   placeHolder="Your Name"
                   onChange={(e) => setFirstName(e.target.value)}
                 />
@@ -91,6 +81,7 @@ function SignupPage() {
                 <InputField
                   value={lastName}
                   label="Last Name"
+                  type="text"
                   placeHolder="Your Last Name"
                   onChange={(e) => setLastName(e.target.value)}
                 />
@@ -107,6 +98,7 @@ function SignupPage() {
                 <InputField
                   value={major}
                   label="Major"
+                  type="text"
                   placeHolder="Your Major"
                   onChange={(e) => setMajor(e.target.value)}
                 />
@@ -128,7 +120,7 @@ function SignupPage() {
                       </option>
                     </>
                   }
-                  onChange={(e) => setCampus(e.target.value)}
+                  onChange={(e) => setCampus(e.target.value as CampusType)}
                 />
               </div>
             </div>

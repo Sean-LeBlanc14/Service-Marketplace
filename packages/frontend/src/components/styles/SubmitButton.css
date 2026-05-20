@@ -12,5 +12,5 @@
 
 .button:hover {
   transform: scale(1.01);
-  background-color: var(--cp-green);
+  opacity: 0.92;
 }

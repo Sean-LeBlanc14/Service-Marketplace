@@ -71,7 +71,7 @@
   border-radius: 8px;
   margin-top: 18px;
   padding: 12px 18px;
-  background: #003831;
+  background: var(--cp-green);
   color: #ffffff;
   font: inherit;
   font-weight: 700;
@@ -105,7 +105,7 @@
   border: none;
   border-radius: 8px;
   padding: 12px 18px;
-  background: #003831;
+  background: var(--cp-green);
   color: #ffffff;
   font: inherit;
   font-weight: 700;
@@ -245,7 +245,7 @@
 }
 
 .pricing-toggle button.active {
-  background: #003831;
+  background: var(--cp-green);
   color: #ffffff;
 }
 
@@ -268,7 +268,7 @@
   border: none;
   border-radius: 8px;
   padding: 12px 18px;
-  background: #003831;
+  background: var(--cp-green);
   color: #ffffff;
   font: inherit;
   font-weight: 700;

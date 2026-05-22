@@ -1,3 +1,5 @@
+import "./Styles/FormContainer.css";
+
 interface FormContainerProps {
   header: string;
   textField: React.ReactNode;
@@ -12,29 +14,9 @@ export default function FormContainer({
   link
 }: FormContainerProps) {
   return (
-    <section
-      style={{
-        display: "grid",
-        placeItems: "center",
-        gap: "1rem",
-        paddingTop: "55px",
-        paddingBottom: "30px"
-      }}>
-      <h1>{header}</h1>
-      <div
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          gap: "1rem",
-          padding: "2rem",
-          borderRadius: "12px",
-          border: "1px solid #e0e0e0",
-          boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
-          backgroundColor: "white",
-          width: "90%",
-          maxWidth: "500px",
-          margin: "20px auto"
-        }}>
+    <section className="form-section">
+      <h1 className="form-heading">{header}</h1>
+      <div className="form-field">
         {textField}
 
         {submitButton}

@@ -1,0 +1,29 @@
+.icon-button {
+  background-color: transparent;
+  color: var(--text-primary);
+  border: none;
+  cursor: pointer;
+  font-size: large;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 15px;
+  width: 100%;
+  border-radius: 8px;
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+.icon-button:hover {
+  color: #2a6a3b;
+  background-color: #f8f9fa;
+}
+
+.icon-button.selected {
+  background-color: #e9f0eb;
+  color: #2a6a3b;
+  font-weight: bold;
+  border-left: 4px solid #2a6a3b;
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+}

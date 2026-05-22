@@ -1,0 +1,6 @@
+.login-container {
+  display: flex;
+  flex-direction: column;
+  background-color: #fff;
+  min-height: 100vh;
+}

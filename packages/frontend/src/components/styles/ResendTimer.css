@@ -1,0 +1,16 @@
+.resend-button {
+  cursor: pointer;
+}
+
+.resend-button.disabled-timer {
+  color: #888888;
+  cursor: not-allowed;
+  text-decoration: none;
+  pointer-events: none;
+}
+
+.resend-button.loading {
+  color: #666666;
+  cursor: wait;
+  pointer-events: none;
+}

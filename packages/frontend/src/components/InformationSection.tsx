@@ -1,54 +1,25 @@
 import { Col } from "react-bootstrap";
+import "./Styles/InformationSection.css";
 
 export default function InformationSection() {
   return (
-    <div
-      style={{
-        flex: "1",
-        backgroundColor: "#f4f4f4",
-        padding: "60px"
-      }}>
-      <section
-        style={{
-          flex: "1",
-          display: "flex",
-          flexDirection: "row",
-          justifyContent: "center",
-          alignItems: "center",
-          gap: "40px",
-          maxWidth: "1000px",
-          margin: "0 auto"
-        }}>
-        <Col
-          style={{
-            flex: 1,
-            textAlign: "center",
-            maxWidth: "300px"
-          }}>
+    <div className="info-container">
+      <section className="info-section">
+        <Col className="info-column">
           <h2> Verified Students </h2>
           <p>
             Exclusive to the Mustang community. Secure,
             student-only access.
           </p>
         </Col>
-        <Col
-          style={{
-            flex: 1,
-            textAlign: "center",
-            maxWidth: "300px"
-          }}>
+        <Col className="info-column">
           <h2> On Campus </h2>
           <p>
             Your campus, your marketplace. Find specialized help
             and gear just a short walk from your dorm.
           </p>
         </Col>
-        <Col
-          style={{
-            flex: 1,
-            textAlign: "center",
-            maxWidth: "300px"
-          }}>
+        <Col className="info-column">
           <h2> n Categories </h2>
           <p>
             Built for student life. Specialized categories

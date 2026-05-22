@@ -20,5 +20,4 @@ public class UserProfile {
     private String bio;
 
     private List<ServiceDto> services;
-
 }

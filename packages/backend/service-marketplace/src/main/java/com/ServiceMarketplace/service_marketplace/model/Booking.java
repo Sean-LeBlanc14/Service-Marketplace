@@ -22,6 +22,7 @@ public class Booking {
     @Indexed
     private String customerId;
 
+    @Indexed
     private String providerId;
 
     private String serviceTitle;

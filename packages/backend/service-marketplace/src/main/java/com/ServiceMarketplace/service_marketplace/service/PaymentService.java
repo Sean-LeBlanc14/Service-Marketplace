@@ -5,7 +5,10 @@ import java.math.BigDecimal;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import com.ServiceMarketplace.service_marketplace.exception.InvalidWebhookSignatureException;
+import com.ServiceMarketplace.service_marketplace.exception.PaymentProcessingException;
 import com.ServiceMarketplace.service_marketplace.exception.ResourceNotFoundException;
+import com.ServiceMarketplace.service_marketplace.exception.WebhookProcessingException;
 import com.ServiceMarketplace.service_marketplace.model.Booking;
 import com.ServiceMarketplace.service_marketplace.model.BookingStatus;
 import com.ServiceMarketplace.service_marketplace.repository.BookingRepository;
@@ -50,7 +53,7 @@ public class PaymentService {
             PaymentIntent paymentIntent = PaymentIntent.create(params);
             return paymentIntent.getClientSecret();
         } catch (StripeException e) {
-            throw new RuntimeException("Failed to create payment intent: " + e.getMessage());
+            throw new PaymentProcessingException("Failed to create payment intent: " + e.getMessage());
         }
     }
 
@@ -60,12 +63,12 @@ public class PaymentService {
         try {
             event = Webhook.constructEvent(payload, sigHeader, STRIPE_WEBHOOK_SECRET);
         } catch (Exception e) {
-            throw new RuntimeException("Invalid webhook signature: " + e.getMessage());
+            throw new InvalidWebhookSignatureException("Invalid webhook signature: " + e.getMessage());
         }
 
         StripeObject stripeObject = event.getDataObjectDeserializer()
             .getObject()
-            .orElseThrow(() -> new RuntimeException("Failed to deserialize webhook event"));
+            .orElseThrow(() -> new WebhookProcessingException("Failed to deserialize webhook event"));
 
         switch (event.getType()) {
             case "payment_intent.succeeded" -> {

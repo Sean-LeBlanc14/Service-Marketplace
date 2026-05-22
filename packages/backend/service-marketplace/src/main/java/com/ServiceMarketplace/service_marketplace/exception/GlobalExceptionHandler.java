@@ -76,5 +76,20 @@ public class GlobalExceptionHandler {
     public ResponseEntity<String> handleStripeException(com.stripe.exception.StripeException e) {
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
     }
+
+    @ExceptionHandler(PaymentProcessingException.class)
+    public ResponseEntity<String> handlePaymentProcessingException(PaymentProcessingException e) {
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
+    }
+
+    @ExceptionHandler(InvalidWebhookSignatureException.class)
+    public ResponseEntity<String> handleInvalidWebhookSignature(InvalidWebhookSignatureException e) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+    }
+
+    @ExceptionHandler(WebhookProcessingException.class)
+    public ResponseEntity<String> handleWebhookProcessing(WebhookProcessingException e) {
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
+    }
     
 }

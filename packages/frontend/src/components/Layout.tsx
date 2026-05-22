@@ -1,12 +1,19 @@
 import { Outlet } from "react-router-dom";
+import SideBar from "./SideBar";
+import NavBar from "./NavBar";
+import "./Styles/Layout.css";
 
 function Layout() {
   return (
-    <div>
-      {/*<h1>Service Marketplace</h1>*/}
-      <main>
-        <Outlet />
-      </main>
+    <div className="app-wrapper-alt">
+      <SideBar />
+
+      <div className="content-area">
+        <NavBar />
+        <main className="main-content">
+          <Outlet />
+        </main>
+      </div>
     </div>
   );
 }

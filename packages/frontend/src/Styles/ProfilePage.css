@@ -1,4 +1,4 @@
-.profile-screen {
+﻿.profile-screen {
   box-sizing: border-box;
   min-height: 100svh;
   width: 100%;
@@ -71,11 +71,54 @@
   border-radius: 8px;
   margin-top: 18px;
   padding: 12px 18px;
-  background: #003831;
+  background: var(--cp-green);
   color: #ffffff;
   font: inherit;
   font-weight: 700;
   cursor: pointer;
+}
+
+.bio-form {
+  display: grid;
+  gap: 14px;
+  margin-top: 16px;
+}
+
+.bio-textarea {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 110px;
+  resize: vertical;
+  border: 1px solid #cfcfcf;
+  border-radius: 8px;
+  padding: 12px;
+  font: inherit;
+}
+
+.bio-form-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.primary-button {
+  border: none;
+  border-radius: 8px;
+  padding: 12px 18px;
+  background: var(--cp-green);
+  color: #ffffff;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.primary-button:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.status-message {
+  margin-top: 10px;
 }
 
 .service-form {
@@ -202,7 +245,7 @@
 }
 
 .pricing-toggle button.active {
-  background: #003831;
+  background: var(--cp-green);
   color: #ffffff;
 }
 
@@ -225,7 +268,7 @@
   border: none;
   border-radius: 8px;
   padding: 12px 18px;
-  background: #003831;
+  background: var(--cp-green);
   color: #ffffff;
   font: inherit;
   font-weight: 700;

@@ -5,6 +5,9 @@ import InformationSection from "../components/InformationSection";
 import FormContainer from "../components/FormContainer";
 import SubmitButton from "../components/SubmitButton";
 import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
+import "../Styles/LoginPage.css";
+import { API_ENDPOINTS } from "../utils/api";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -20,7 +23,7 @@ export default function LoginPage() {
 
     try {
       const response = await fetch(
-        "http://localhost:8080/api/auth/login",
+        API_ENDPOINTS.auth.login,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -28,38 +31,37 @@ export default function LoginPage() {
         }
       );
 
-      if (!response.ok) {
-        return;
-      }
+      if (response.ok) {
 
       const data = await response.json();
 
-      //Using local storage to store token for now, possibly use cookies in the future
-      localStorage.setItem("jwt_token", data.token);
+        //Using local storage to store token for now, possibly use cookies in the future
+        localStorage.setItem("jwt_token", data.token);
+        navigate("/homepage");
+      } else if (response.status === 401) {
+        toast.error("Invalid Email or Password!");
+      } else {
+        toast.error("Something went wrong, please try again.");
+      }
 
-      navigate("/");
-    } catch {
-      // Toast error handling is provided by the shared UI layer.
+      } catch {
+      toast.warning(
+        "Unable to connect to the server, please try again."
+      );
     }
   };
 
   return (
-    <div
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        backgroundColor: "white"
-      }}>
-      {/*Login Box*/}
+    <div className="login-container">
       <FormContainer
-        header={"Welcome to Service Market Place"}
+        header={"Welcome to Poly Services"}
         textField={
           <>
             <InputField
               value={email}
               label="Email"
               type="email"
-              placeHolder="johndoe@calpoly.edu"
+              placeHolder="mustang@calpoly.edu"
               onChange={(e) => setEmail(e.target.value)}
             />{" "}
             <InputField
@@ -78,7 +80,6 @@ export default function LoginPage() {
         link=<NavLink to="/signup" label="Create Account" />
       />
 
-      {/* Description Section*/}
       <InformationSection />
     </div>
   );

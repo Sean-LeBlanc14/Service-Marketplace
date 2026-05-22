@@ -37,6 +37,7 @@ public class UserService {
 
     private final ServiceService serviceService;
 
+
     public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder, EmailService emailService, 
         VerificationService verificationService, AuthenticationManager authenticationManager, JwtService jwtService,
         ServiceService serviceService) {

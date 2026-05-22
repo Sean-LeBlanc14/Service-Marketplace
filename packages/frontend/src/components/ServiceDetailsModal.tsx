@@ -1,4 +1,4 @@
-import "./ServiceDetailsModal.css";
+import "./Styles/ServiceDetailsModal.css";
 
 interface ServiceDetailsProvider {
   name: string;

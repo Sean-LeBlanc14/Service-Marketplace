@@ -6,6 +6,9 @@ import InformationSection from "../components/InformationSection";
 import FormContainer from "../components/FormContainer";
 import SubmitButton from "../components/SubmitButton";
 import DropDown from "../components/DropDown";
+import { toast } from "react-toastify";
+import "../Styles/SignupPage.css";
+import { API_ENDPOINTS } from "../utils/api";
 
 function SignupPage() {
   const [email, setEmail] = useState("");
@@ -28,9 +31,13 @@ function SignupPage() {
       campus: campus,
       major: major
     };
+    if (!email.endsWith("@calpoly.edu")) {
+      toast.error("Please use a valid Cal Poly email");
+      return;
+    }
     try {
       const response = await fetch(
-        "http://localhost:8080/api/auth/register",
+        API_ENDPOINTS.auth.signup,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -38,36 +45,37 @@ function SignupPage() {
         }
       );
 
-      if (!response.ok) {
-        return;
+      if (response.ok) {
+        const data = await response.json();
+        localStorage.setItem("jwt_token", data.token);
+        navigate("/verify", {
+          state: { email: data.email, token: data.token }
+        });
+      } else if (response.status === 409) {
+        toast.error("An account with this email already exists.");
+      } else if (response.status === 400) {
+        toast.error(
+          "Please enter a valid email and a password of at least 8 characters."
+        );
+      } else {
+        toast.error("Something went wrong. Please try again.");
       }
 
-      const data = await response.json();
-      localStorage.setItem("jwt_token", data.token);
-      navigate("/verify", { state: { email: data.email, token: data.token } });
     } catch {
-      // Toast error handling is provided by the shared UI layer.
+      toast.warning(
+        "Unable to connect to the server. Please try again."
+      );
     }
   };
 
   return (
-    <div
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        backgroundColor: "white"
-      }}>
+    <div className="signup-container">
       <FormContainer
-        header={"Welcome to Service Market Place"}
+        header={"Welcome to Poly Services"}
         textField={
           <>
-            <div
-              style={{
-                display: "flex",
-                flexDirection: "row",
-                gap: "10px"
-              }}>
-              <div style={{ flex: 1 }}>
+            <div className="field-container">
+              <div className="user-field">
                 <InputField
                   value={firstName}
                   label="First Name"
@@ -77,7 +85,7 @@ function SignupPage() {
                 />
               </div>
 
-              <div style={{ flex: 1 }}>
+              <div className="user-field">
                 <InputField
                   value={lastName}
                   label="Last Name"
@@ -88,13 +96,8 @@ function SignupPage() {
               </div>
             </div>
 
-            <div
-              style={{
-                display: "flex",
-                flexDirection: "row",
-                gap: "10px"
-              }}>
-              <div style={{ flex: 1 }}>
+            <div className="field-container">
+              <div className="user-field">
                 <InputField
                   value={major}
                   label="Major"
@@ -104,7 +107,7 @@ function SignupPage() {
                 />
               </div>
 
-              <div style={{ flex: 1 }}>
+              <div className="user-field">
                 <DropDown
                   label="Campus"
                   value={campus}

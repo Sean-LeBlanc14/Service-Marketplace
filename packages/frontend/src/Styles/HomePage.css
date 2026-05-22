@@ -1,0 +1,41 @@
+.homepage-wrapper {
+  background-color: #f4f4f4;
+  min-height: 100vh;
+  padding: 40px 0;
+}
+
+.heading-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.heading {
+  font-weight: 700;
+  font-size: 1.8rem;
+  margin: 0;
+}
+
+.status-message {
+  color: #666;
+  margin-bottom: 24px;
+}
+
+.status-message-error {
+  color: #9b1c31;
+}
+
+.login-link {
+  color: #003831;
+  font-weight: 700;
+}
+
+.subheading {
+  color: #666;
+  margin-bottom: 24px;
+}
+
+.service-padding {
+  margin-bottom: 24px;
+}

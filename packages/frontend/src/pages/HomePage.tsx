@@ -126,6 +126,8 @@ function normalizeService(
       reviews: 0
     },
     price: formatPrice(service),
+    priceMin: Number(service.priceMin ?? 0),
+    priceMax: Number(service.priceMax ?? 0),
     description: cleanText(service.description),
     location: cleanText(service.location) || "Campus",
     tags

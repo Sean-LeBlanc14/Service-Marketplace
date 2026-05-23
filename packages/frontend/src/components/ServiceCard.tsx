@@ -16,6 +16,8 @@ interface Service {
   category: string;
   provider: Provider;
   price: string;
+  priceMin: number;
+  priceMax: number;
   description: string;
   location: string;
   tags: string[];

@@ -1,21 +1,16 @@
 import { useState } from "react";
 import { Badge, Card } from "react-bootstrap";
-import ServiceDetailsModal from "./ServiceDetailsModal";
+import ServiceDetailsModal, { type ServiceDetails } from "./ServiceDetailsModal";
 import "./styles/ServiceCard.css";
-
-interface Provider {
-  name: string;
-  avatar: string;
-  rating: number;
-  reviews: number;
-}
 
 interface Service {
   id: string;
   title: string;
   category: string;
-  provider: Provider;
-  price: string;
+  userId: string;
+  priceMin: number;
+  priceMax: number;
+  priceUnit: string | null;
   description: string;
   location: string;
   tags: string[];
@@ -25,9 +20,36 @@ interface ServiceCardProps {
   service: Service;
 }
 
+function formatPrice(
+  priceMin: number,
+  priceMax: number,
+  priceUnit: string | null
+): string {
+  const unit = priceUnit ? `/${priceUnit}` : "";
+
+  if (priceMin === priceMax) {
+    return `$${priceMin}${unit}`;
+  }
+
+  return `$${priceMin}-$${priceMax}${unit}`;
+}
+
 function ServiceCard({ service }: ServiceCardProps) {
-  const hasRating = service.provider.rating > 0;
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
+  const price = formatPrice(service.priceMin, service.priceMax, service.priceUnit);
+  const modalService: ServiceDetails = {
+    title: service.title,
+    provider: {
+      name: "Service creator",
+      avatar: "SC",
+      rating: 0,
+      reviews: 0
+    },
+    price,
+    description: service.description,
+    location: service.location,
+    tags: service.tags
+  };
 
   return (
     <>
@@ -37,30 +59,14 @@ function ServiceCard({ service }: ServiceCardProps) {
             <Card.Title className="service-card-title">
               {service.title}
             </Card.Title>
-            <span className="service-provider-avatar">
-              {service.provider.avatar}
-            </span>
+            <Badge bg="none" className="service-tag">
+              {service.category}
+            </Badge>
           </div>
 
           <Card.Text className="service-description">
             {service.description}
           </Card.Text>
-
-          <div className="service-provider-info">
-            {service.provider.name}
-            {hasRating && (
-              <>
-                {" "}
-                <span className="rating-star">{"\u2605"}</span>{" "}
-                <span className="rating-value">
-                  {service.provider.rating}
-                </span>{" "}
-                <span className="review-count">
-                  ({service.provider.reviews})
-                </span>
-              </>
-            )}
-          </div>
 
           <div className="service-location">
             <span aria-hidden="true" className="service-location-icon">
@@ -84,7 +90,7 @@ function ServiceCard({ service }: ServiceCardProps) {
           </div>
 
           <div className="service-card-footer">
-            <span className="service-price">{service.price}</span>
+            <span className="service-price">{price}</span>
             <button
               type="button"
               onClick={() => setIsDetailsOpen(true)}
@@ -97,7 +103,7 @@ function ServiceCard({ service }: ServiceCardProps) {
 
       {isDetailsOpen && (
         <ServiceDetailsModal
-          service={service}
+          service={modalService}
           onClose={() => setIsDetailsOpen(false)}
         />
       )}

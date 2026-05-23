@@ -1,259 +1,162 @@
-import { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
 import { Container, Row, Col } from "react-bootstrap";
-import { Link } from "react-router-dom";
+import { Search, LayoutGrid, BookOpen, Monitor, Home, DollarSign, Utensils, Camera } from "lucide-react";
 import ServiceCard from "../components/ServiceCard";
 import type { Service } from "../components/ServiceCard";
 import "../Styles/HomePage.css";
-import { API_ENDPOINTS } from "../utils/api";
 
-const TOKEN_STORAGE_KEY = "jwt_token";
-
-interface ApiService {
-  id?: string;
-  title?: string;
-  category?: string;
-  userId?: string;
-  providerName?: string;
-  priceMin?: number | string | null;
-  priceMax?: number | string | null;
-  priceUnit?: string | null;
-  description?: string;
-  location?: string;
-  tags?: string[] | null;
-}
-
-interface ApiUserProfile {
-  email?: string;
-  firstName?: string;
-  lastName?: string;
-  services?: ApiService[];
-}
-
-function cleanText(value?: string | null) {
-  return value?.trim() ?? "";
-}
-
-function cleanPriceValue(value?: number | string | null) {
-  return value == null ? "" : String(value).trim();
-}
-
-function formatCurrency(value: string) {
-  const amount = Number(value);
-
-  if (!Number.isFinite(amount)) {
-    return "$0";
-  }
-
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-    maximumFractionDigits: Number.isInteger(amount) ? 0 : 2
-  }).format(amount);
-}
-
-function formatPrice(service: ApiService) {
-  const minPrice = cleanPriceValue(service.priceMin);
-  const maxPrice = cleanPriceValue(service.priceMax);
-  const displayPrice =
-    minPrice && maxPrice && minPrice !== maxPrice
-      ? `${formatCurrency(minPrice)} - ${formatCurrency(maxPrice)}`
-      : formatCurrency(minPrice || maxPrice);
-  const priceUnit = cleanText(service.priceUnit).replace(/^\/+/, "");
-
-  return priceUnit ? `${displayPrice}/${priceUnit}` : displayPrice;
-}
-
-function getInitials(name: string) {
-  const words = name
-    .split(/\s+/)
-    .map((word) => word.replace(/[^a-zA-Z0-9]/g, ""))
-    .filter(Boolean);
-
-  if (words.length === 0) {
-    return "SC";
-  }
-
-  return words
-    .slice(0, 2)
-    .map((word) => word[0])
-    .join("")
-    .toUpperCase();
-}
-
-function getProfileDisplayName(profile: ApiUserProfile) {
-  return `${cleanText(profile.firstName)} ${cleanText(profile.lastName)}`.trim()
-    || cleanText(profile.email);
-}
-
-function getProfileServiceNames(profile: ApiUserProfile) {
-  const displayName = getProfileDisplayName(profile);
-  const services = Array.isArray(profile.services) ? profile.services : [];
-
-  if (!displayName) {
-    return new Map<string, string>();
-  }
-
-  return new Map(
-    services
-      .map((service) => cleanText(service.id))
-      .filter(Boolean)
-      .map((serviceId) => [serviceId, displayName])
-  );
-}
-
-function normalizeService(
-  service: ApiService,
-  index: number,
-  providerNameByServiceId = new Map<string, string>()
-): Service {
-  const tags = Array.isArray(service.tags)
-    ? service.tags.map(cleanText).filter(Boolean)
-    : [];
-  const id = cleanText(service.id) || `service-${index}`;
-  const providerName =
-    cleanText(service.providerName) ||
-    providerNameByServiceId.get(id) ||
-    "Service creator";
-
-  return {
-    id,
-    title: cleanText(service.title) || "Untitled service",
-    category: cleanText(service.category) || "general",
-    provider: {
-      name: providerName,
-      avatar: getInitials(providerName),
-      rating: 0,
-      reviews: 0
-    },
-    price: formatPrice(service),
-    description: cleanText(service.description),
-    location: cleanText(service.location) || "Campus",
-    tags
-  };
-}
+const CATEGORIES = [
+  { value: "All", label: "All Services", icon: LayoutGrid },
+  { value: "tutoring", label: "Tutoring", icon: BookOpen },
+  { value: "tech", label: "Tech Help", icon: Monitor },
+  { value: "housing", label: "Housing", icon: Home },
+  { value: "finance", label: "Finance", icon: DollarSign },
+  { value: "food and catering", label: "Food & Catering", icon: Utensils },
+  { value: "photography", label: "Photography", icon: Camera },
+];
 
 function HomePage() {
   const [services, setServices] = useState<Service[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("All");
+  const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
-    let isMounted = true;
+    const fetchServices = async () => {
+      const token = localStorage.getItem("jwt_token");
 
-    async function loadServices() {
+      if (!token) {
+        setError("You must be logged in to view services.");
+        setLoading(false);
+        return;
+      }
+
       try {
-        const authToken = localStorage.getItem(TOKEN_STORAGE_KEY);
-
-        if (!authToken) {
-          if (isMounted) {
-            setServices([]);
-            setError("Log in to view campus services.");
-          }
-
-          return;
-        }
-
-        const authHeaders = {
-          Authorization: `Bearer ${authToken}`
-        };
-
-        const response = await fetch(API_ENDPOINTS.services.services, {
-          headers: authHeaders
+        const response = await fetch("http://localhost:8080/api/services", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         });
 
-        if (response.status === 401 || response.status === 403) {
-          throw new Error("Log in to view campus services.");
+        if (response.ok) {
+          const data = await response.json();
+          setServices(data);
+        } else if (response.status === 401) {
+          setError("Session expired. Please log in again.");
+        } else {
+          setError("Failed to load services. Please try again.");
         }
-
-        if (!response.ok) {
-          throw new Error("Could not load services.");
-        }
-
-        const data = (await response.json()) as ApiService[];
-        let providerNameByServiceId = new Map<string, string>();
-
-        try {
-          const profileResponse = await fetch(API_ENDPOINTS.user.profile, {
-            headers: authHeaders
-          });
-
-          if (profileResponse.ok) {
-            const profile = (await profileResponse.json()) as ApiUserProfile;
-            providerNameByServiceId = getProfileServiceNames(profile);
-          }
-        } catch {
-          providerNameByServiceId = new Map<string, string>();
-        }
-
-        const nextServices = Array.isArray(data)
-          ? data.map((service, index) =>
-              normalizeService(service, index, providerNameByServiceId)
-            )
-          : [];
-
-        if (isMounted) {
-          setServices(nextServices);
-          setError("");
-        }
-      } catch (loadError) {
-        if (isMounted) {
-          setError(
-            loadError instanceof Error
-              ? loadError.message
-              : "Could not load services."
-          );
-        }
+      } catch {
+        setError("Unable to connect to the server.");
       } finally {
-        if (isMounted) {
-          setIsLoading(false);
-        }
+        setLoading(false);
       }
-    }
-
-    void loadServices();
-
-    return () => {
-      isMounted = false;
     };
+
+    fetchServices();
   }, []);
 
-  const requiresLogin = error === "Log in to view campus services.";
+  const filteredServices = services.filter((service) => {
+    const matchesCategory =
+      selectedCategory === "All" || service.category === selectedCategory;
+
+    const query = searchQuery.toLowerCase();
+    const matchesSearch =
+      query === "" ||
+      service.title.toLowerCase().includes(query) ||
+      service.description.toLowerCase().includes(query) ||
+      service.tags.some((tag) => tag.toLowerCase().includes(query));
+
+    return matchesCategory && matchesSearch;
+  });
 
   return (
     <div className="homepage-wrapper">
       <Container>
-        <div className="heading-container">
-          <h1 className="heading">Campus Services</h1>
+        {/* Header */}
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "24px" }}>
+          <h1 style={{ fontWeight: "700", fontSize: "1.8rem", margin: 0 }}>Campus Services</h1>
+          <button
+            style={{
+              backgroundColor: "#003831",
+              color: "white",
+              border: "none",
+              borderRadius: "8px",
+              padding: "10px 20px",
+              fontWeight: "600",
+              cursor: "pointer",
+              fontSize: "0.95rem",
+            }}>
+            List Your Service
+          </button>
         </div>
 
-        {isLoading ? (
-          <p className="status-message">Loading services...</p>
-        ) : (
-          <p className={error ? "status-message status-message-error" : "status-message"}>
-            {error || `${services.length} services found`}
-          </p>
-        )}
+        {/* ST-07: Search bar */}
+        <div style={{ position: "relative", marginBottom: "16px" }}>
+          <Search
+            size={16}
+            style={{
+              position: "absolute",
+              left: "14px",
+              top: "50%",
+              transform: "translateY(-50%)",
+              color: "#888",
+            }}
+          />
+          <input
+            type="text"
+            placeholder="Search services..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            style={{
+              width: "100%",
+              padding: "10px 16px 10px 38px",
+              borderRadius: "8px",
+              border: "1px solid #ccc",
+              fontSize: "0.95rem",
+            }}
+          />
+        </div>
 
-        {!isLoading && requiresLogin && (
-          <Link
-            to="/login"
-            className="login-link">
-            Log in
-          </Link>
-        )}
+        {/* ST-06: Category filter */}
+        <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", marginBottom: "16px" }}>
+          {CATEGORIES.map(({ value, label, icon: Icon }) => {
+            const isSelected = selectedCategory === value;
+            return (
+              <button
+                key={value}
+                onClick={() => setSelectedCategory(value)}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "6px",
+                  padding: "6px 16px",
+                  borderRadius: "20px",
+                  border: "1px solid #003831",
+                  backgroundColor: isSelected ? "#003831" : "white",
+                  color: isSelected ? "white" : "#003831",
+                  fontWeight: "500",
+                  cursor: "pointer",
+                  fontSize: "0.85rem",
+                }}>
+                <Icon size={14} />
+                {label}
+              </button>
+            );
+          })}
+        </div>
 
-        {!isLoading && !error && services.length === 0 && (
-          <p className="status-message">No services have been listed yet.</p>
-        )}
+        <p style={{ color: "#666", marginBottom: "24px" }}>
+          {filteredServices.length} services found
+        </p>
+
+        {loading && <p>Loading services...</p>}
+        {error && <p style={{ color: "red" }}>{error}</p>}
 
         <Row>
-          {services.map((service) => (
-            <Col
-              key={service.id}
-              xs={12}
-              md={6}
-              lg={4}
-              className="service-padding">
+          {filteredServices.map((service) => (
+            <Col key={service.id} xs={12} md={6} lg={4} style={{ marginBottom: "24px" }}>
               <ServiceCard service={service} />
             </Col>
           ))}

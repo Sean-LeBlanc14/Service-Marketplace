@@ -1,9 +1,19 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Container, Row, Col } from "react-bootstrap";
-import { Search, LayoutGrid, BookOpen, Monitor, Home, DollarSign, Utensils, Camera } from "lucide-react";
+import {
+  Search,
+  LayoutGrid,
+  BookOpen,
+  Monitor,
+  Home,
+  DollarSign,
+  Utensils,
+  Camera
+} from "lucide-react";
 import ServiceCard from "../components/ServiceCard";
 import type { Service } from "../components/ServiceCard";
 import "../Styles/HomePage.css";
+import { API_ENDPOINTS } from "../utils/api";
 
 const CATEGORIES = [
   { value: "All", label: "All Services", icon: LayoutGrid },
@@ -12,8 +22,143 @@ const CATEGORIES = [
   { value: "housing", label: "Housing", icon: Home },
   { value: "finance", label: "Finance", icon: DollarSign },
   { value: "food and catering", label: "Food & Catering", icon: Utensils },
-  { value: "photography", label: "Photography", icon: Camera },
+  { value: "photography", label: "Photography", icon: Camera }
 ];
+
+const TOKEN_STORAGE_KEY = "jwt_token";
+
+interface ApiService {
+  id?: string;
+  title?: string;
+  category?: string;
+  userId?: string;
+  providerName?: string;
+  priceMin?: number | string | null;
+  priceMax?: number | string | null;
+  priceUnit?: string | null;
+  description?: string;
+  location?: string;
+  tags?: string[] | null;
+}
+
+interface ApiUserProfile {
+  email?: string;
+  firstName?: string;
+  lastName?: string;
+  services?: ApiService[];
+}
+
+function cleanText(value?: string | null) {
+  return value?.trim() ?? "";
+}
+
+function cleanPriceValue(value?: number | string | null) {
+  return value == null ? "" : String(value).trim();
+}
+
+function formatCurrency(value: string) {
+  const amount = Number(value);
+
+  if (!Number.isFinite(amount)) {
+    return "$0";
+  }
+
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+    maximumFractionDigits: Number.isInteger(amount) ? 0 : 2
+  }).format(amount);
+}
+
+function formatPrice(service: ApiService) {
+  const minPrice = cleanPriceValue(service.priceMin);
+  const maxPrice = cleanPriceValue(service.priceMax);
+  const displayPrice =
+    minPrice && maxPrice && minPrice !== maxPrice
+      ? `${formatCurrency(minPrice)} - ${formatCurrency(maxPrice)}`
+      : formatCurrency(minPrice || maxPrice);
+  const priceUnit = cleanText(service.priceUnit).replace(/^\/+/, "");
+
+  return priceUnit ? `${displayPrice}/${priceUnit}` : displayPrice;
+}
+
+function getInitials(name: string) {
+  const words = name
+    .split(/\s+/)
+    .map((word) => word.replace(/[^a-zA-Z0-9]/g, ""))
+    .filter(Boolean);
+
+  if (words.length === 0) {
+    return "SC";
+  }
+
+  return words
+    .slice(0, 2)
+    .map((word) => word[0])
+    .join("")
+    .toUpperCase();
+}
+
+function getProfileDisplayName(profile: ApiUserProfile) {
+  return (
+    `${cleanText(profile.firstName)} ${cleanText(profile.lastName)}`.trim() ||
+    cleanText(profile.email)
+  );
+}
+
+function getProfileServiceNames(profile: ApiUserProfile) {
+  const displayName = getProfileDisplayName(profile);
+  const services = Array.isArray(profile.services) ? profile.services : [];
+
+  if (!displayName) {
+    return new Map<string, string>();
+  }
+
+  return new Map(
+    services
+      .map((service) => cleanText(service.id))
+      .filter(Boolean)
+      .map((serviceId) => [serviceId, displayName])
+  );
+}
+
+function normalizeService(
+  service: ApiService,
+  index: number,
+  providerNameByServiceId = new Map<string, string>()
+) {
+  const tags = Array.isArray(service.tags)
+    ? service.tags.map(cleanText).filter(Boolean)
+    : [];
+  const id = cleanText(service.id) || `service-${index}`;
+  const providerName =
+    cleanText(service.providerName) ||
+    providerNameByServiceId.get(id) ||
+    "Service creator";
+  const priceMin = Number(cleanPriceValue(service.priceMin) || 0);
+  const priceMax = Number(cleanPriceValue(service.priceMax) || priceMin);
+  const priceUnit = cleanText(service.priceUnit) || null;
+
+  return {
+    id,
+    title: cleanText(service.title) || "Untitled service",
+    category: cleanText(service.category) || "general",
+    userId: cleanText(service.userId),
+    provider: {
+      name: providerName,
+      avatar: getInitials(providerName),
+      rating: 0,
+      reviews: 0
+    },
+    price: formatPrice(service),
+    priceMin,
+    priceMax,
+    priceUnit,
+    description: cleanText(service.description),
+    location: cleanText(service.location) || "Campus",
+    tags
+  };
+}
 
 function HomePage() {
   const [services, setServices] = useState<Service[]>([]);
@@ -23,38 +168,79 @@ function HomePage() {
   const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
+    let isMounted = true;
+
     const fetchServices = async () => {
-      const token = localStorage.getItem("jwt_token");
+      const token = localStorage.getItem(TOKEN_STORAGE_KEY);
 
       if (!token) {
-        setError("You must be logged in to view services.");
-        setLoading(false);
+        if (isMounted) {
+          setServices([]);
+          setError("You must be logged in to view services.");
+          setLoading(false);
+        }
         return;
       }
 
+      const authHeaders = {
+        Authorization: `Bearer ${token}`
+      };
+
       try {
-        const response = await fetch("http://localhost:8080/api/services", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+        const response = await fetch(API_ENDPOINTS.services.services, {
+          headers: authHeaders
         });
 
         if (response.ok) {
-          const data = await response.json();
-          setServices(data);
-        } else if (response.status === 401) {
-          setError("Session expired. Please log in again.");
-        } else {
+          const data = (await response.json()) as ApiService[];
+          let providerNameByServiceId = new Map<string, string>();
+
+          try {
+            const profileResponse = await fetch(API_ENDPOINTS.user.profile, {
+              headers: authHeaders
+            });
+
+            if (profileResponse.ok) {
+              const profile = (await profileResponse.json()) as ApiUserProfile;
+              providerNameByServiceId = getProfileServiceNames(profile);
+            }
+          } catch {
+            providerNameByServiceId = new Map<string, string>();
+          }
+
+          const nextServices = Array.isArray(data)
+            ? data.map((service, index) =>
+                normalizeService(service, index, providerNameByServiceId)
+              )
+            : [];
+
+          if (isMounted) {
+            setServices(nextServices);
+            setError("");
+          }
+        } else if (response.status === 401 || response.status === 403) {
+          if (isMounted) {
+            setError("Session expired. Please log in again.");
+          }
+        } else if (isMounted) {
           setError("Failed to load services. Please try again.");
         }
       } catch {
-        setError("Unable to connect to the server.");
+        if (isMounted) {
+          setError("Unable to connect to the server.");
+        }
       } finally {
-        setLoading(false);
+        if (isMounted) {
+          setLoading(false);
+        }
       }
     };
 
-    fetchServices();
+    void fetchServices();
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   const filteredServices = services.filter((service) => {
@@ -75,8 +261,16 @@ function HomePage() {
     <div className="homepage-wrapper">
       <Container>
         {/* Header */}
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "24px" }}>
-          <h1 style={{ fontWeight: "700", fontSize: "1.8rem", margin: 0 }}>Campus Services</h1>
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            marginBottom: "24px"
+          }}>
+          <h1 style={{ fontWeight: "700", fontSize: "1.8rem", margin: 0 }}>
+            Campus Services
+          </h1>
           <button
             style={{
               backgroundColor: "#003831",
@@ -86,7 +280,7 @@ function HomePage() {
               padding: "10px 20px",
               fontWeight: "600",
               cursor: "pointer",
-              fontSize: "0.95rem",
+              fontSize: "0.95rem"
             }}>
             List Your Service
           </button>
@@ -101,26 +295,32 @@ function HomePage() {
               left: "14px",
               top: "50%",
               transform: "translateY(-50%)",
-              color: "#888",
+              color: "#888"
             }}
           />
           <input
             type="text"
             placeholder="Search services..."
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            onChange={(event) => setSearchQuery(event.target.value)}
             style={{
               width: "100%",
               padding: "10px 16px 10px 38px",
               borderRadius: "8px",
               border: "1px solid #ccc",
-              fontSize: "0.95rem",
+              fontSize: "0.95rem"
             }}
           />
         </div>
 
         {/* ST-06: Category filter */}
-        <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", marginBottom: "16px" }}>
+        <div
+          style={{
+            display: "flex",
+            gap: "8px",
+            flexWrap: "wrap",
+            marginBottom: "16px"
+          }}>
           {CATEGORIES.map(({ value, label, icon: Icon }) => {
             const isSelected = selectedCategory === value;
             return (
@@ -138,7 +338,7 @@ function HomePage() {
                   color: isSelected ? "white" : "#003831",
                   fontWeight: "500",
                   cursor: "pointer",
-                  fontSize: "0.85rem",
+                  fontSize: "0.85rem"
                 }}>
                 <Icon size={14} />
                 {label}
@@ -156,7 +356,12 @@ function HomePage() {
 
         <Row>
           {filteredServices.map((service) => (
-            <Col key={service.id} xs={12} md={6} lg={4} style={{ marginBottom: "24px" }}>
+            <Col
+              key={service.id}
+              xs={12}
+              md={6}
+              lg={4}
+              style={{ marginBottom: "24px" }}>
               <ServiceCard service={service} />
             </Col>
           ))}

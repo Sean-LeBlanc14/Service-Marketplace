@@ -38,14 +38,11 @@ function ServiceCard({ service }: ServiceCardProps) {
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
   const price = formatPrice(service.priceMin, service.priceMax, service.priceUnit);
   const modalService: ServiceDetails = {
+    id: service.id,
     title: service.title,
-    provider: {
-      name: "Service creator",
-      avatar: "SC",
-      rating: 0,
-      reviews: 0
-    },
     price,
+    priceMin: service.priceMin,
+    priceMax: service.priceMax,
     description: service.description,
     location: service.location,
     tags: service.tags

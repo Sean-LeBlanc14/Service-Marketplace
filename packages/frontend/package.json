@@ -10,6 +10,9 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@react-aria/ssr": "^3.9.0",
+    "@stripe/react-stripe-js": "^6.4.0",
+    "@stripe/stripe-js": "^9.6.0",
     "bootstrap": "^5.3.8",
     "lucide-react": "^1.16.0",
     "react": "^18.3.1",

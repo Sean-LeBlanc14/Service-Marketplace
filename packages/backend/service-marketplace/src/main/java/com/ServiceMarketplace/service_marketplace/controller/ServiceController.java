@@ -6,13 +6,17 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.ServiceMarketplace.service_marketplace.dto.CreateServiceRequest;
 import com.ServiceMarketplace.service_marketplace.dto.ServiceDto;
+import com.ServiceMarketplace.service_marketplace.dto.UpdateServiceRequest;
 import com.ServiceMarketplace.service_marketplace.service.ServiceService;
 
 import jakarta.validation.Valid;
@@ -41,5 +45,22 @@ public class ServiceController {
             @Valid @RequestBody CreateServiceRequest request) {
         ServiceDto service = serviceService.createService(request, userDetails);
         return ResponseEntity.status(HttpStatus.CREATED).body(service);
+    }
+
+    @PutMapping("/{serviceId}")
+    public ResponseEntity<ServiceDto> updateService(
+            @PathVariable String serviceId,
+            @AuthenticationPrincipal UserDetails userDetails,
+            @Valid @RequestBody UpdateServiceRequest request) {
+        ServiceDto service = serviceService.updateService(serviceId, request, userDetails);
+        return ResponseEntity.status(HttpStatus.OK).body(service);
+    }
+
+    @DeleteMapping("/{serviceId}")
+    public ResponseEntity<Void> deleteService(
+            @PathVariable String serviceId,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        serviceService.deleteService(serviceId, userDetails);
+        return ResponseEntity.noContent().build();
     }
 }

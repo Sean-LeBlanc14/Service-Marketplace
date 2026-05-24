@@ -1,21 +1,21 @@
-
-const API_ROUTE = import.meta.env.VITE_API_BASE_ROUTE
+const API_ROUTE = import.meta.env.VITE_API_BASE_ROUTE;
 
 export const API_ENDPOINTS = {
-    auth : {
-        login: `${API_ROUTE}/auth/login`,
-        signup: `${API_ROUTE}/auth/register`,
-        logout: `${API_ROUTE}/auth/logout`
-    },
-    verification: {
-        verify: `${API_ROUTE}/verification/code`,
-        resend: `${API_ROUTE}/verification/resend`
-    },
-    user : {
-        profile: `${API_ROUTE}/users/me`,
-
-    },
-    services : {
-        services: `${API_ROUTE}/services`
-    }
-}
+  auth: {
+    login: `${API_ROUTE}/auth/login`,
+    signup: `${API_ROUTE}/auth/register`,
+    logout: `${API_ROUTE}/auth/logout`
+  },
+  verification: {
+    verify: `${API_ROUTE}/verification/code`,
+    resend: `${API_ROUTE}/verification/resend`
+  },
+  user: {
+    profile: `${API_ROUTE}/users/me`
+  },
+  services: {
+    services: `${API_ROUTE}/services`,
+    service: (serviceId: string) =>
+      `${API_ROUTE}/services/${encodeURIComponent(serviceId)}`
+  }
+};

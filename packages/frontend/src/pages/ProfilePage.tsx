@@ -59,6 +59,13 @@ interface ApiUserProfile {
   services?: ApiServiceListing[];
 }
 
+interface ConnectStatus {
+  accountId: string | null;
+  chargesEnabled: boolean;
+  detailsSubmitted: boolean;
+  payoutsEnabled: boolean;
+}
+
 const emptyProfile: UserProfile = {
   email: "",
   firstName: "",
@@ -181,6 +188,8 @@ function ProfilePage() {
   const [servicePriceUnit, setServicePriceUnit] = useState("");
   const [serviceLocation, setServiceLocation] = useState("");
   const [serviceTags, setServiceTags] = useState("");
+  const [connectStatus, setConnectStatus] = useState<ConnectStatus | null>(null);
+  const [isConnecting, setIsConnecting] = useState(false);
 
   useEffect(() => {
     let isMounted = true;
@@ -204,10 +213,17 @@ function ProfilePage() {
         const data = (await response.json()) as ApiUserProfile;
         const nextProfile = normalizeProfile(data);
 
+        const connectResponse = await fetch(API_ENDPOINTS.payments.connectStatus, {
+          headers: { Authorization: `Bearer ${authToken}` }
+        });
+
         if (isMounted) {
           setProfile(nextProfile);
           setBioDraft(nextProfile.bio);
           setIsEditingBio(false);
+          if (connectResponse.ok) {
+            setConnectStatus((await connectResponse.json()) as ConnectStatus);
+          }
         }
       } catch {
         if (isMounted) {
@@ -408,6 +424,27 @@ function ProfilePage() {
     setIsServiceFormOpen(false);
   }
 
+  async function handleConnectStripe() {
+    if (!authToken) return;
+    setIsConnecting(true);
+    try {
+      const response = await fetch(API_ENDPOINTS.payments.connect, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${authToken}` }
+      });
+      if (!response.ok) {
+        toast.error("Could not start Stripe onboarding.");
+        return;
+      }
+      const data = (await response.json()) as { onboardingUrl: string };
+      window.location.href = data.onboardingUrl;
+    } catch {
+      toast.error("Could not start Stripe onboarding.");
+    } finally {
+      setIsConnecting(false);
+    }
+  }
+
   const displayName =
     `${profile.firstName} ${profile.lastName}`.trim() ||
     "Profile";
@@ -517,6 +554,43 @@ function ProfilePage() {
             </div>
           </form>
         ) : null}
+      </section>
+
+      <section
+        className="profile-section"
+        aria-label="Payments">
+        <div className="section-heading">
+          <div>
+            <h2>Payments</h2>
+            <p>Connect Stripe to receive payments for your services.</p>
+          </div>
+          {connectStatus && !connectStatus.chargesEnabled && (
+            <button
+              type="button"
+              className="section-action-button"
+              disabled={isConnecting}
+              onClick={() => void handleConnectStripe()}>
+              {isConnecting
+                ? "Redirecting..."
+                : connectStatus.accountId
+                ? "Continue Setup"
+                : "Connect Stripe"}
+            </button>
+          )}
+        </div>
+        {connectStatus?.chargesEnabled ? (
+          <p className="connect-status connect-status--active">
+            Stripe connected. Payments are active.
+          </p>
+        ) : connectStatus?.detailsSubmitted ? (
+          <p className="connect-status">
+            Stripe setup in progress. Payments will be enabled once verification is complete.
+          </p>
+        ) : (
+          <p className="empty-state">
+            Connect a Stripe account to receive payments from customers.
+          </p>
+        )}
       </section>
 
       <section

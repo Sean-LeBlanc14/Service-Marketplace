@@ -300,6 +300,16 @@
   color: #0d473f;
 }
 
+.connect-status {
+  margin: 8px 0 0;
+  color: #5b5b5b;
+}
+
+.connect-status--active {
+  color: #0d473f;
+  font-weight: 600;
+}
+
 .listing-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));

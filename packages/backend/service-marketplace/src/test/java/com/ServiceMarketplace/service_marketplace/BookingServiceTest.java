@@ -11,6 +11,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import static org.mockito.Mockito.verify;
@@ -20,6 +21,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 
 import com.ServiceMarketplace.service_marketplace.dto.CreateBookingRequest;
 import com.ServiceMarketplace.service_marketplace.dto.CreateBookingResponse;
+import com.ServiceMarketplace.service_marketplace.dto.PaymentIntentResult;
 import com.ServiceMarketplace.service_marketplace.exception.InvalidPriceException;
 import com.ServiceMarketplace.service_marketplace.exception.ResourceNotFoundException;
 import com.ServiceMarketplace.service_marketplace.model.Booking;
@@ -55,6 +57,7 @@ class BookingServiceTest {
 
     private Service mockService;
     private User mockCustomer;
+    private User mockProvider;
 
     @BeforeEach
     void setUp() {
@@ -70,6 +73,10 @@ class BookingServiceTest {
         mockCustomer.setId("customer-789");
         mockCustomer.setEmail("student@calpoly.edu");
 
+        mockProvider = new User();
+        mockProvider.setId("provider-456");
+        mockProvider.setStripeAccountId("acct_test_provider");
+
         when(userDetails.getUsername()).thenReturn("student@calpoly.edu");
     }
 
@@ -83,8 +90,9 @@ class BookingServiceTest {
 
         when(userRepository.findByEmail("student@calpoly.edu")).thenReturn(Optional.of(mockCustomer));
         when(serviceRepository.findById("service-123")).thenReturn(Optional.of(mockService));
-        when(paymentService.createPaymentIntent(any(), eq("service-123"), eq("customer-789")))
-            .thenReturn("pi_test_secret_123");
+        when(userRepository.findById("provider-456")).thenReturn(Optional.of(mockProvider));
+        when(paymentService.createPaymentIntent(any(), eq("service-123"), eq("customer-789"), eq("acct_test_provider")))
+            .thenReturn(new PaymentIntentResult("pi_test_secret_123", "pi_test_123"));
         when(bookingRepository.save(any(Booking.class))).thenAnswer(inv -> inv.getArgument(0));
 
         CreateBookingResponse result = bookingService.createBooking(request, userDetails);
@@ -98,6 +106,29 @@ class BookingServiceTest {
         assertThat(result.getBooking().getStatus()).isEqualTo(BookingStatus.PENDING_PAYMENT);
         assertThat(result.getClientSecret()).isEqualTo("pi_test_secret_123");
         verify(bookingRepository).save(any(Booking.class));
+    }
+
+    @Test
+    void createBooking_providerNotConnected_createsPaymentIntentWithNullAccountId() {
+        CreateBookingRequest request = new CreateBookingRequest(
+            "service-123",
+            new BigDecimal("50.00"),
+            Instant.now()
+        );
+
+        mockProvider.setStripeAccountId(null);
+
+        when(userRepository.findByEmail("student@calpoly.edu")).thenReturn(Optional.of(mockCustomer));
+        when(serviceRepository.findById("service-123")).thenReturn(Optional.of(mockService));
+        when(userRepository.findById("provider-456")).thenReturn(Optional.of(mockProvider));
+        when(paymentService.createPaymentIntent(any(), eq("service-123"), eq("customer-789"), isNull()))
+            .thenReturn(new PaymentIntentResult("pi_test_secret_456", "pi_test_456"));
+        when(bookingRepository.save(any(Booking.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        CreateBookingResponse result = bookingService.createBooking(request, userDetails);
+
+        assertThat(result.getClientSecret()).isEqualTo("pi_test_secret_456");
+        assertThat(result.getBooking().getStatus()).isEqualTo(BookingStatus.PENDING_PAYMENT);
     }
 
     @Test

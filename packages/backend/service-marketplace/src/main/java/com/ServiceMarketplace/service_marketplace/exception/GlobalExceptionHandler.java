@@ -91,5 +91,10 @@ public class GlobalExceptionHandler {
     public ResponseEntity<String> handleWebhookProcessing(WebhookProcessingException e) {
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
     }
-    
+
+    @ExceptionHandler(StripeConnectException.class)
+    public ResponseEntity<String> handleStripeConnect(StripeConnectException e) {
+        return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(e.getMessage());
+    }
+
 }

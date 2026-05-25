@@ -17,5 +17,9 @@ export const API_ENDPOINTS = {
     },
     services : {
         services: `${API_ROUTE}/services`
+    },
+    payments: {
+        connect: `${API_ROUTE}/payments/connect`,
+        connectStatus: `${API_ROUTE}/payments/connect/status`
     }
 }

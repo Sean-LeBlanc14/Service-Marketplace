@@ -7,10 +7,12 @@ import org.springframework.stereotype.Service;
 import com.ServiceMarketplace.service_marketplace.dto.BookingResponse;
 import com.ServiceMarketplace.service_marketplace.dto.CreateBookingRequest;
 import com.ServiceMarketplace.service_marketplace.dto.CreateBookingResponse;
+import com.ServiceMarketplace.service_marketplace.dto.PaymentIntentResult;
 import com.ServiceMarketplace.service_marketplace.exception.InvalidPriceException;
 import com.ServiceMarketplace.service_marketplace.exception.ResourceNotFoundException;
 import com.ServiceMarketplace.service_marketplace.model.Booking;
 import com.ServiceMarketplace.service_marketplace.model.BookingStatus;
+import com.ServiceMarketplace.service_marketplace.model.User;
 import com.ServiceMarketplace.service_marketplace.repository.BookingRepository;
 import com.ServiceMarketplace.service_marketplace.repository.ServiceRepository;
 import com.ServiceMarketplace.service_marketplace.repository.UserRepository;
@@ -45,10 +47,14 @@ public class BookingService {
             );
         }
 
-        String clientSecret = paymentService.createPaymentIntent(
+        User provider = userRepository.findById(service.getUserId()).orElse(null);
+        String providerStripeAccountId = (provider != null) ? provider.getStripeAccountId() : null;
+
+        PaymentIntentResult paymentIntentResult = paymentService.createPaymentIntent(
             request.getAgreedPrice(),
             request.getServiceId(),
-            customer.getId()
+            customer.getId(),
+            providerStripeAccountId
         );
 
         Booking booking = new Booking();
@@ -60,10 +66,11 @@ public class BookingService {
         booking.setPriceUnit(service.getPriceUnit());
         booking.setScheduledAt(request.getScheduledAt());
         booking.setStatus(BookingStatus.PENDING_PAYMENT);
+        booking.setStripePaymentIntentId(paymentIntentResult.getPaymentIntentId());
 
         Booking saved = bookingRepository.save(booking);
 
-        return new CreateBookingResponse(toBookingResponse(saved), clientSecret);
+        return new CreateBookingResponse(toBookingResponse(saved), paymentIntentResult.getClientSecret());
     }
 
     private BookingResponse toBookingResponse(Booking booking) {

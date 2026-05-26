@@ -2,17 +2,35 @@ name: CI Testing
 
 on:
   push:
-    branches: [main]
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
 
 jobs:
-  build:
+  frontend-tasks:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 20
+          cache: 'npm' 
       - run: npm ci
-      - run: npm run -w express-backend lint
-      - run: npm run -w react-frontend lint
-      - run: npm run -w react-frontend build
+      - run: npm run -w packages/frontend lint 
+      - run: npm run -w packages/frontend build
+      
+  backend-tasks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: 'maven'
+          cache-dependency-path: 'packages/backend/service-marketplace/pom.xml' 
+          
+      - name: Run Backend Tests
+        working-directory: packages/backend/service-marketplace
+        run: mvn clean test

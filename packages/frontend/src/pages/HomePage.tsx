@@ -7,6 +7,7 @@ import "../Styles/HomePage.css";
 import { API_ENDPOINTS } from "../utils/api";
 import { toast } from "react-toastify";
 import type { ApiUserProfile, ApiService } from "../utils/types";
+import { normalizePriceUnit } from "../utils/pricing";
 
 const TOKEN_STORAGE_KEY = "jwt_token";
 
@@ -39,7 +40,7 @@ function formatPrice(service: ApiService) {
     minPrice && maxPrice && minPrice !== maxPrice
       ? `${formatCurrency(minPrice)} - ${formatCurrency(maxPrice)}`
       : formatCurrency(minPrice || maxPrice);
-  const priceUnit = cleanText(service.priceUnit).replace(/^\/+/, "");
+  const priceUnit = normalizePriceUnit(service.priceUnit);
 
   return priceUnit ? `${displayPrice}/${priceUnit}` : displayPrice;
 }

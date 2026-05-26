@@ -11,7 +11,7 @@ import jakarta.validation.constraints.Size;
 import lombok.Data;
 
 @Data
-public class CreateServiceRequest {
+public class UpdateServiceRequest {
 
     public static final int MAX_TITLE_LENGTH = 80;
     public static final int MAX_DESCRIPTION_LENGTH = 1000;
@@ -50,5 +50,4 @@ public class CreateServiceRequest {
     public boolean isPriceRangeValid() {
         return priceMin == null || priceMax == null || priceMax.compareTo(priceMin) >= 0;
     }
-
 }

@@ -2,6 +2,7 @@ package com.ServiceMarketplace.service_marketplace;
 
 import com.ServiceMarketplace.service_marketplace.dto.CreateServiceRequest;
 import com.ServiceMarketplace.service_marketplace.dto.ServiceDto;
+import com.ServiceMarketplace.service_marketplace.dto.UpdateServiceRequest;
 import com.ServiceMarketplace.service_marketplace.model.Service;
 import com.ServiceMarketplace.service_marketplace.model.User;
 import com.ServiceMarketplace.service_marketplace.repository.ServiceRepository;
@@ -13,6 +14,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import java.math.BigDecimal;
@@ -127,7 +129,7 @@ public class ServiceServiceTest {
         request.setPriceUnit(" ");
         request.setDescription(" Help with derivatives ");
         request.setLocation(" Library ");
-        request.setTags(List.of(" math ", "", "calculus"));
+        request.setTags(List.of(" python ", "", "DATA SCIENCE", "algorithms"));
 
         User user = new User();
         user.setId("user123");
@@ -158,7 +160,97 @@ public class ServiceServiceTest {
         assertEquals("", savedService.getValue().getPriceUnit());
         assertEquals("Help with derivatives", savedService.getValue().getDescription());
         assertEquals("Library", savedService.getValue().getLocation());
-        assertEquals(List.of("math", "calculus"), savedService.getValue().getTags());
+        assertEquals(List.of("Python", "Data Science", "Algorithms"), savedService.getValue().getTags());
         assertEquals("user123", savedService.getValue().getUserId());
+    }
+
+    @Test
+    void updateService_updatesOwnedService() {
+        UpdateServiceRequest request = new UpdateServiceRequest();
+        request.setTitle(" Updated tutoring ");
+        request.setCategory("tech help");
+        request.setPriceMin(new BigDecimal("25.00"));
+        request.setPriceMax(new BigDecimal("60.00"));
+        request.setPriceUnit(" session ");
+        request.setDescription(" Updated description ");
+        request.setLocation(" Engineering building ");
+        request.setTags(List.of(" coding ", "", "debugging"));
+
+        Service existingService = createMockService("service123", "tutoring");
+
+        User user = new User();
+        user.setId("user123");
+        user.setEmail("student@example.com");
+        user.setFirstName("Avery");
+        user.setLastName("Chen");
+
+        UserDetails userDetails = mock(UserDetails.class);
+        when(userDetails.getUsername()).thenReturn("student@example.com");
+        when(userRepository.findByEmail("student@example.com")).thenReturn(Optional.of(user));
+        when(serviceRepository.findById("service123")).thenReturn(Optional.of(existingService));
+        when(serviceRepository.save(any(Service.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        ServiceDto result = serviceService.updateService("service123", request, userDetails);
+
+        ArgumentCaptor<Service> savedService = ArgumentCaptor.forClass(Service.class);
+        verify(serviceRepository).save(savedService.capture());
+
+        assertEquals("service123", result.getId());
+        assertEquals("Updated tutoring", savedService.getValue().getTitle());
+        assertEquals("tech help", savedService.getValue().getCategory());
+        assertEquals(new BigDecimal("25.00"), savedService.getValue().getPriceMin());
+        assertEquals(new BigDecimal("60.00"), savedService.getValue().getPriceMax());
+        assertEquals("session", savedService.getValue().getPriceUnit());
+        assertEquals("Updated description", savedService.getValue().getDescription());
+        assertEquals("Engineering building", savedService.getValue().getLocation());
+        assertEquals(List.of("Coding", "Debugging"), savedService.getValue().getTags());
+    }
+
+    @Test
+    void updateService_rejectsServiceOwnedByAnotherUser() {
+        UpdateServiceRequest request = new UpdateServiceRequest();
+        request.setTitle("Updated tutoring");
+        request.setCategory("tech help");
+        request.setPriceMin(new BigDecimal("25.00"));
+        request.setPriceMax(new BigDecimal("60.00"));
+        request.setDescription("Updated description");
+        request.setLocation("Engineering building");
+
+        Service existingService = createMockService("service123", "tutoring");
+        existingService.setUserId("other-user");
+
+        User user = new User();
+        user.setId("user123");
+        user.setEmail("student@example.com");
+
+        UserDetails userDetails = mock(UserDetails.class);
+        when(userDetails.getUsername()).thenReturn("student@example.com");
+        when(userRepository.findByEmail("student@example.com")).thenReturn(Optional.of(user));
+        when(serviceRepository.findById("service123")).thenReturn(Optional.of(existingService));
+
+        assertThrows(
+            AccessDeniedException.class,
+            () -> serviceService.updateService("service123", request, userDetails)
+        );
+
+        verify(serviceRepository, never()).save(any(Service.class));
+    }
+
+    @Test
+    void deleteService_deletesOwnedService() {
+        Service existingService = createMockService("service123", "tutoring");
+
+        User user = new User();
+        user.setId("user123");
+        user.setEmail("student@example.com");
+
+        UserDetails userDetails = mock(UserDetails.class);
+        when(userDetails.getUsername()).thenReturn("student@example.com");
+        when(userRepository.findByEmail("student@example.com")).thenReturn(Optional.of(user));
+        when(serviceRepository.findById("service123")).thenReturn(Optional.of(existingService));
+
+        serviceService.deleteService("service123", userDetails);
+
+        verify(serviceRepository).delete(existingService);
     }
 }

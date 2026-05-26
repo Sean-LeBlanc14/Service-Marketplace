@@ -205,7 +205,7 @@ function HomePage() {
     return () => {
       isMounted = false;
     };
-  }, []);
+  }, [navigate]);
 
   const requiresLogin = error === "Log in to view campus services.";
 

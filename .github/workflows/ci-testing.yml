@@ -18,7 +18,8 @@ jobs:
       - run: npm ci
       - run: npm run -w packages/frontend lint 
       - run: npm run -w packages/frontend build
-      
+  
+  # These tests work locally, we need to create "test" env variables so they pass in github
   backend-tasks:
     runs-on: ubuntu-latest
     steps:

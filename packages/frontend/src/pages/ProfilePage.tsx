@@ -269,7 +269,7 @@ function ProfilePage() {
     return () => {
       isMounted = false;
     };
-  }, [authToken]);
+  }, [authToken, navigate]);
 
   useEffect(() => {
     if (!servicePendingDeletion) {
@@ -496,7 +496,7 @@ function ProfilePage() {
       }
 
       const data = (await response.json()) as ApiService;
-      const [createdService] = normalizeServices([data]);
+      const [savedService] = normalizeServices([data]);
 
       if (savedService) {
         setProfile((currentProfile) => ({

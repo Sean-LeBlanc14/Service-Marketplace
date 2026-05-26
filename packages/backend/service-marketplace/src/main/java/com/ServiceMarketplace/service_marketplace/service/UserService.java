@@ -123,7 +123,7 @@ public class UserService {
 
     private UserProfile toUserProfile(User user) {
         return new UserProfile(user.getEmail(), user.getFirstName(), user.getLastName(), user.getMajor(),
-            user.getCampus(), clean(user.getBio()), getProfileServices(user.getId()));
+            user.getCampus(), clean(user.getBio()), user.getVerificationStatus(),getProfileServices(user.getId()));
     }
 
     private List<ServiceDto> getProfileServices(String userId) {

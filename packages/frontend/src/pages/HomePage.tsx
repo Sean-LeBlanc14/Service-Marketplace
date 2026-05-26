@@ -1,33 +1,14 @@
 import { useEffect, useState } from "react";
 import { Container, Row, Col } from "react-bootstrap";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import ServiceCard from "../components/ServiceCard";
 import type { Service } from "../components/ServiceCard";
 import "../Styles/HomePage.css";
 import { API_ENDPOINTS } from "../utils/api";
+import { toast } from "react-toastify";
+import type { ApiUserProfile, ApiService } from "../utils/types";
 
 const TOKEN_STORAGE_KEY = "jwt_token";
-
-interface ApiService {
-  id?: string;
-  title?: string;
-  category?: string;
-  userId?: string;
-  providerName?: string;
-  priceMin?: number | string | null;
-  priceMax?: number | string | null;
-  priceUnit?: string | null;
-  description?: string;
-  location?: string;
-  tags?: string[] | null;
-}
-
-interface ApiUserProfile {
-  email?: string;
-  firstName?: string;
-  lastName?: string;
-  services?: ApiService[];
-}
 
 function cleanText(value?: string | null) {
   return value?.trim() ?? "";
@@ -138,6 +119,7 @@ function HomePage() {
   const [services, setServices] = useState<Service[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
+  const navigate = useNavigate();
 
   useEffect(() => {
     let isMounted = true;
@@ -181,6 +163,11 @@ function HomePage() {
 
           if (profileResponse.ok) {
             const profile = (await profileResponse.json()) as ApiUserProfile;
+
+            if (!profile.verified){
+              toast.warning("Please verify your account before proceeding.");
+              navigate("/verify");
+            }
             providerNameByServiceId = getProfileServiceNames(profile);
           }
         } catch {

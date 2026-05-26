@@ -16,6 +16,7 @@ jobs:
           node-version: 20
           cache: 'npm' 
       - run: npm ci
+      - run: npm install @rollup/rollup-linux-x64-gnu
       - run: npm run -w packages/frontend lint 
       - run: npm run -w packages/frontend build
   

@@ -73,7 +73,7 @@ public class UserService {
 
         User saved = userRepository.save(user);
 
-        return new AuthResponse(saved.getId(), saved.getEmail(), jwtToken);
+        return new AuthResponse(saved.getId(), saved.getEmail(), jwtToken, saved.getRole());
     }
 
     public AuthResponse loginUser(LoginRequest request){
@@ -93,7 +93,7 @@ public class UserService {
 
         String jwtToken = jwtService.generateToken(request.getEmail());
 
-        return new AuthResponse(user.getId(), user.getEmail(), jwtToken);
+        return new AuthResponse(user.getId(), user.getEmail(), jwtToken, user.getRole());
 
     }
 

@@ -54,6 +54,8 @@ function SignupPage() {
       if (response.ok) {
         const data = await response.json();
         localStorage.setItem("jwt_token", data.token);
+        localStorage.setItem("user_role", data.role);
+        localStorage.setItem("user_id", data.id);
         navigate("/verify", {
           state: { email: data.email, token: data.token }
         });

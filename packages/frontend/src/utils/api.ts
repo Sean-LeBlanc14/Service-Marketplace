@@ -13,9 +13,20 @@ export const API_ENDPOINTS = {
   user: {
     profile: `${API_ROUTE}/users/me`
   },
+  users: {
+    all: `${API_ROUTE}/users`,
+    getById: (userId: string) =>
+      `${API_ROUTE}/users/${encodeURIComponent(userId)}`,
+    suspend: (userId: string) =>
+      `${API_ROUTE}/users/${encodeURIComponent(userId)}/suspend`,
+    unsuspend: (userId: string) =>
+      `${API_ROUTE}/users/${encodeURIComponent(userId)}/unsuspend`
+  },
   services: {
     services: `${API_ROUTE}/services`,
     service: (serviceId: string) =>
+      `${API_ROUTE}/services/${encodeURIComponent(serviceId)}`,
+    delete: (serviceId: string) =>
       `${API_ROUTE}/services/${encodeURIComponent(serviceId)}`
   },
   payments: {
@@ -24,5 +35,11 @@ export const API_ENDPOINTS = {
   },
   bookings: {
     create: `${API_ROUTE}/bookings`
+  },
+  reports: {
+    create: `${API_ROUTE}/reports`,
+    all: `${API_ROUTE}/reports`,
+    resolve: (reportId: string) =>
+      `${API_ROUTE}/reports/${encodeURIComponent(reportId)}/resolve`
   }
 };

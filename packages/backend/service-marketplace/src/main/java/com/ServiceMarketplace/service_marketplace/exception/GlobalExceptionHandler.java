@@ -2,6 +2,7 @@ package com.ServiceMarketplace.service_marketplace.exception;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -44,6 +45,11 @@ public class GlobalExceptionHandler {
     public ResponseEntity<String> handleJwtException(JwtException e) {
 
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(e.getMessage());
+    }
+
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<String> handleAccessDenied(AccessDeniedException e) {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(e.getMessage());
     }
 
     @ExceptionHandler(IncorrectResultSizeDataAccessException.class)
@@ -91,5 +97,10 @@ public class GlobalExceptionHandler {
     public ResponseEntity<String> handleWebhookProcessing(WebhookProcessingException e) {
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
     }
-    
+
+    @ExceptionHandler(StripeConnectException.class)
+    public ResponseEntity<String> handleStripeConnect(StripeConnectException e) {
+        return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(e.getMessage());
+    }
+
 }

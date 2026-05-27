@@ -1,14 +1,19 @@
 package com.ServiceMarketplace.service_marketplace.service;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
+import java.util.Locale;
 import java.util.stream.Collectors;
 
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 
 import com.ServiceMarketplace.service_marketplace.dto.CreateServiceRequest;
 import com.ServiceMarketplace.service_marketplace.dto.ServiceDto;
+import com.ServiceMarketplace.service_marketplace.dto.UpdateServiceRequest;
+import com.ServiceMarketplace.service_marketplace.exception.ResourceNotFoundException;
 import com.ServiceMarketplace.service_marketplace.model.Service;
 import com.ServiceMarketplace.service_marketplace.model.User;
 import com.ServiceMarketplace.service_marketplace.repository.ServiceRepository;
@@ -71,22 +76,86 @@ public class ServiceService {
     }
 
     public ServiceDto createService(CreateServiceRequest request, UserDetails userDetails) {
-        var user = userRepository.findByEmail(userDetails.getUsername())
-            .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+        var user = getCurrentUser(userDetails);
 
         Service service = new Service();
-        service.setTitle(clean(request.getTitle()));
-        service.setDescription(clean(request.getDescription()));
-        service.setPriceMin(request.getPriceMin());
-        service.setPriceMax(request.getPriceMax());
-        service.setPriceUnit(clean(request.getPriceUnit()));
-        service.setCategory(clean(request.getCategory()));
-        service.setLocation(clean(request.getLocation()));
-        service.setTags(normalizeTags(request.getTags()));
+        applyServiceFields(
+            service,
+            request.getTitle(),
+            request.getDescription(),
+            request.getPriceMin(),
+            request.getPriceMax(),
+            request.getPriceUnit(),
+            request.getCategory(),
+            request.getLocation(),
+            request.getTags()
+        );
         service.setUserId(user.getId());
         service.setCreatedAt(Instant.now());
 
         return toDto(serviceRepository.save(service), user);
+    }
+
+    public ServiceDto updateService(String serviceId, UpdateServiceRequest request, UserDetails userDetails) {
+        var user = getCurrentUser(userDetails);
+        var service = getOwnedService(serviceId, user);
+
+        applyServiceFields(
+            service,
+            request.getTitle(),
+            request.getDescription(),
+            request.getPriceMin(),
+            request.getPriceMax(),
+            request.getPriceUnit(),
+            request.getCategory(),
+            request.getLocation(),
+            request.getTags()
+        );
+
+        return toDto(serviceRepository.save(service), user);
+    }
+
+    public void deleteService(String serviceId, UserDetails userDetails) {
+        var user = getCurrentUser(userDetails);
+        var service = getOwnedService(serviceId, user);
+
+        serviceRepository.delete(service);
+    }
+
+    private void applyServiceFields(
+        Service service,
+        String title,
+        String description,
+        BigDecimal priceMin,
+        BigDecimal priceMax,
+        String priceUnit,
+        String category,
+        String location,
+        List<String> tags) {
+        service.setTitle(clean(title));
+        service.setDescription(clean(description));
+        service.setPriceMin(priceMin);
+        service.setPriceMax(priceMax);
+        service.setPriceUnit(clean(priceUnit));
+        service.setCategory(clean(category));
+        service.setLocation(clean(location));
+        service.setTags(normalizeTags(tags));
+    }
+
+    private User getCurrentUser(UserDetails userDetails) {
+        return userRepository.findByEmail(userDetails.getUsername())
+            .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+    }
+
+    private Service getOwnedService(String serviceId, User user) {
+        var service = serviceRepository.findById(clean(serviceId))
+            .orElseThrow(() -> new ResourceNotFoundException("Service", serviceId));
+
+        if (!clean(service.getUserId()).equals(user.getId())) {
+            throw new AccessDeniedException("You can only modify your own services.");
+        }
+
+        return service;
     }
 
     private List<String> normalizeTags(List<String> tags) {
@@ -95,9 +164,41 @@ public class ServiceService {
         }
 
         return tags.stream()
-            .map(this::clean)
+            .map(this::normalizeTag)
             .filter(tag -> !tag.isBlank())
             .collect(Collectors.toList());
+    }
+
+    private String normalizeTag(String tag) {
+        String normalizedTag = clean(tag).replaceAll("\\s+", " ");
+
+        if (normalizedTag.isBlank()) {
+            return "";
+        }
+
+        String lowerCaseTag = normalizedTag.toLowerCase(Locale.ROOT);
+        StringBuilder titleCaseTag = new StringBuilder(lowerCaseTag.length());
+        boolean capitalizeNext = true;
+
+        for (int i = 0; i < lowerCaseTag.length(); i++) {
+            char current = lowerCaseTag.charAt(i);
+
+            if (Character.isWhitespace(current)) {
+                titleCaseTag.append(current);
+                capitalizeNext = true;
+                continue;
+            }
+
+            if (capitalizeNext && Character.isLetter(current)) {
+                titleCaseTag.append(Character.toTitleCase(current));
+            } else {
+                titleCaseTag.append(current);
+            }
+
+            capitalizeNext = false;
+        }
+
+        return titleCaseTag.toString();
     }
 
     private String clean(String value) {

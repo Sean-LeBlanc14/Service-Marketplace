@@ -133,6 +133,14 @@
   background: #ffffff;
 }
 
+.service-form-header h3 {
+  margin: 0;
+  color: #161616;
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: 0;
+}
+
 .service-form-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -186,10 +194,6 @@
     calc(100% - 13px) 54%;
   background-repeat: no-repeat;
   background-size: 5px 5px;
-}
-
-.service-form select:invalid {
-  color: #757575;
 }
 
 .service-form select option {
@@ -300,6 +304,16 @@
   color: #0d473f;
 }
 
+.connect-status {
+  margin: 8px 0 0;
+  color: #5b5b5b;
+}
+
+.connect-status--active {
+  color: #0d473f;
+  font-weight: 600;
+}
+
 .listing-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
@@ -332,6 +346,38 @@
   font-size: 20px;
   font-weight: 800;
   letter-spacing: 0;
+}
+
+.listing-card-actions {
+  display: flex;
+  flex: 0 0 auto;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.listing-card-actions button {
+  min-height: 36px;
+  border: 1px solid #b8c2cc;
+  border-radius: 8px;
+  padding: 8px 12px;
+  background: #ffffff;
+  color: #25364a;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 800;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.listing-card-actions .danger-button {
+  border-color: #d8a9b2;
+  color: #9b1c31;
+}
+
+.listing-card-actions button:disabled {
+  cursor: not-allowed;
+  opacity: 0.65;
 }
 
 .listing-card p {
@@ -409,6 +455,75 @@
   line-height: 1;
 }
 
+.profile-modal-backdrop {
+  position: fixed;
+  z-index: 1000;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgba(12, 18, 24, 0.48);
+}
+
+.profile-confirm-modal {
+  box-sizing: border-box;
+  width: min(460px, 100%);
+  border: 1px solid #d8d0c4;
+  border-radius: 8px;
+  padding: 24px;
+  background: #ffffff;
+  color: #161616;
+  box-shadow: 0 24px 60px rgba(12, 18, 24, 0.24);
+}
+
+.profile-confirm-modal h2 {
+  margin: 0;
+  color: #161616;
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: 0;
+}
+
+.profile-confirm-modal p {
+  margin: 12px 0 0;
+  color: #4f625c;
+  line-height: 1.5;
+}
+
+.profile-confirm-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 22px;
+}
+
+.profile-confirm-actions button {
+  min-height: 42px;
+  border-radius: 8px;
+  padding: 10px 16px;
+  font: inherit;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.profile-confirm-danger {
+  border: none;
+  background: #9b1c31;
+  color: #ffffff;
+}
+
+.profile-confirm-cancel {
+  border: 1px solid #b8b8b8;
+  background: #ffffff;
+  color: #161616;
+}
+
+.profile-confirm-actions button:disabled {
+  cursor: not-allowed;
+  opacity: 0.65;
+}
+
 @media (max-width: 720px) {
   .profile-screen {
     padding: 24px 18px;
@@ -450,6 +565,18 @@
 
   .listing-card-footer {
     align-items: stretch;
+    flex-direction: column;
+  }
+
+  .listing-card-heading {
+    flex-direction: column;
+  }
+
+  .listing-card-actions {
+    justify-content: flex-start;
+  }
+
+  .profile-confirm-actions {
     flex-direction: column;
   }
 }

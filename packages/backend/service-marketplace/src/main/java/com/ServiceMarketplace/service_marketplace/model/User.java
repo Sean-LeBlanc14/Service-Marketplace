@@ -38,6 +38,8 @@ public class User {
     @Setter(AccessLevel.NONE)
     private boolean isVerified = false;
 
+    private String stripeAccountId;
+
     @CreatedDate
     private Instant createdAt;
 

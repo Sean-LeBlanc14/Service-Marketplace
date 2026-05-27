@@ -19,5 +19,7 @@ public class UserProfile {
 
     private String bio;
 
+    private boolean isVerified;
+
     private List<ServiceDto> services;
 }

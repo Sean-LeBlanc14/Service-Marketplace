@@ -1,8 +1,13 @@
 
 :root {
     /* Cal Poly green to be used for buttons and possible headings*/
-    --cp-green: #1e4d2b;
+    /* --cp-green: #1e4d2b; old green*/
+    --cp-green: #154734;
+    --cp-gold: #BD8B13;
 
-    /*Primary text color for all descriptions*/
-    --text-primary: #333;
+    --cp-stadium-gold: #F8E08E;
+    --cp-mission-beige: #E4E3D3;
+
+    /* Primary text color for crisp accessibility */
+    --text-primary: #333333;
 }

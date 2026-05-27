@@ -8,6 +8,8 @@ import {
   PRICE_UNIT_OPTIONS
 } from "../utils/pricing";
 import { toast } from "react-toastify";
+import type { ApiUserProfile, ApiService } from "../utils/types";
+import { useNavigate } from "react-router-dom";
 
 const TOKEN_STORAGE_KEY = "jwt_token";
 
@@ -137,7 +139,7 @@ function formatCategory(category: string) {
 }
 
 function normalizeServices(
-  services: ApiServiceListing[] | undefined
+  services: ApiService[] | undefined
 ): ServiceListing[] {
   if (!Array.isArray(services)) {
     return [];
@@ -248,6 +250,11 @@ function ProfilePage() {
         }
 
         const data = (await response.json()) as ApiUserProfile;
+
+        if (!data.verified){
+          toast.warning("Please verify your account before proceeding.");
+          navigate("/verify");
+        }
         const nextProfile = normalizeProfile(data);
 
         const connectResponse = await fetch(API_ENDPOINTS.payments.connectStatus, {
@@ -278,7 +285,7 @@ function ProfilePage() {
     return () => {
       isMounted = false;
     };
-  }, [authToken]);
+  }, [authToken, navigate]);
 
   useEffect(() => {
     if (!servicePendingDeletion) {
@@ -504,7 +511,7 @@ function ProfilePage() {
         );
       }
 
-      const data = (await response.json()) as ApiServiceListing;
+      const data = (await response.json()) as ApiService;
       const [savedService] = normalizeServices([data]);
 
       if (savedService) {

@@ -32,17 +32,6 @@ jobs:
           cache: 'maven'
           cache-dependency-path: 'packages/backend/service-marketplace/pom.xml' 
           
-      - name: Create Backend Env File
-        working-directory: packages/backend/service-marketplace
-        run: cp .env.example .env
-
       - name: Run Backend Tests
         working-directory: packages/backend/service-marketplace
-        env:
-          MONGO_URI: ${{ secrets.TEST_MONGO_URI }}
-          SECRET_KEY: ${{ secrets.TEST_SECRET_KEY }}
-          SEND_GRID_API: ${{ secrets.TEST_SEND_GRID_API }}
-          STRIPE_SECRET_KEY: ${{ secrets.TEST_STRIPE_SECRET_KEY }}
-          STRIPE_PUBLISHABLE_KEY: ${{ secrets.TEST_STRIPE_PUBLISHABLE_KEY }}
-          STRIPE_WEBHOOK_SECRET: ${{ secrets.TEST_STRIPE_WEBHOOK_SECRET }}
         run: mvn clean test

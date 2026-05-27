@@ -49,27 +49,6 @@ interface UserProfile {
   services: ServiceListing[];
 }
 
-interface ApiServiceListing {
-  id?: string;
-  title?: string;
-  category?: string;
-  description?: string;
-  priceMin?: number | string | null;
-  priceMax?: number | string | null;
-  priceUnit?: string | null;
-  location?: string;
-  tags?: string[];
-}
-
-interface ApiUserProfile {
-  email?: string;
-  firstName?: string;
-  lastName?: string;
-  major?: string;
-  campus?: string;
-  bio?: string;
-  services?: ApiServiceListing[];
-}
 
 interface ConnectStatus {
   accountId: string | null;
@@ -226,6 +205,7 @@ function ProfilePage() {
   const [servicePriceUnit, setServicePriceUnit] = useState("");
   const [serviceLocation, setServiceLocation] = useState("");
   const [serviceTags, setServiceTags] = useState("");
+  const navigate = useNavigate();
   const [connectStatus, setConnectStatus] = useState<ConnectStatus | null>(null);
   const [isConnecting, setIsConnecting] = useState(false);
   const [editingServiceId, setEditingServiceId] = useState<

@@ -19,7 +19,8 @@ export default function VerifyAccount() {
   const inputs = useRef<(HTMLInputElement | null)[]>([]);
   const navigate = useNavigate();
   const location = useLocation();
-  const { email, token } = location.state || {};
+  const { email } = location.state || {};
+  const token = localStorage.getItem("jwt_token");
 
   useEffect(() => {
     if (!token) {

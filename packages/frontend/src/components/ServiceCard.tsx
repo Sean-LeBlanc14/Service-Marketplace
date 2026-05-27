@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Badge, Card } from "react-bootstrap";
 import ServiceDetailsModal from "./ServiceDetailsModal";
-import "./styles/ServiceCard.css";
+import "./Styles/ServiceCard.css";
 
 interface Provider {
   name: string;

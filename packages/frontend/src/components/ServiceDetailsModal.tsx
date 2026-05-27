@@ -2,22 +2,14 @@ import { useState } from "react";
 import InputField from "./InputField";
 import SubmitButton from "./SubmitButton";
 import PaymentForm from "./PaymentForm";
+import { API_ENDPOINTS } from "../utils/api";
 import "./styles/ServiceDetailsModal.css";
 
-const API_URL = "http://localhost:8080";
 const TOKEN_STORAGE_KEY = "jwt_token";
-
-interface ServiceDetailsProvider {
-  name: string;
-  avatar: string;
-  rating: number;
-  reviews: number;
-}
 
 interface ServiceDetails {
   id: string;
   title: string;
-  provider: ServiceDetailsProvider;
   price: string;
   priceMin: number;
   priceMax: number;
@@ -63,7 +55,6 @@ function ServiceDetailsModal({
   service,
   onClose
 }: ServiceDetailsModalProps) {
-  const hasRating = service.provider.rating > 0;
   const [view, setView] = useState<ModalView>("details");
   const [clientSecret, setClientSecret] = useState("");
   const [form, setForm] = useState<BookingFormState>({
@@ -93,7 +84,7 @@ function ServiceDetailsModal({
 
     try {
       const authToken = localStorage.getItem(TOKEN_STORAGE_KEY);
-      const response = await fetch(`${API_URL}/api/bookings`, {
+      const response = await fetch(API_ENDPOINTS.bookings.create, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -159,26 +150,6 @@ function ServiceDetailsModal({
 
         {view === "details" && (
           <>
-            <div className="service-details-provider">
-              <div className="service-details-avatar">
-                {service.provider.avatar}
-              </div>
-              <div>
-                <p className="service-details-provider-name">
-                  {service.provider.name}
-                </p>
-                {hasRating && (
-                  <div className="service-details-rating">
-                    <span className="service-details-star">{"\u2605"}</span>
-                    <span>{service.provider.rating}</span>
-                    <span className="service-details-muted">
-                      ({service.provider.reviews} reviews)
-                    </span>
-                  </div>
-                )}
-              </div>
-            </div>
-
             <div className="service-details-location">
               <PinIcon />
               <span>{service.location}</span>
@@ -284,4 +255,4 @@ function ServiceDetailsModal({
 }
 
 export default ServiceDetailsModal;
-export type { ServiceDetails, ServiceDetailsProvider };
+export type { ServiceDetails };

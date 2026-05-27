@@ -17,5 +17,9 @@ export const API_ENDPOINTS = {
     services: `${API_ROUTE}/services`,
     service: (serviceId: string) =>
       `${API_ROUTE}/services/${encodeURIComponent(serviceId)}`
+  },
+  payments: {
+    connect: `${API_ROUTE}/payments/connect`,
+    connectStatus: `${API_ROUTE}/payments/connect/status`
   }
 };

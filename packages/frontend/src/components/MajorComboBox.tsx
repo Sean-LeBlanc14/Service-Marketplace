@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import "./Styles/InputField.css";
-import "./Styles/MajorComboBox.css";
+import "./styles/InputField.css";
+import "./styles/MajorComboBox.css";
 
 interface MajorComboBoxProps {
   value: string;

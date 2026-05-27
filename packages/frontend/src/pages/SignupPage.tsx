@@ -7,7 +7,7 @@ import FormContainer from "../components/FormContainer";
 import SubmitButton from "../components/SubmitButton";
 import DropDown from "../components/DropDown";
 import { toast } from "react-toastify";
-import "../Styles/SignupPage.css";
+import "../styles/SignupPage.css";
 import { API_ENDPOINTS } from "../utils/api";
 
 function SignupPage() {

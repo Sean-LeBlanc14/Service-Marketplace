@@ -10,10 +10,13 @@ import {
   Utensils,
   Camera
 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import ServiceCard from "../components/ServiceCard";
 import type { Service } from "../components/ServiceCard";
-import "../Styles/HomePage.css";
+import "../styles/HomePage.css";
 import { API_ENDPOINTS } from "../utils/api";
+import { toast } from "react-toastify";
+import type { ApiUserProfile, ApiService } from "../utils/types";
 import { normalizePriceUnit } from "../utils/pricing";
 
 const CATEGORIES = [
@@ -27,27 +30,6 @@ const CATEGORIES = [
 ];
 
 const TOKEN_STORAGE_KEY = "jwt_token";
-
-interface ApiService {
-  id?: string;
-  title?: string;
-  category?: string;
-  userId?: string;
-  providerName?: string;
-  priceMin?: number | string | null;
-  priceMax?: number | string | null;
-  priceUnit?: string | null;
-  description?: string;
-  location?: string;
-  tags?: string[] | null;
-}
-
-interface ApiUserProfile {
-  email?: string;
-  firstName?: string;
-  lastName?: string;
-  services?: ApiService[];
-}
 
 function cleanText(value?: string | null) {
   return value?.trim() ?? "";
@@ -83,33 +65,10 @@ function formatPrice(service: ApiService) {
   return priceUnit ? `${displayPrice}/${priceUnit}` : displayPrice;
 }
 
-function getProfileDisplayName(profile: ApiUserProfile) {
-  return (
-    `${cleanText(profile.firstName)} ${cleanText(profile.lastName)}`.trim() ||
-    cleanText(profile.email)
-  );
-}
-
-function getProfileServiceNames(profile: ApiUserProfile) {
-  const displayName = getProfileDisplayName(profile);
-  const services = Array.isArray(profile.services) ? profile.services : [];
-
-  if (!displayName) {
-    return new Map<string, string>();
-  }
-
-  return new Map(
-    services
-      .map((service) => cleanText(service.id))
-      .filter(Boolean)
-      .map((serviceId) => [serviceId, displayName])
-  );
-}
 
 function normalizeService(
   service: ApiService,
   index: number,
-  _providerNameByServiceId = new Map<string, string>()
 ): Service {
   const tags = Array.isArray(service.tags)
     ? service.tags.map(cleanText).filter(Boolean)
@@ -142,6 +101,7 @@ function HomePage() {
   const [error, setError] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [searchQuery, setSearchQuery] = useState("");
+  const navigate = useNavigate();
 
   useEffect(() => {
     let isMounted = true;
@@ -169,24 +129,28 @@ function HomePage() {
 
         if (response.ok) {
           const data = (await response.json()) as ApiService[];
-          let providerNameByServiceId = new Map<string, string>();
 
           try {
             const profileResponse = await fetch(API_ENDPOINTS.user.profile, {
               headers: authHeaders
             });
 
-            if (profileResponse.ok) {
-              const profile = (await profileResponse.json()) as ApiUserProfile;
-              providerNameByServiceId = getProfileServiceNames(profile);
+          if (profileResponse.ok) {
+            const profile = (await profileResponse.json()) as ApiUserProfile;
+
+            if (!profile.verified){
+              toast.warning("Please verify your account before proceeding.");
+              navigate("/verify");
             }
-          } catch {
-            providerNameByServiceId = new Map<string, string>();
           }
+        } catch (e){
+            console.error(e);
+            toast.warning("A network error occured, please try again");
+        }
 
           const nextServices = Array.isArray(data)
             ? data.map((service, index) =>
-                normalizeService(service, index, providerNameByServiceId)
+                normalizeService(service, index)
               )
             : [];
 
@@ -217,7 +181,7 @@ function HomePage() {
     return () => {
       isMounted = false;
     };
-  }, []);
+  }, [navigate]);
 
   const filteredServices = services.filter((service) => {
     const matchesCategory =

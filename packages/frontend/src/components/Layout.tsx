@@ -1,7 +1,7 @@
 import { Outlet } from "react-router-dom";
 import SideBar from "./SideBar";
 import NavBar from "./NavBar";
-import "./Styles/Layout.css";
+import "./styles/Layout.css";
 
 function Layout() {
   return (

@@ -1,4 +1,4 @@
-import "./Styles/SearchBar.css";
+import "./styles/SearchBar.css";
 import { FaMagnifyingGlass } from "react-icons/fa6";
 
 interface SearchBarProps {

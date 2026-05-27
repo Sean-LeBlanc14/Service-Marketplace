@@ -1,5 +1,5 @@
 import { NavLink } from "react-router-dom";
-import "./Styles/NavigationButton.css";
+import "./styles/NavigationButton.css";
 
 interface NavigationButtonProps {
   to: string;

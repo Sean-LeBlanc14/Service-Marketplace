@@ -1,4 +1,4 @@
-import "./Styles/FormContainer.css";
+import "./styles/FormContainer.css";
 
 interface FormContainerProps {
   header: string;

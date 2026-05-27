@@ -1,9 +1,15 @@
 {
+  "dependencies": {
+    "react": "18.3.1",
+    "react-dom": "18.3.1"
+  },
   "devDependencies": {
-    "@eslint/compat": "^2.0.5",
-    "@eslint/eslintrc": "^3.3.5",
-    "@eslint/js": "^10.0.1",
-    "eslint": "^10.2.1",
+    "@types/react": "18.3.29",
+    "@types/react-dom": "18.3.7",
+    "@eslint/compat": "^1.4.1",
+    "@eslint/eslintrc": "^3.3.3",
+    "@eslint/js": "^9.39.1",
+    "eslint": "^9.39.1",
     "prettier": "^3.8.3"
   },
   "workspaces": [
@@ -14,6 +20,14 @@
     "start": "npm run dev -w packages/frontend",
     "back": "cd packages/backend/service-marketplace && mvn spring-boot:run",
     "build": "npm run build -w packages/frontend",
-    "lint": "npm run lint -w packages/frontend"
+    "lint": "npm run lint -w packages/frontend",
+    "back-test": "cd packages/backend/service-marketplace && mvn clean test -X",
+    "front-test": "npm run build -w packages/frontend && npm run lint -w packages/frontend"
+  },
+  "overrides": {
+    "react": "18.3.1",
+    "react-dom": "18.3.1",
+    "@types/react": "18.3.29",
+    "@types/react-dom": "18.3.7"
   }
 }

@@ -1,4 +1,4 @@
-import "./Styles/NavBar.css";
+import "./styles/NavBar.css";
 import SearchBar from "./SearchBar";
 import { useState } from "react";
 import { FaBell, FaCalendarAlt } from "react-icons/fa";

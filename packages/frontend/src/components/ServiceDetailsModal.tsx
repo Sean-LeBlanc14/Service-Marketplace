@@ -2,7 +2,7 @@ import { useState } from "react";
 import InputField from "./InputField";
 import SubmitButton from "./SubmitButton";
 import PaymentForm from "./PaymentForm";
-import "./Styles/ServiceDetailsModal.css";
+import "./styles/ServiceDetailsModal.css";
 
 const API_URL = "http://localhost:8080";
 const TOKEN_STORAGE_KEY = "jwt_token";

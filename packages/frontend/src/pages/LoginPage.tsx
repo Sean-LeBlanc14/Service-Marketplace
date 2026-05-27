@@ -6,7 +6,7 @@ import FormContainer from "../components/FormContainer";
 import SubmitButton from "../components/SubmitButton";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
-import "../Styles/LoginPage.css";
+import "../styles/LoginPage.css";
 import { API_ENDPOINTS } from "../utils/api";
 
 export default function LoginPage() {

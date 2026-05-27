@@ -3,7 +3,7 @@ import { Container, Row, Col } from "react-bootstrap";
 import { Link, useNavigate } from "react-router-dom";
 import ServiceCard from "../components/ServiceCard";
 import type { Service } from "../components/ServiceCard";
-import "../Styles/HomePage.css";
+import "../styles/HomePage.css";
 import { API_ENDPOINTS } from "../utils/api";
 import { toast } from "react-toastify";
 import type { ApiUserProfile, ApiService } from "../utils/types";

@@ -1,4 +1,4 @@
-import "./Styles/DropDown.css";
+import "./styles/DropDown.css";
 
 interface DropDownProps {
   label: string;

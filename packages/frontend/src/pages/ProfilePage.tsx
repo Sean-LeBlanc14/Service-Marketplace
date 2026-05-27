@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import type { FormEvent } from "react";
-import "../Styles/ProfilePage.css";
+import "../styles/ProfilePage.css";
 import { API_ENDPOINTS } from "../utils/api";
 import {
   formatPriceUnit,

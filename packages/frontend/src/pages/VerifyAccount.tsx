@@ -3,7 +3,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import FormContainer from "../components/FormContainer";
 import SubmitButton from "../components/SubmitButton";
 import { toast } from "react-toastify";
-import "../Styles/VerifyAccount.css";
+import "../styles/VerifyAccount.css";
 import { ResendTimerLink } from "../components/ResendTimerLink";
 import { API_ENDPOINTS } from "../utils/api";
 

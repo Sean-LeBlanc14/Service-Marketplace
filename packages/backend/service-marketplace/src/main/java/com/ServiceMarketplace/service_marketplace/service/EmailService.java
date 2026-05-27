@@ -41,7 +41,8 @@ public class EmailService {
     }
 
     public void sendProviderBookingNotificationEmail(String toEmail, String providerName, String customerName,
-            String serviceTitle, BigDecimal proposedPrice, String priceUnit, Instant scheduledAt) {
+            String serviceTitle, BigDecimal proposedPrice, String priceUnit, Instant scheduledAt,
+            String confirmUrl, String cancelUrl) {
         sendTemplatedEmail(toEmail, "New Booking Request - " + serviceTitle, "providerBookingNotification",
             Map.of(
                 "providerName", providerName,
@@ -49,7 +50,9 @@ public class EmailService {
                 "serviceTitle", serviceTitle,
                 "proposedPrice", formatPrice(proposedPrice),
                 "priceUnit", priceUnit != null ? priceUnit : "",
-                "scheduledAt", DATE_FORMATTER.format(scheduledAt)
+                "scheduledAt", DATE_FORMATTER.format(scheduledAt),
+                "confirmUrl", confirmUrl,
+                "cancelUrl", cancelUrl
             ));
     }
 

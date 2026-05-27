@@ -83,6 +83,11 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
     }
 
+    @ExceptionHandler(BookingTokenException.class)
+    public ResponseEntity<String> handleBookingToken(BookingTokenException e) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+    }
+
     @ExceptionHandler(StripeException.class)
     public ResponseEntity<String> handleStripeException(com.stripe.exception.StripeException e) {
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());

@@ -35,4 +35,15 @@ jobs:
           
       - name: Run Backend Tests
         working-directory: packages/backend/service-marketplace
+        env:
+          MONGO_URI: mongodb://localhost:27017/service_marketplace_test
+          SECRET_KEY: MDEyMzQ1Njc4OTAxMjM0NTY3ODkwMTIzNDU2Nzg5MDE=
+          EXPIRATION_TIME: 3600000
+          SEND_GRID_API: test-sendgrid-key
+          VERIFICATION_EMAIL: test@example.com
+          STRIPE_SECRET_KEY: sk_test_dummy
+          STRIPE_PUBLISHABLE_KEY: pk_test_dummy
+          STRIPE_WEBHOOK_SECRET: whsec_dummy
+          STRIPE_CONNECT_RETURN_URL: http://localhost:5173/profile
+          STRIPE_CONNECT_REFRESH_URL: http://localhost:5173/profile
         run: mvn clean test

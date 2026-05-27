@@ -1,6 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import SubmitButton from "../components/SubmitButton";
 import "../Styles/LandingPage.css";
+import "../Styles/global.css";
 
 function LandingPage() {
     const navigate = useNavigate();

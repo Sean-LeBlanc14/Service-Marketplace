@@ -20,7 +20,6 @@ jobs:
       - run: npm run -w packages/frontend lint 
       - run: npm run -w packages/frontend build
   
-  # These tests work locally, we need to create "test" env variables so they pass in github
   backend-tasks:
     runs-on: ubuntu-latest
     steps:
@@ -33,17 +32,17 @@ jobs:
           cache: 'maven'
           cache-dependency-path: 'packages/backend/service-marketplace/pom.xml' 
           
+      - name: Create Backend Env File
+        working-directory: packages/backend/service-marketplace
+        run: cp .env.example .env
+
       - name: Run Backend Tests
         working-directory: packages/backend/service-marketplace
         env:
           MONGO_URI: ${{ secrets.TEST_MONGO_URI }}
           SECRET_KEY: ${{ secrets.TEST_SECRET_KEY }}
-          EXPIRATION_TIME: 3600000
           SEND_GRID_API: ${{ secrets.TEST_SEND_GRID_API }}
-          VERIFICATION_EMAIL: test@example.com
           STRIPE_SECRET_KEY: ${{ secrets.TEST_STRIPE_SECRET_KEY }}
           STRIPE_PUBLISHABLE_KEY: ${{ secrets.TEST_STRIPE_PUBLISHABLE_KEY }}
           STRIPE_WEBHOOK_SECRET: ${{ secrets.TEST_STRIPE_WEBHOOK_SECRET }}
-          STRIPE_CONNECT_RETURN_URL: http://localhost:5173/profile
-          STRIPE_CONNECT_REFRESH_URL: http://localhost:5173/profile
         run: mvn clean test

@@ -2,9 +2,9 @@ import { useState } from "react";
 import InputField from "./InputField";
 import SubmitButton from "./SubmitButton";
 import PaymentForm from "./PaymentForm";
-import "./Styles/ServiceDetailsModal.css";
+import { API_ENDPOINTS } from "../utils/api";
+import "./styles/ServiceDetailsModal.css";
 
-const API_URL = "http://localhost:8080";
 const TOKEN_STORAGE_KEY = "jwt_token";
 
 interface ServiceDetails {
@@ -84,7 +84,7 @@ function ServiceDetailsModal({
 
     try {
       const authToken = localStorage.getItem(TOKEN_STORAGE_KEY);
-      const response = await fetch(`${API_URL}/api/bookings`, {
+      const response = await fetch(API_ENDPOINTS.bookings.create, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

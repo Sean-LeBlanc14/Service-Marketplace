@@ -1,4 +1,3 @@
-
 const API_ROUTE = import.meta.env.VITE_API_BASE_ROUTE
 
 export const API_ENDPOINTS = {
@@ -13,9 +12,11 @@ export const API_ENDPOINTS = {
     },
     user : {
         profile: `${API_ROUTE}/users/me`,
-
     },
     services : {
         services: `${API_ROUTE}/services`
+    },
+    bookings: {
+        create: `${API_ROUTE}/bookings`
     }
 }

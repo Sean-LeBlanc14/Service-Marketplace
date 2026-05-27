@@ -17,6 +17,64 @@
   margin: 0;
 }
 
+.homepage-list-service-button {
+  background-color: #003831;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 20px;
+  font-weight: 600;
+  cursor: pointer;
+  font-size: 0.95rem;
+}
+
+.homepage-search {
+  position: relative;
+  margin-bottom: 16px;
+}
+
+.homepage-search-icon {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #888;
+}
+
+.homepage-search-input {
+  width: 100%;
+  padding: 10px 16px 10px 38px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  font-size: 0.95rem;
+}
+
+.homepage-categories {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+
+.homepage-category-button {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 16px;
+  border-radius: 20px;
+  border: 1px solid #003831;
+  background-color: white;
+  color: #003831;
+  font-weight: 500;
+  cursor: pointer;
+  font-size: 0.85rem;
+}
+
+.homepage-category-button-selected {
+  background-color: #003831;
+  color: white;
+}
+
 .status-message {
   color: #666;
   margin-bottom: 24px;

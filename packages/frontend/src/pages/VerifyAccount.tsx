@@ -16,7 +16,6 @@ export default function VerifyAccount() {
     "",
     ""
   ]);
-  const [error, setError] = useState("");
   const inputs = useRef<(HTMLInputElement | null)[]>([]);
   const navigate = useNavigate();
   const location = useLocation();
@@ -69,11 +68,10 @@ export default function VerifyAccount() {
 
   const handleSubmit = async (e: React.MouseEvent) => {
     e.preventDefault();
-    setError("");
     const fullCode = code.join("");
     if (fullCode.length < 6) {
-      setError("Please enter the full 6-digit code.");
-      toast.error(error);
+      const message = "Please enter the full 6-digit code.";
+      toast.error(message);
       return;
     }
 
@@ -99,7 +97,6 @@ export default function VerifyAccount() {
       } else {
         toast.error("Something went wrong. Please try again.");
       }
-
     } catch {
       toast.warning(
         "Unable to connect to the server. Please try again."
@@ -109,17 +106,14 @@ export default function VerifyAccount() {
 
   const handleResend = async () => {
     try {
-      await fetch(
-        API_ENDPOINTS.verification.resend,
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`
-          },
-          body: JSON.stringify({})
-        }
-      );
+      await fetch(API_ENDPOINTS.verification.resend, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({})
+      });
     } catch {
       toast.warning("Unable to resend code. Please try again.");
     }
@@ -138,7 +132,9 @@ export default function VerifyAccount() {
             {code.map((digit, i) => (
               <input
                 key={i}
-                ref={(el) => (inputs.current[i] = el)}
+                ref={(el) => {
+                  inputs.current[i] = el;
+                }}
                 type="text"
                 inputMode="numeric"
                 maxLength={1}

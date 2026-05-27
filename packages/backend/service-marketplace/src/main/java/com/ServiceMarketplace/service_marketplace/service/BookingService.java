@@ -47,8 +47,9 @@ public class BookingService {
             );
         }
 
-        User provider = userRepository.findById(service.getUserId()).orElse(null);
-        String providerStripeAccountId = (provider != null) ? provider.getStripeAccountId() : null;
+        User provider = userRepository.findById(service.getUserId())
+            .orElseThrow(() -> new ResourceNotFoundException("Provider", service.getUserId()));
+        String providerStripeAccountId = provider.getStripeAccountId();
 
         PaymentIntentResult paymentIntentResult = paymentService.createPaymentIntent(
             request.getAgreedPrice(),

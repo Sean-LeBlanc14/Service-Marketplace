@@ -1,0 +1,16 @@
+.signup-container {
+  display: flex;
+  flex-direction: column;
+  background-color: #fff;
+  max-height: 100vh;
+}
+
+.field-container {
+  display: flex;
+  flex-direction: row;
+  gap: 10px;
+}
+
+.user-field {
+  flex: 1;
+}

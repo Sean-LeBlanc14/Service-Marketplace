@@ -1,101 +1,263 @@
+import { useEffect, useState } from "react";
 import { Container, Row, Col } from "react-bootstrap";
+import {
+  Search,
+  LayoutGrid,
+  BookOpen,
+  Monitor,
+  Home,
+  DollarSign,
+  Utensils,
+  Camera
+} from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import ServiceCard from "../components/ServiceCard";
 import type { Service } from "../components/ServiceCard";
+import "../styles/HomePage.css";
+import { API_ENDPOINTS } from "../utils/api";
+import { toast } from "react-toastify";
+import type { ApiUserProfile, ApiService } from "../utils/types";
+import { normalizePriceUnit } from "../utils/pricing";
 
-const services: Service[] = [
-  {
-    id: "1",
-    title: "Calculus & Statistics Tutoring",
-    category: "tutoring",
-    provider: { name: "Sarah Chen", avatar: "👩‍🎓", rating: 4.9, reviews: 47 },
-    price: "$25/hr",
-    description: "Math major offering help with Calc I-III, Linear Algebra, and Statistics. 3 years of tutoring experience with proven results.",
-    location: "Main Library or Online",
-    tags: ["Mathematics", "One-on-one", "Group sessions"],
-  },
-  {
-    id: "2",
-    title: "Computer Repair & Setup",
-    category: "tech",
-    provider: { name: "Marcus Johnson", avatar: "👨‍💻", rating: 4.8, reviews: 63 },
-    price: "$30-50",
-    description: "Fast computer repairs, software installation, virus removal, and hardware upgrades. Same-day service available.",
-    location: "On-campus or dorm visits",
-    tags: ["Hardware", "Software", "Emergency service"],
-  },
-  {
-    id: "3",
-    title: "Photography for Events",
-    category: "photography",
-    provider: { name: "Emily Rodriguez", avatar: "📸", rating: 5.0, reviews: 31 },
-    price: "$100-200",
-    description: "Professional photography for formals, club events, headshots, and grad photos. High-quality edits included.",
-    location: "Anywhere on campus",
-    tags: ["Events", "Portraits", "Editing included"],
-  },
-  {
-    id: "4",
-    title: "Resume Review & Career Coaching",
-    category: "finance",
-    provider: { name: "David Park", avatar: "👔", rating: 4.9, reviews: 28 },
-    price: "$20/session",
-    description: "Former McKinsey intern helping with resumes, cover letters, interview prep, and career strategy.",
-    location: "Student Center or Zoom",
-    tags: ["Resume", "Interview prep", "Career advice"],
-  },
-  {
-    id: "5",
-    title: "Home-Cooked Meal Prep",
-    category: "food",
-    provider: { name: "Priya Patel", avatar: "👩‍🍳", rating: 4.7, reviews: 52 },
-    price: "$15-25/meal",
-    description: "Healthy, homemade meals delivered to your dorm. Vegetarian, vegan, and dietary restrictions accommodated.",
-    location: "Campus delivery",
-    tags: ["Healthy", "Custom orders", "Meal plans"],
-  },
-  {
-    id: "6",
-    title: "Web Development & Design",
-    category: "tech",
-    provider: { name: "Alex Kim", avatar: "💻", rating: 4.9, reviews: 19 },
-    price: "$40/hr",
-    description: "Build websites for clubs, personal portfolios, or small businesses. React, WordPress, and custom solutions.",
-    location: "Remote collaboration",
-    tags: ["Web design", "React", "Portfolio"],
-  },
-  {
-    id: "7",
-    title: "Sublet: 1BR Apartment Summer",
-    category: "housing",
-    provider: { name: "Jessica Martinez", avatar: "🏠", rating: 4.6, reviews: 8 },
-    price: "$800/month",
-    description: "Furnished 1-bedroom apartment 5 min walk from campus. Available June-August. Utilities included.",
-    location: "123 College Ave",
-    tags: ["Furnished", "Utilities included", "Pet-friendly"],
-  },
-  {
-    id: "8",
-    title: "Python & Data Science Tutoring",
-    category: "tutoring",
-    provider: { name: "Ryan Thompson", avatar: "🐍", rating: 4.8, reviews: 34 },
-    price: "$30/hr",
-    description: "CS grad student specializing in Python, machine learning, data analysis, and pandas/numpy libraries.",
-    location: "Engineering Building or Online",
-    tags: ["Python", "ML", "Data Science"],
-  },
+const CATEGORIES = [
+  { value: "All", label: "All Services", icon: LayoutGrid },
+  { value: "tutoring", label: "Tutoring", icon: BookOpen },
+  { value: "tech", label: "Tech Help", icon: Monitor },
+  { value: "housing", label: "Housing", icon: Home },
+  { value: "finance", label: "Finance", icon: DollarSign },
+  { value: "food and catering", label: "Food & Catering", icon: Utensils },
+  { value: "photography", label: "Photography", icon: Camera }
 ];
 
+const TOKEN_STORAGE_KEY = "jwt_token";
+
+function cleanText(value?: string | null) {
+  return value?.trim() ?? "";
+}
+
+function cleanPriceValue(value?: number | string | null) {
+  return value == null ? "" : String(value).trim();
+}
+
+function formatCurrency(value: string) {
+  const amount = Number(value);
+
+  if (!Number.isFinite(amount)) {
+    return "$0";
+  }
+
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+    maximumFractionDigits: Number.isInteger(amount) ? 0 : 2
+  }).format(amount);
+}
+
+function formatPrice(service: ApiService) {
+  const minPrice = cleanPriceValue(service.priceMin);
+  const maxPrice = cleanPriceValue(service.priceMax);
+  const displayPrice =
+    minPrice && maxPrice && minPrice !== maxPrice
+      ? `${formatCurrency(minPrice)} - ${formatCurrency(maxPrice)}`
+      : formatCurrency(minPrice || maxPrice);
+  const priceUnit = normalizePriceUnit(service.priceUnit);
+
+  return priceUnit ? `${displayPrice}/${priceUnit}` : displayPrice;
+}
+
+
+function normalizeService(
+  service: ApiService,
+  index: number,
+): Service {
+  const tags = Array.isArray(service.tags)
+    ? service.tags.map(cleanText).filter(Boolean)
+    : [];
+  const id = cleanText(service.id) || `service-${index}`;
+  const priceMin = Number(cleanPriceValue(service.priceMin) || 0);
+  const priceMax = Number(cleanPriceValue(service.priceMax) || priceMin);
+  const priceUnit = cleanText(service.priceUnit) || null;
+
+  const normalizedService = {
+    id,
+    title: cleanText(service.title) || "Untitled service",
+    category: cleanText(service.category) || "general",
+    userId: cleanText(service.userId),
+    price: formatPrice(service),
+    priceMin,
+    priceMax,
+    priceUnit,
+    description: cleanText(service.description),
+    location: cleanText(service.location) || "Campus",
+    tags
+  };
+
+  return normalizedService;
+}
+
 function HomePage() {
+  const [services, setServices] = useState<Service[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("All");
+  const [searchQuery, setSearchQuery] = useState("");
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const fetchServices = async () => {
+      const token = localStorage.getItem(TOKEN_STORAGE_KEY);
+
+      if (!token) {
+        if (isMounted) {
+          setServices([]);
+          setError("You must be logged in to view services.");
+          setLoading(false);
+        }
+        return;
+      }
+
+      const authHeaders = {
+        Authorization: `Bearer ${token}`
+      };
+
+      try {
+        const response = await fetch(API_ENDPOINTS.services.services, {
+          headers: authHeaders
+        });
+
+        if (response.ok) {
+          const data = (await response.json()) as ApiService[];
+
+          try {
+            const profileResponse = await fetch(API_ENDPOINTS.user.profile, {
+              headers: authHeaders
+            });
+
+          if (profileResponse.ok) {
+            const profile = (await profileResponse.json()) as ApiUserProfile;
+
+            if (!profile.verified){
+              toast.warning("Please verify your account before proceeding.");
+              navigate("/verify");
+            }
+          }
+        } catch (e){
+            console.error(e);
+            toast.warning("A network error occured, please try again");
+        }
+
+          const nextServices = Array.isArray(data)
+            ? data.map((service, index) =>
+                normalizeService(service, index)
+              )
+            : [];
+
+          if (isMounted) {
+            setServices(nextServices);
+            setError("");
+          }
+        } else if (response.status === 401 || response.status === 403) {
+          if (isMounted) {
+            setError("Session expired. Please log in again.");
+          }
+        } else if (isMounted) {
+          setError("Failed to load services. Please try again.");
+        }
+      } catch {
+        if (isMounted) {
+          setError("Unable to connect to the server.");
+        }
+      } finally {
+        if (isMounted) {
+          setLoading(false);
+        }
+      }
+    };
+
+    void fetchServices();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [navigate]);
+
+  const filteredServices = services.filter((service) => {
+    const matchesCategory =
+      selectedCategory === "All" || service.category === selectedCategory;
+
+    const query = searchQuery.toLowerCase();
+    const matchesSearch =
+      query === "" ||
+      service.title.toLowerCase().includes(query) ||
+      service.description.toLowerCase().includes(query) ||
+      service.tags.some((tag) => tag.toLowerCase().includes(query));
+
+    return matchesCategory && matchesSearch;
+  });
+
   return (
-    <div style={{ backgroundColor: "#f4f4f4", minHeight: "100vh", padding: "40px 0" }}>
+    <div className="homepage-wrapper">
       <Container>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "24px" }}>
-          <h1 style={{ fontWeight: "700", fontSize: "1.8rem", margin: 0 }}>Campus Services</h1>
+        {/* Header */}
+        <div className="heading-container">
+          <h1 className="heading">Campus Services</h1>
+          <button className="homepage-list-service-button">
+            List Your Service
+          </button>
         </div>
-        <p style={{ color: "#666", marginBottom: "24px" }}>{services.length} services found</p>
+
+        {/* ST-07: Search bar */}
+        <div className="homepage-search">
+          <Search
+            size={16}
+            className="homepage-search-icon"
+          />
+          <input
+            type="text"
+            placeholder="Search services..."
+            value={searchQuery}
+            onChange={(event) => setSearchQuery(event.target.value)}
+            className="homepage-search-input"
+          />
+        </div>
+
+        {/* ST-06: Category filter */}
+        <div className="homepage-categories">
+          {CATEGORIES.map(({ value, label, icon: Icon }) => {
+            const isSelected = selectedCategory === value;
+            return (
+              <button
+                key={value}
+                onClick={() => setSelectedCategory(value)}
+                className={`homepage-category-button${
+                  isSelected ? " homepage-category-button-selected" : ""
+                }`}>
+                <Icon size={14} />
+                {label}
+              </button>
+            );
+          })}
+        </div>
+
+        {!loading && (
+          <p className="status-message">
+            {filteredServices.length} services found
+          </p>
+        )}
+
+        {loading && <p className="status-message">Loading services...</p>}
+        {error && <p className="status-message status-message-error">{error}</p>}
+
         <Row>
-          {services.map((service) => (
-            <Col key={service.id} xs={12} md={6} lg={4} style={{ marginBottom: "24px" }}>
+          {filteredServices.map((service) => (
+            <Col
+              key={service.id}
+              xs={12}
+              md={6}
+              lg={4}
+              className="service-padding">
               <ServiceCard service={service} />
             </Col>
           ))}

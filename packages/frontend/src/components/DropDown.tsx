@@ -1,3 +1,5 @@
+import "./styles/DropDown.css";
+
 interface DropDownProps {
   label: string;
   options: React.ReactNode;
@@ -14,26 +16,11 @@ export default function DropDown({
 }: DropDownProps) {
   return (
     <div>
-      <label
-        style={{
-          fontSize: "0.9rem",
-          fontWeight: "600",
-          color: "#333"
-        }}>
-        {label}
-      </label>
+      <label className="drop-down-label">{label}</label>
       <select
         value={value}
         onChange={onChange}
-        style={{
-          borderRadius: "8px",
-          border: "1px solid #ccc",
-          padding: "12px",
-          fontSize: "1rem",
-          width: "100%",
-          backgroundColor: "white",
-          color: value === "" ? "#A9A9A9" : "black"
-        }}>
+        className={`drop-down-select ${!value ? "is-placeholder" : ""}`}>
         <option value="" disabled>
           {placeHolder}
         </option>

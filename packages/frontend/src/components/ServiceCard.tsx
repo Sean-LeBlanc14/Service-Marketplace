@@ -1,18 +1,16 @@
-import { Card, Badge } from "react-bootstrap";
-
-interface Provider {
-  name: string;
-  avatar: string;
-  rating: number;
-  reviews: number;
-}
+import { useState } from "react";
+import { Badge, Card } from "react-bootstrap";
+import ServiceDetailsModal, { type ServiceDetails } from "./ServiceDetailsModal";
+import "./styles/ServiceCard.css";
 
 interface Service {
   id: string;
   title: string;
   category: string;
-  provider: Provider;
-  price: string;
+  userId: string;
+  priceMin: number;
+  priceMax: number;
+  priceUnit: string | null;
   description: string;
   location: string;
   tags: string[];
@@ -22,74 +20,91 @@ interface ServiceCardProps {
   service: Service;
 }
 
+function formatPrice(
+  priceMin: number,
+  priceMax: number,
+  priceUnit: string | null
+): string {
+  const unit = priceUnit ? `/${priceUnit}` : "";
+
+  if (priceMin === priceMax) {
+    return `$${priceMin}${unit}`;
+  }
+
+  return `$${priceMin}-$${priceMax}${unit}`;
+}
+
 function ServiceCard({ service }: ServiceCardProps) {
+  const [isDetailsOpen, setIsDetailsOpen] = useState(false);
+  const price = formatPrice(service.priceMin, service.priceMax, service.priceUnit);
+  const modalService: ServiceDetails = {
+    id: service.id,
+    title: service.title,
+    price,
+    priceMin: service.priceMin,
+    priceMax: service.priceMax,
+    description: service.description,
+    location: service.location,
+    tags: service.tags
+  };
+
   return (
-    <Card
-      style={{
-        borderRadius: "12px",
-        border: "1px solid #e0e0e0",
-        boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
-        height: "100%",
-      }}>
-      <Card.Body style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-          <Card.Title style={{ fontSize: "1.1rem", fontWeight: "700", marginBottom: 0 }}>
-            {service.title}
-          </Card.Title>
-          <span style={{ fontSize: "1.5rem" }}>{service.provider.avatar}</span>
-        </div>
-
-        <Card.Text style={{ color: "#555", fontSize: "0.9rem", marginBottom: 0 }}>
-          {service.description}
-        </Card.Text>
-
-        <div style={{ fontWeight: "600", fontSize: "0.95rem" }}>
-          {service.provider.name}{" "}
-          <span style={{ color: "#f5a623" }}>★ {service.provider.rating}</span>{" "}
-          <span style={{ color: "#888", fontWeight: "400" }}>({service.provider.reviews})</span>
-        </div>
-
-        <div style={{ color: "#666", fontSize: "0.85rem" }}>
-          📍 {service.location}
-        </div>
-
-        <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
-          {service.tags.map((tag, index) => (
-            <Badge
-              bg="none"
-              key={tag}
-              style={{
-                backgroundColor: "#003831",
-                color: "white",
-                fontWeight: "400",
-                fontSize: "0.8rem",
-                borderRadius: "20px",
-                padding: "4px 10px",
-              }}>
-              {tag}
+    <>
+      <Card className="service-card">
+        <Card.Body className="service-card-body">
+          <div className="service-card-header">
+            <Card.Title className="service-card-title">
+              {service.title}
+            </Card.Title>
+            <Badge bg="none" className="service-tag">
+              {service.category}
             </Badge>
-          ))}
-        </div>
+          </div>
 
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "auto", paddingTop: "8px" }}>
-          <span style={{ fontSize: "1.3rem", fontWeight: "700", color: "#003831" }}>
-            {service.price}
-          </span>
-          <button
-            style={{
-              backgroundColor: "#003831",
-              color: "white",
-              border: "none",
-              borderRadius: "8px",
-              padding: "8px 16px",
-              fontWeight: "600",
-              cursor: "pointer",
-            }}>
-            View Details
-          </button>
-        </div>
-      </Card.Body>
-    </Card>
+          <Card.Text className="service-description">
+            {service.description}
+          </Card.Text>
+
+          <div className="service-location">
+            <span aria-hidden="true" className="service-location-icon">
+              <svg
+                className="service-location-svg"
+                viewBox="0 0 24 24"
+                focusable="false">
+                <path d="M12 21s7-6.1 7-12A7 7 0 0 0 5 9c0 5.9 7 12 7 12Z" />
+                <circle cx="12" cy="9" r="2.4" />
+              </svg>
+            </span>
+            {service.location}
+          </div>
+
+          <div className="service-tags-container">
+            {service.tags.map((tag) => (
+              <Badge bg="none" key={tag} className="service-tag">
+                {tag}
+              </Badge>
+            ))}
+          </div>
+
+          <div className="service-card-footer">
+            <span className="service-price">{price}</span>
+            <button
+              type="button"
+              onClick={() => setIsDetailsOpen(true)}
+              className="btn-view-details">
+              View Details
+            </button>
+          </div>
+        </Card.Body>
+      </Card>
+
+      {isDetailsOpen && (
+        <ServiceDetailsModal
+          service={modalService}
+          onClose={() => setIsDetailsOpen(false)}
+        />
+      )}
+    </>
   );
 }
 

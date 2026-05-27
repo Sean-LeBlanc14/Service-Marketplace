@@ -21,5 +21,8 @@ export const API_ENDPOINTS = {
   payments: {
     connect: `${API_ROUTE}/payments/connect`,
     connectStatus: `${API_ROUTE}/payments/connect/status`
+  },
+  bookings: {
+    create: `${API_ROUTE}/bookings`
   }
 };

@@ -1,3 +1,4 @@
 /node_modules
 .env
+packages/backend/service-marketplace/src/main/resources/application-local.properties
 CLAUDE.md

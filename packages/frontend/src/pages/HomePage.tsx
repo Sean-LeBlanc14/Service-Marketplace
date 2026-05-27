@@ -1,11 +1,30 @@
 import { useEffect, useState } from "react";
 import { Container, Row, Col } from "react-bootstrap";
-import { Link } from "react-router-dom";
+import {
+  Search,
+  LayoutGrid,
+  BookOpen,
+  Monitor,
+  Home,
+  DollarSign,
+  Utensils,
+  Camera
+} from "lucide-react";
 import ServiceCard from "../components/ServiceCard";
 import type { Service } from "../components/ServiceCard";
 import "../Styles/HomePage.css";
 import { API_ENDPOINTS } from "../utils/api";
 import { normalizePriceUnit } from "../utils/pricing";
+
+const CATEGORIES = [
+  { value: "All", label: "All Services", icon: LayoutGrid },
+  { value: "tutoring", label: "Tutoring", icon: BookOpen },
+  { value: "tech", label: "Tech Help", icon: Monitor },
+  { value: "housing", label: "Housing", icon: Home },
+  { value: "finance", label: "Finance", icon: DollarSign },
+  { value: "food and catering", label: "Food & Catering", icon: Utensils },
+  { value: "photography", label: "Photography", icon: Camera }
+];
 
 const TOKEN_STORAGE_KEY = "jwt_token";
 
@@ -64,26 +83,11 @@ function formatPrice(service: ApiService) {
   return priceUnit ? `${displayPrice}/${priceUnit}` : displayPrice;
 }
 
-function getInitials(name: string) {
-  const words = name
-    .split(/\s+/)
-    .map((word) => word.replace(/[^a-zA-Z0-9]/g, ""))
-    .filter(Boolean);
-
-  if (words.length === 0) {
-    return "SC";
-  }
-
-  return words
-    .slice(0, 2)
-    .map((word) => word[0])
-    .join("")
-    .toUpperCase();
-}
-
 function getProfileDisplayName(profile: ApiUserProfile) {
-  return `${cleanText(profile.firstName)} ${cleanText(profile.lastName)}`.trim()
-    || cleanText(profile.email);
+  return (
+    `${cleanText(profile.firstName)} ${cleanText(profile.lastName)}`.trim() ||
+    cleanText(profile.email)
+  );
 }
 
 function getProfileServiceNames(profile: ApiUserProfile) {
@@ -105,152 +109,185 @@ function getProfileServiceNames(profile: ApiUserProfile) {
 function normalizeService(
   service: ApiService,
   index: number,
-  providerNameByServiceId = new Map<string, string>()
+  _providerNameByServiceId = new Map<string, string>()
 ): Service {
   const tags = Array.isArray(service.tags)
     ? service.tags.map(cleanText).filter(Boolean)
     : [];
   const id = cleanText(service.id) || `service-${index}`;
-  const providerName =
-    cleanText(service.providerName) ||
-    providerNameByServiceId.get(id) ||
-    "Service creator";
+  const priceMin = Number(cleanPriceValue(service.priceMin) || 0);
+  const priceMax = Number(cleanPriceValue(service.priceMax) || priceMin);
+  const priceUnit = cleanText(service.priceUnit) || null;
 
-  return {
+  const normalizedService = {
     id,
     title: cleanText(service.title) || "Untitled service",
     category: cleanText(service.category) || "general",
-    provider: {
-      name: providerName,
-      avatar: getInitials(providerName),
-      rating: 0,
-      reviews: 0
-    },
+    userId: cleanText(service.userId),
     price: formatPrice(service),
-    priceMin: Number(service.priceMin ?? 0),
-    priceMax: Number(service.priceMax ?? 0),
+    priceMin,
+    priceMax,
+    priceUnit,
     description: cleanText(service.description),
     location: cleanText(service.location) || "Campus",
     tags
   };
+
+  return normalizedService;
 }
 
 function HomePage() {
   const [services, setServices] = useState<Service[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("All");
+  const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
     let isMounted = true;
 
-    async function loadServices() {
-      try {
-        const authToken = localStorage.getItem(TOKEN_STORAGE_KEY);
+    const fetchServices = async () => {
+      const token = localStorage.getItem(TOKEN_STORAGE_KEY);
 
-        if (!authToken) {
-          if (isMounted) {
-            setServices([]);
-            setError("Log in to view campus services.");
-          }
-
-          return;
+      if (!token) {
+        if (isMounted) {
+          setServices([]);
+          setError("You must be logged in to view services.");
+          setLoading(false);
         }
+        return;
+      }
 
-        const authHeaders = {
-          Authorization: `Bearer ${authToken}`
-        };
+      const authHeaders = {
+        Authorization: `Bearer ${token}`
+      };
 
+      try {
         const response = await fetch(API_ENDPOINTS.services.services, {
           headers: authHeaders
         });
 
-        if (response.status === 401 || response.status === 403) {
-          throw new Error("Log in to view campus services.");
-        }
+        if (response.ok) {
+          const data = (await response.json()) as ApiService[];
+          let providerNameByServiceId = new Map<string, string>();
 
-        if (!response.ok) {
-          throw new Error("Could not load services.");
-        }
+          try {
+            const profileResponse = await fetch(API_ENDPOINTS.user.profile, {
+              headers: authHeaders
+            });
 
-        const data = (await response.json()) as ApiService[];
-        let providerNameByServiceId = new Map<string, string>();
-
-        try {
-          const profileResponse = await fetch(API_ENDPOINTS.user.profile, {
-            headers: authHeaders
-          });
-
-          if (profileResponse.ok) {
-            const profile = (await profileResponse.json()) as ApiUserProfile;
-            providerNameByServiceId = getProfileServiceNames(profile);
+            if (profileResponse.ok) {
+              const profile = (await profileResponse.json()) as ApiUserProfile;
+              providerNameByServiceId = getProfileServiceNames(profile);
+            }
+          } catch {
+            providerNameByServiceId = new Map<string, string>();
           }
-        } catch {
-          providerNameByServiceId = new Map<string, string>();
-        }
 
-        const nextServices = Array.isArray(data)
-          ? data.map((service, index) =>
-              normalizeService(service, index, providerNameByServiceId)
-            )
-          : [];
+          const nextServices = Array.isArray(data)
+            ? data.map((service, index) =>
+                normalizeService(service, index, providerNameByServiceId)
+              )
+            : [];
 
-        if (isMounted) {
-          setServices(nextServices);
-          setError("");
+          if (isMounted) {
+            setServices(nextServices);
+            setError("");
+          }
+        } else if (response.status === 401 || response.status === 403) {
+          if (isMounted) {
+            setError("Session expired. Please log in again.");
+          }
+        } else if (isMounted) {
+          setError("Failed to load services. Please try again.");
         }
-      } catch (loadError) {
+      } catch {
         if (isMounted) {
-          setError(
-            loadError instanceof Error
-              ? loadError.message
-              : "Could not load services."
-          );
+          setError("Unable to connect to the server.");
         }
       } finally {
         if (isMounted) {
-          setIsLoading(false);
+          setLoading(false);
         }
       }
-    }
+    };
 
-    void loadServices();
+    void fetchServices();
 
     return () => {
       isMounted = false;
     };
   }, []);
 
-  const requiresLogin = error === "Log in to view campus services.";
+  const filteredServices = services.filter((service) => {
+    const matchesCategory =
+      selectedCategory === "All" || service.category === selectedCategory;
+
+    const query = searchQuery.toLowerCase();
+    const matchesSearch =
+      query === "" ||
+      service.title.toLowerCase().includes(query) ||
+      service.description.toLowerCase().includes(query) ||
+      service.tags.some((tag) => tag.toLowerCase().includes(query));
+
+    return matchesCategory && matchesSearch;
+  });
 
   return (
     <div className="homepage-wrapper">
       <Container>
+        {/* Header */}
         <div className="heading-container">
           <h1 className="heading">Campus Services</h1>
+          <button className="homepage-list-service-button">
+            List Your Service
+          </button>
         </div>
 
-        {isLoading ? (
-          <p className="status-message">Loading services...</p>
-        ) : (
-          <p className={error ? "status-message status-message-error" : "status-message"}>
-            {error || `${services.length} services found`}
+        {/* ST-07: Search bar */}
+        <div className="homepage-search">
+          <Search
+            size={16}
+            className="homepage-search-icon"
+          />
+          <input
+            type="text"
+            placeholder="Search services..."
+            value={searchQuery}
+            onChange={(event) => setSearchQuery(event.target.value)}
+            className="homepage-search-input"
+          />
+        </div>
+
+        {/* ST-06: Category filter */}
+        <div className="homepage-categories">
+          {CATEGORIES.map(({ value, label, icon: Icon }) => {
+            const isSelected = selectedCategory === value;
+            return (
+              <button
+                key={value}
+                onClick={() => setSelectedCategory(value)}
+                className={`homepage-category-button${
+                  isSelected ? " homepage-category-button-selected" : ""
+                }`}>
+                <Icon size={14} />
+                {label}
+              </button>
+            );
+          })}
+        </div>
+
+        {!loading && (
+          <p className="status-message">
+            {filteredServices.length} services found
           </p>
         )}
 
-        {!isLoading && requiresLogin && (
-          <Link
-            to="/login"
-            className="login-link">
-            Log in
-          </Link>
-        )}
-
-        {!isLoading && !error && services.length === 0 && (
-          <p className="status-message">No services have been listed yet.</p>
-        )}
+        {loading && <p className="status-message">Loading services...</p>}
+        {error && <p className="status-message status-message-error">{error}</p>}
 
         <Row>
-          {services.map((service) => (
+          {filteredServices.map((service) => (
             <Col
               key={service.id}
               xs={12}

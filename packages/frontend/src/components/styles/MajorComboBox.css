@@ -1,0 +1,26 @@
+.major-combobox {
+  position: relative;
+}
+
+.major-combobox-dropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  background: white;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  max-height: 320px;
+  overflow-y: auto;
+  z-index: 100;
+}
+
+.major-combobox-option {
+  padding: 4px 10px;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.major-combobox-option:hover {
+  background: #f0f0f0;
+}

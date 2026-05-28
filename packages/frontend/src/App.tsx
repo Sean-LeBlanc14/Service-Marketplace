@@ -25,7 +25,7 @@ function App() {
           />
           <Route path="inbox" element={<Inbox />} />
         </Route>
-        <Route index element={<LandingPage/>}/>
+        <Route index element={<LandingPage />} />
         <Route path="verify" element={<VerifyAccount />} />
         <Route path="signup" element={<SignupPage />} />
         <Route path="login" element={<LoginPage />} />

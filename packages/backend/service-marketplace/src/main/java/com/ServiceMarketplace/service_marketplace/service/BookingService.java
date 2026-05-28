@@ -1,5 +1,8 @@
 package com.ServiceMarketplace.service_marketplace.service;
 
+import java.util.Collections;
+import java.util.List;
+
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
@@ -72,6 +75,39 @@ public class BookingService {
         Booking saved = bookingRepository.save(booking);
 
         return new CreateBookingResponse(toBookingResponse(saved), paymentIntentResult.getClientSecret());
+    }
+
+    public List<BookingResponse> getUserBookings(UserDetails userDetails){
+
+        var user = userRepository.findByEmail(userDetails.getUsername()).orElseThrow(() -> new UsernameNotFoundException("user not found"));
+
+        List<Booking> bookings = bookingRepository.findByProviderIdAndStatus(user.getId(), BookingStatus.CONFIRMED);
+
+        if (bookings.equals(Collections.emptyList())){
+            throw new ResourceNotFoundException("Upcoming Bookings", userDetails.getUsername());
+        }
+
+        List<BookingResponse> response = bookings.stream()
+            .map(this::toBookingResponse)
+            .toList();
+        
+        return response;
+        
+    }
+
+    public List<BookingResponse> getUserCompletedBookings(UserDetails userDetails){
+        
+        var user = userRepository.findByEmail(userDetails.getUsername()).orElseThrow(() -> new UsernameNotFoundException("user not found"));
+        
+        List<Booking> bookings = bookingRepository.findByProviderIdAndStatus(user.getId(), BookingStatus.COMPLETED);
+
+        if (bookings.equals(Collections.emptyList())){
+            throw new ResourceNotFoundException("Completed Bookings", userDetails.getUsername());
+        }
+
+        List<BookingResponse> response = bookings.stream().map(this::toBookingResponse).toList();
+
+        return response;
     }
 
     private BookingResponse toBookingResponse(Booking booking) {

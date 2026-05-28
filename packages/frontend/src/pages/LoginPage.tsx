@@ -22,18 +22,14 @@ export default function LoginPage() {
     };
 
     try {
-      const response = await fetch(
-        API_ENDPOINTS.auth.login,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(user)
-        }
-      );
+      const response = await fetch(API_ENDPOINTS.auth.login, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(user)
+      });
 
       if (response.ok) {
-
-      const data = await response.json();
+        const data = await response.json();
 
         //Using local storage to store token for now, possibly use cookies in the future
         localStorage.setItem("jwt_token", data.token);
@@ -43,8 +39,7 @@ export default function LoginPage() {
       } else {
         toast.error("Something went wrong, please try again.");
       }
-
-      } catch {
+    } catch {
       toast.warning(
         "Unable to connect to the server, please try again."
       );

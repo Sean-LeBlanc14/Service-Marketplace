@@ -1,6 +1,5 @@
-
 export interface ApiService {
-    id?: string;
+  id?: string;
   title?: string;
   category?: string;
   userId?: string;
@@ -14,12 +13,25 @@ export interface ApiService {
 }
 
 export interface ApiUserProfile {
-    email: string;
-    firstName: string;
-    lastName: string;
-    major: string;
-    campus: string;
-    bio: string;
-    verified: string;
-    services: ApiService[];
+  email: string;
+  firstName: string;
+  lastName: string;
+  major: string;
+  campus: string;
+  bio: string;
+  verified: string;
+  services: ApiService[];
+}
+
+export interface ApiBooking {
+  id: string;
+  serviceId: string;
+  serviceTitle: string;
+  customerId: string;
+  providerId: string;
+  agreedPrice: number;
+  priceUnit: string;
+  scheduledAt: string;
+  bookingStatus: string;
+  createdAt: string;
 }

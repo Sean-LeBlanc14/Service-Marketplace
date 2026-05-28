@@ -4,7 +4,7 @@ import react from "@vitejs/plugin-react";
 export default defineConfig({
   plugins: [react()],
   resolve: {
-    dedupe: ["@react-aria/ssr"],
+    dedupe: ["@react-aria/ssr"]
   },
   optimizeDeps: {
     include: []

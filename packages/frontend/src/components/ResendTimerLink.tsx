@@ -12,7 +12,9 @@ export const ResendTimerLink: React.FC<
   ResendTimerLinkProps
 > = ({ onResend }) => {
   const [timeLeft, setTimeLeft] = useState<number>(() => {
-    const savedEndTime = localStorage.getItem(LOCAL_STORAGE_KEY);
+    const savedEndTime = localStorage.getItem(
+      LOCAL_STORAGE_KEY
+    );
     if (!savedEndTime) return 0;
 
     const endTime = parseInt(savedEndTime, 10);
@@ -29,11 +31,13 @@ export const ResendTimerLink: React.FC<
   const intervalRef = useRef<number | null>(null);
 
   const startCountdown = (endTime: number) => {
-    if (intervalRef.current !== null) window.clearInterval(intervalRef.current);
+    if (intervalRef.current !== null)
+      window.clearInterval(intervalRef.current);
     intervalRef.current = window.setInterval(() => {
       const remaining = endTime - Date.now();
       if (remaining <= 0) {
-        if (intervalRef.current !== null) window.clearInterval(intervalRef.current);
+        if (intervalRef.current !== null)
+          window.clearInterval(intervalRef.current);
         setTimeLeft(0);
         localStorage.removeItem(LOCAL_STORAGE_KEY);
       } else {
@@ -43,7 +47,9 @@ export const ResendTimerLink: React.FC<
   };
 
   useEffect(() => {
-    const savedEndTime = localStorage.getItem(LOCAL_STORAGE_KEY);
+    const savedEndTime = localStorage.getItem(
+      LOCAL_STORAGE_KEY
+    );
     if (savedEndTime) {
       const endTime = parseInt(savedEndTime, 10);
       const remaining = endTime - Date.now();
@@ -55,11 +61,10 @@ export const ResendTimerLink: React.FC<
     }
 
     return () => {
-      if (intervalRef.current !== null) window.clearInterval(intervalRef.current);
+      if (intervalRef.current !== null)
+        window.clearInterval(intervalRef.current);
     };
   }, []);
-
-  
 
   const handleTriggerClick = async () => {
     if (timeLeft > 0 || isSending) return;
@@ -91,7 +96,10 @@ export const ResendTimerLink: React.FC<
 
   if (isSending) {
     return (
-      <button type="button" className="resend-button loading" disabled>
+      <button
+        type="button"
+        className="resend-button loading"
+        disabled>
         Sending...
       </button>
     );
@@ -99,7 +107,10 @@ export const ResendTimerLink: React.FC<
 
   if (timeLeft > 0) {
     return (
-      <button type="button" className="resend-button disabled-timer" disabled>
+      <button
+        type="button"
+        className="resend-button disabled-timer"
+        disabled>
         Resend code in {formatTime(timeLeft)}
       </button>
     );

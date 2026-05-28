@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { Badge, Card } from "react-bootstrap";
-import ServiceDetailsModal, { type ServiceDetails } from "./ServiceDetailsModal";
+import ServiceDetailsModal, {
+  type ServiceDetails
+} from "./ServiceDetailsModal";
 import "./styles/ServiceCard.css";
 
 interface Service {
@@ -36,7 +38,11 @@ function formatPrice(
 
 function ServiceCard({ service }: ServiceCardProps) {
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
-  const price = formatPrice(service.priceMin, service.priceMax, service.priceUnit);
+  const price = formatPrice(
+    service.priceMin,
+    service.priceMax,
+    service.priceUnit
+  );
   const modalService: ServiceDetails = {
     id: service.id,
     title: service.title,
@@ -66,7 +72,9 @@ function ServiceCard({ service }: ServiceCardProps) {
           </Card.Text>
 
           <div className="service-location">
-            <span aria-hidden="true" className="service-location-icon">
+            <span
+              aria-hidden="true"
+              className="service-location-icon">
               <svg
                 className="service-location-svg"
                 viewBox="0 0 24 24"
@@ -80,7 +88,10 @@ function ServiceCard({ service }: ServiceCardProps) {
 
           <div className="service-tags-container">
             {service.tags.map((tag) => (
-              <Badge bg="none" key={tag} className="service-tag">
+              <Badge
+                bg="none"
+                key={tag}
+                className="service-tag">
                 {tag}
               </Badge>
             ))}

@@ -23,7 +23,8 @@ export function formatPriceUnit(value?: string | null) {
   }
 
   return (
-    PRICE_UNIT_OPTIONS.find((option) => option.value === cleanUnit)
-      ?.label ?? cleanUnit
+    PRICE_UNIT_OPTIONS.find(
+      (option) => option.value === cleanUnit
+    )?.label ?? cleanUnit
   );
 }

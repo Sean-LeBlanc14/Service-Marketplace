@@ -1,0 +1,21 @@
+.serviceDashboard-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.service-request-container {
+  border-bottom: 1px solid #333;
+  height: 30px;
+}
+
+.service-provided-history-container {
+  border-bottom: 1px solid #333;
+  height: 30px;
+}
+
+.service-history-container {
+  border-bottom: 1px solid #333;
+  height: 30px;
+}

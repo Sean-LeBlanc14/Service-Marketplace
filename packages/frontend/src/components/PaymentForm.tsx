@@ -31,35 +31,35 @@ function PaymentFormInner({
 
     setIsLoading(true);
 
-    const { error } = await stripe.confirmPayment({
-      elements,
-      confirmParams: {
-        return_url: window.location.href
-      },
-      redirect: "if_required"
-    });
+        const { error } = await stripe.confirmSetup({
+        elements,
+        confirmParams: {
+            return_url: window.location.href
+        },
+        redirect: "if_required"
+        });
 
-    if (error) {
-      onError(error.message ?? "Payment failed.");
-    } else {
-      onSuccess();
-    }
+        if (error) {
+        onError(error.message ?? "Failed to save card.");
+        } else {
+        onSuccess();
+        }
 
     setIsLoading(false);
   }
 
-  return (
-    <div className="payment-form">
-      <PaymentElement />
-      <div style={{ marginTop: "1rem" }}>
-        <SubmitButton
-          label={isLoading ? "Processing..." : "Pay Now"}
-          onClick={handleSubmit}
-        />
-      </div>
-    </div>
-  );
-}
+    return (
+        <div className="payment-form">
+        <PaymentElement />
+        <div style={{ marginTop: "1rem" }}>
+            <SubmitButton
+            label={isLoading ? "Saving..." : "Submit Booking"}
+            onClick={handleSubmit}
+            />
+        </div>
+        </div>
+    );
+    }
 
 interface PaymentFormProps {
   clientSecret: string;

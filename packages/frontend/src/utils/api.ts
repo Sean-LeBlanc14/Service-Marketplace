@@ -24,7 +24,7 @@ export const API_ENDPOINTS = {
   },
   bookings: {
     create: `${API_ROUTE}/bookings`,
-    getUpcoming: `${API_ROUTE}/bookings/upcoming`,
-    getCompleted: `${API_ROUTE}/bookings/completed`
+    confirm: (bookingId: string) => `${API_ROUTE}/bookings/${encodeURIComponent(bookingId)}/confirm`,
+    cancel: (bookingId: string) => `${API_ROUTE}/bookings/${encodeURIComponent(bookingId)}/cancel`
   }
 };

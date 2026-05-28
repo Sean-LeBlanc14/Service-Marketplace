@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import InputField from "../components/InputField";
+import MajorComboBox from "../components/MajorComboBox";
 import NavLink from "../components/NavLink";
 import InformationSection from "../components/InformationSection";
 import FormContainer from "../components/FormContainer";
@@ -31,6 +32,11 @@ function SignupPage() {
       campus: campus,
       major: major
     };
+    if (!major) {
+      toast.error("Please select a major from the list.");
+      return;
+    }
+
     if (!email.endsWith("@calpoly.edu")) {
       toast.error("Please use a valid Cal Poly email");
       return;
@@ -96,13 +102,7 @@ function SignupPage() {
 
             <div className="field-container">
               <div className="user-field">
-                <InputField
-                  value={major}
-                  label="Major"
-                  type="text"
-                  placeHolder="Your Major"
-                  onChange={(e) => setMajor(e.target.value)}
-                />
+                <MajorComboBox value={major} onChange={setMajor} />
               </div>
 
               <div className="user-field">

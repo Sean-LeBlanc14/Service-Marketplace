@@ -13,9 +13,9 @@ export default function ServiceDashboard() {
 
   const [ bookings, setBookings ] = useState<ApiBooking[]>();
 
-  const [ serviceHistory, setServiceHistory ] = useState<ApiService[]>();
+  const [ serviceHistory, setServiceHistory ] = useState<ApiBooking[]>();
 
-  const [ servicePurchaseHistory, setServicePurchaseHistory ] = useState<ApiService[]>();
+  const [ servicePurchaseHistory, setServicePurchaseHistory ] = useState<ApiBooking[]>();
 
 
 
@@ -54,7 +54,7 @@ export default function ServiceDashboard() {
   }
   const fetchUserServices = async() => {
         try{
-          const bookingResponse = await fetch(API_ENDPOINTS.bookings.getUpcoming, {
+          const bookingResponse = await fetch(API_ENDPOINTS.bookings.getRequests, {
           headers: {
             'Authorization': `Bearer ${authToken}`,
             'Accepted': 'application/json'
@@ -81,13 +81,25 @@ export default function ServiceDashboard() {
 
           if (serviceHistoryResponse.ok){
             const serviceHistory = (await serviceHistoryResponse.json());
-
-            console.log(serviceHistory);
+            
+            setServiceHistory(serviceHistory);
           }else if (serviceHistoryResponse.status === 404){
             toast.warning("No bookings found");
           }
 
-          //const servicePurchaseHistoryResponse = await fetch();
+          const scheduledBookingsResponse = await fetch(API_ENDPOINTS.bookings.getScheduled, {
+            headers: {"Authorization": `Bearer: ${authToken}`}
+          });
+
+          if (scheduledBookingsResponse.ok){
+            const scheduledBookings = (await scheduledBookingsResponse.json()) as ApiBooking[];
+
+            setServicePurchaseHistory(scheduledBookings);
+          }else if (scheduledBookingsResponse.status === 404){
+            toast.warning("No upcoming bookings");
+          }else{
+            toast.warning("A network error occurred");
+          }
 
 
         }catch(e){

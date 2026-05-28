@@ -1,5 +1,7 @@
 package com.ServiceMarketplace.service_marketplace.controller;
 
+import java.util.List;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -82,6 +84,29 @@ public class BookingController {
                 .body(buildHtmlPage("Already Actioned", "This booking has already been confirmed or cancelled.", "#e65100"));
         }
     }
+
+    @GetMapping("/requests")
+    public ResponseEntity<List<BookingResponse>> getRequests(@AuthenticationPrincipal UserDetails userDetails) {
+      List<BookingResponse> response = bookingService.getUserServiceRequests(userDetails);
+
+      return ResponseEntity.status(HttpStatus.OK).body(response);
+    }
+
+    @GetMapping("/completed")
+    public ResponseEntity<List<BookingResponse>> getCompletedBookings(@AuthenticationPrincipal UserDetails userDetails){
+      List<BookingResponse> response = bookingService.getUserCompletedBookings(userDetails);
+
+      return ResponseEntity.status(HttpStatus.OK).body(response);
+    }
+
+    @GetMapping("/scheduled")
+    public ResponseEntity<List<BookingResponse>> getScheduledBookings(@AuthenticationPrincipal UserDetails userDetails) {
+      List<BookingResponse> response = bookingService.getUserScheduledBookings(userDetails);
+
+      return ResponseEntity.status(HttpStatus.OK).body(response);
+    }
+    
+    
 
     private String buildHtmlPage(String heading, String message, String headingColor) {
         return """

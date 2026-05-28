@@ -22,7 +22,8 @@
     "build": "npm run build -w packages/frontend",
     "lint": "npm run lint -w packages/frontend",
     "back-test": "cd packages/backend/service-marketplace && mvn clean test -X",
-    "front-test": "npm run build -w packages/frontend && npm run lint -w packages/frontend"
+    "front-test": "npm run build -w packages/frontend && npm run lint -w packages/frontend",
+    "compile": "cd packages/backend/service-marketplace && mvn clean compile"
   },
   "overrides": {
     "react": "18.3.1",

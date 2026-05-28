@@ -1,5 +1,10 @@
 package com.ServiceMarketplace.service_marketplace.service;
 
+import java.math.BigDecimal;
+import java.util.Collections;
+import java.util.List;
+
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
@@ -186,17 +191,17 @@ public class BookingService {
         return toBookingResponse(booking);
     }
 
-    public List<BookingResponse> getUserBookings(UserDetails userDetails){
+    public List<BookingResponse> getUserServiceRequests(UserDetails userDetails){
 
         var user = userRepository.findByEmail(userDetails.getUsername()).orElseThrow(() -> new UsernameNotFoundException("user not found"));
 
-        List<Booking> bookings = bookingRepository.findByProviderIdAndStatus(user.getId(), BookingStatus.CONFIRMED);
+        List<Booking> bookingRequests = bookingRepository.findByProviderIdAndStatus(user.getId(), BookingStatus.AWAITING_PROVIDER_CONFIRMATION);
 
-        if (bookings.equals(Collections.emptyList())){
-            throw new ResourceNotFoundException("Upcoming Bookings", userDetails.getUsername());
+        if (bookingRequests.equals(Collections.emptyList())){
+            throw new ResourceNotFoundException("Booking Requests", userDetails.getUsername());
         }
 
-        List<BookingResponse> response = bookings.stream()
+        List<BookingResponse> response = bookingRequests.stream()
             .map(this::toBookingResponse)
             .toList();
         
@@ -212,6 +217,20 @@ public class BookingService {
 
         if (bookings.equals(Collections.emptyList())){
             throw new ResourceNotFoundException("Completed Bookings", userDetails.getUsername());
+        }
+
+        List<BookingResponse> response = bookings.stream().map(this::toBookingResponse).toList();
+
+        return response;
+    }
+
+    public List<BookingResponse> getUserScheduledBookings(UserDetails userDetails){
+        var user = userRepository.findByEmail(userDetails.getUsername()).orElseThrow(() -> new UsernameNotFoundException("User not found"));
+
+        List<Booking> bookings = bookingRepository.findByProviderIdAndStatus(user.getId(), BookingStatus.CONFIRMED);
+
+        if (bookings.equals(Collections.emptyList())){
+            throw new ResourceNotFoundException("Scheduled Bookings", userDetails.getUsername());
         }
 
         List<BookingResponse> response = bookings.stream().map(this::toBookingResponse).toList();

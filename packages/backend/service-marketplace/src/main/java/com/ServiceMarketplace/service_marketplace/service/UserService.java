@@ -106,6 +106,12 @@ public class UserService {
         
     }
 
+    public UserProfile getUserById(String id){
+        var user = userRepository.findById(id).orElseThrow(() -> new UsernameNotFoundException("User not found"));
+
+        return toUserProfile(user);
+    }
+
     public UserProfile updateUserProfile(UserDetails userDetails, UpdateUserProfileRequest request){
 
         var user = userRepository.findByEmail(userDetails.getUsername())

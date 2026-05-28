@@ -1,21 +1,25 @@
 .serviceDashboard-wrapper {
+  padding: 20px;
   display: flex;
   flex-direction: column;
   align-items: center;
+  gap: 20px;
+  height: 100vh;
+}
+
+.serviceDashboard-wrapper section {
+  width: 100%;
+  border-bottom: 1px solid #333;
+  display: flex;
+  flex-direction: column;
   justify-content: center;
+  flex: 1;
 }
 
-.service-request-container {
-  border-bottom: 1px solid #333;
-  height: 30px;
-}
 
-.service-provided-history-container {
-  border-bottom: 1px solid #333;
-  height: 30px;
-}
-
-.service-history-container {
-  border-bottom: 1px solid #333;
-  height: 30px;
+.booking-container{
+  display: flex;
+  flex-direction: row;
+  margin: 10px;
+  gap: 10px;
 }

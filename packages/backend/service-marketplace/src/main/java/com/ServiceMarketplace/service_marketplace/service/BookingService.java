@@ -180,7 +180,8 @@ public class BookingService {
     }
 
     private BookingResponse doCancelBooking(Booking booking) {
-        if (booking.getStatus() != BookingStatus.AWAITING_PROVIDER_CONFIRMATION) {
+        if (booking.getStatus() != BookingStatus.AWAITING_PROVIDER_CONFIRMATION 
+            && booking.getStatus() != BookingStatus.CONFIRMED) {
             throw new BookingStateException("Only bookings awaiting confirmation can be cancelled");
         }
 

@@ -32,6 +32,6 @@ export interface ApiBooking {
   agreedPrice: number;
   priceUnit: string;
   scheduledAt: string;
-  bookingStatus: string;
+  status: string;
   createdAt: string;
 }

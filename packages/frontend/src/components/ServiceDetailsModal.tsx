@@ -56,7 +56,7 @@ function ServiceDetailsModal({
   onClose
 }: ServiceDetailsModalProps) {
   const [view, setView] = useState<ModalView>("details");
-  const [clientSecret, setClientSecret] = useState("");
+  const [setupClientSecret, setSetupClientSecret] = useState("");
   const [form, setForm] = useState<BookingFormState>({
     agreedPrice: String(service.priceMin),
     scheduledAt: "",
@@ -92,7 +92,7 @@ function ServiceDetailsModal({
         },
         body: JSON.stringify({
           serviceId: service.id,
-          agreedPrice: price,
+          proposedPrice: price,
           scheduledAt: new Date(form.scheduledAt).toISOString()
         })
       });
@@ -102,7 +102,7 @@ function ServiceDetailsModal({
       }
 
       const data = await response.json();
-      setClientSecret(data.clientSecret);
+      setSetupClientSecret(data.setupClientSecret);
       setView("payment");
     } catch (err) {
       setForm(f => ({
@@ -136,8 +136,8 @@ function ServiceDetailsModal({
               : view === "booking"
               ? "Book Service"
               : view === "payment"
-              ? "Payment"
-              : "Booking Confirmed"}
+              ? "Card Details"
+              : "Request Submitted"}
           </h2>
           <button
             type="button"
@@ -229,8 +229,11 @@ function ServiceDetailsModal({
 
         {view === "payment" && (
           <div className="service-details-payment">
+            <p className="service-details-payment-note">
+              Your card will not be charged until the provider confirms the price.
+            </p>
             <PaymentForm
-              clientSecret={clientSecret}
+              clientSecret={setupClientSecret}
               onSuccess={() => setView("success")}
               onError={(message) => setForm(f => ({ ...f, error: message }))}
             />
@@ -239,7 +242,7 @@ function ServiceDetailsModal({
 
         {view === "success" && (
           <div className="service-details-payment">
-            <p>Your booking is confirmed!</p>
+            <p>Your booking request has been submitted. The provider will review and confirm the price shortly — you'll receive an email once it's confirmed.</p>
             <button
               type="button"
               className="service-details-book"

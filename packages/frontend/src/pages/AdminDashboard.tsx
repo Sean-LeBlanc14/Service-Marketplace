@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import { API_ENDPOINTS } from "../utils/api";
 import "../components/styles/AdminDashboard.css";
@@ -44,6 +44,14 @@ function getUserName(user: AdminUser) {
   return name || "Unknown";
 }
 
+function getAuthHeaders() {
+  const token = localStorage.getItem(TOKEN_STORAGE_KEY);
+
+  return {
+    Authorization: `Bearer ${token}`
+  };
+}
+
 function AdminDashboard() {
   const [reports, setReports] = useState<Report[]>([]);
   const [users, setUsers] = useState<AdminUser[]>([]);
@@ -55,100 +63,110 @@ function AdminDashboard() {
     action: ReportAction;
   } | null>(null);
   const [activeUserAction, setActiveUserAction] = useState<string | null>(null);
+  const [reloadVersion, setReloadVersion] = useState(0);
   const currentUserId = localStorage.getItem("user_id");
   const suspendedUsers = users.filter((user) => user.role === "suspended");
 
-  const getAuthHeaders = useCallback(() => {
-    const token = localStorage.getItem(TOKEN_STORAGE_KEY);
-
-    return {
-      Authorization: `Bearer ${token}`
-    };
-  }, []);
-
-  const fetchAdminData = useCallback(async () => {
-    setIsLoading(true);
-
-    try {
-      const headers = getAuthHeaders();
-      const reportsResponse = await fetch(API_ENDPOINTS.reports.all, {
-        headers
-      });
-
-      if (reportsResponse.status === 403) {
-        setAccessDenied(true);
-        setReports([]);
-        setUsers([]);
-        setReportUsers({});
-        return;
-      }
-
-      if (!reportsResponse.ok) {
-        throw new Error("Failed to load reports");
-      }
-
-      const reportsData = (await reportsResponse.json()) as Report[];
-      const nextReports = Array.isArray(reportsData) ? reportsData : [];
-      const reportUserIds = Array.from(
-        new Set(
-          nextReports
-            .flatMap((report) => [report.reporterId, report.providerId])
-            .filter(Boolean)
-        )
-      );
-      const reportUserEntries = await Promise.all(
-        reportUserIds.map(async (userId) => {
-          const userResponse = await fetch(API_ENDPOINTS.users.getById(userId), {
-            headers
-          });
-
-          if (!userResponse.ok) {
-            return null;
-          }
-
-          const user = (await userResponse.json()) as AdminUser;
-          return [userId, user] as const;
-        })
-      );
-      const nextReportUsers: Record<string, AdminUser> = {};
-      reportUserEntries.forEach((entry) => {
-        if (entry) {
-          const [userId, user] = entry;
-          nextReportUsers[userId] = user;
-        }
-      });
-
-      const usersResponse = await fetch(API_ENDPOINTS.users.all, {
-        headers
-      });
-
-      if (usersResponse.status === 403) {
-        setAccessDenied(true);
-        setReports([]);
-        setUsers([]);
-        setReportUsers({});
-        return;
-      }
-
-      if (!usersResponse.ok) {
-        throw new Error("Failed to load users");
-      }
-
-      const usersData = (await usersResponse.json()) as AdminUser[];
-      setReports(nextReports);
-      setUsers(Array.isArray(usersData) ? usersData : []);
-      setReportUsers(nextReportUsers);
-      setAccessDenied(false);
-    } catch {
-      toast.error("Failed to load admin dashboard");
-    } finally {
-      setIsLoading(false);
-    }
-  }, [getAuthHeaders]);
-
   useEffect(() => {
-    void fetchAdminData();
-  }, [fetchAdminData]);
+    let cancelled = false;
+
+    async function load() {
+      setIsLoading(true);
+
+      try {
+        const headers = getAuthHeaders();
+        const reportsResponse = await fetch(API_ENDPOINTS.reports.all, {
+          headers
+        });
+
+        if (reportsResponse.status === 403) {
+          if (!cancelled) {
+            setAccessDenied(true);
+            setReports([]);
+            setUsers([]);
+            setReportUsers({});
+          }
+          return;
+        }
+
+        if (!reportsResponse.ok) {
+          throw new Error("Failed to load reports");
+        }
+
+        const reportsData = (await reportsResponse.json()) as Report[];
+        const nextReports = Array.isArray(reportsData) ? reportsData : [];
+        const reportUserIds = Array.from(
+          new Set(
+            nextReports
+              .flatMap((report) => [report.reporterId, report.providerId])
+              .filter(Boolean)
+          )
+        );
+        const reportUserEntries = await Promise.all(
+          reportUserIds.map(async (userId) => {
+            const userResponse = await fetch(API_ENDPOINTS.users.getById(userId), {
+              headers
+            });
+
+            if (!userResponse.ok) {
+              return null;
+            }
+
+            const user = (await userResponse.json()) as AdminUser;
+            return [userId, user] as const;
+          })
+        );
+        const nextReportUsers: Record<string, AdminUser> = {};
+        reportUserEntries.forEach((entry) => {
+          if (entry) {
+            const [userId, user] = entry;
+            nextReportUsers[userId] = user;
+          }
+        });
+
+        const usersResponse = await fetch(API_ENDPOINTS.users.all, {
+          headers
+        });
+
+        if (usersResponse.status === 403) {
+          if (!cancelled) {
+            setAccessDenied(true);
+            setReports([]);
+            setUsers([]);
+            setReportUsers({});
+          }
+          return;
+        }
+
+        if (!usersResponse.ok) {
+          throw new Error("Failed to load users");
+        }
+
+        const usersData = (await usersResponse.json()) as AdminUser[];
+
+        if (!cancelled) {
+          setReports(nextReports);
+          setUsers(Array.isArray(usersData) ? usersData : []);
+          setReportUsers(nextReportUsers);
+          setAccessDenied(false);
+        }
+      } catch {
+        if (!cancelled) {
+          toast.error("Failed to load admin dashboard");
+        }
+      } finally {
+        if (!cancelled) {
+          setIsLoading(false);
+        }
+      }
+    }
+
+    void load();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [reloadVersion]);
 
   async function resolveReport(reportId: string) {
     const response = await fetch(API_ENDPOINTS.reports.resolve(reportId), {
@@ -176,7 +194,7 @@ function AdminDashboard() {
 
       await resolveReport(report.id);
       toast.success("Listing removed");
-      await fetchAdminData();
+      setReloadVersion((version) => version + 1);
     } catch {
       toast.error("Failed to remove listing");
     } finally {
@@ -199,7 +217,7 @@ function AdminDashboard() {
 
       await resolveReport(report.id);
       toast.success("User suspended");
-      await fetchAdminData();
+      setReloadVersion((version) => version + 1);
     } catch {
       toast.error("Failed to suspend user");
     } finally {
@@ -221,7 +239,7 @@ function AdminDashboard() {
       }
 
       toast.success("User unsuspended");
-      await fetchAdminData();
+      setReloadVersion((version) => version + 1);
     } catch {
       toast.error("Failed to unsuspend user");
     } finally {
@@ -242,7 +260,7 @@ function AdminDashboard() {
   if (accessDenied) {
     return (
       <main className="admin-dashboard">
-        <p className="admin-dashboard-message">Access denied — admins only</p>
+        <p className="admin-dashboard-message">Access denied &mdash; admins only</p>
       </main>
     );
   }

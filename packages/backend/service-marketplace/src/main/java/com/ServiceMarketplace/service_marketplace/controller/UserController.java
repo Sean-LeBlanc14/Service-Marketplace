@@ -82,7 +82,7 @@ public class UserController {
     }
 
     @PutMapping("/{userId}/suspend")
-    public ResponseEntity<User> suspendUser(
+    public ResponseEntity<?> suspendUser(
             @PathVariable String userId,
             @AuthenticationPrincipal UserDetails userDetails) {
         User requester = getCurrentUser(userDetails);
@@ -98,6 +98,11 @@ public class UserController {
         }
 
         User user = userToSuspend.get();
+
+        if ("admin".equals(user.getRole())) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Cannot suspend another admin.");
+        }
+
         user.setRole("suspended");
 
         return ResponseEntity.status(HttpStatus.OK).body(userRepository.save(user));

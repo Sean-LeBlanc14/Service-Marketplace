@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Navigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { API_ENDPOINTS } from "../utils/api";
 import "../components/styles/AdminDashboard.css";
@@ -53,11 +54,13 @@ function getAuthHeaders() {
 }
 
 function AdminDashboard() {
+  const authToken = localStorage.getItem(TOKEN_STORAGE_KEY);
   const [reports, setReports] = useState<Report[]>([]);
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [reportUsers, setReportUsers] = useState<Record<string, AdminUser>>({});
   const [isLoading, setIsLoading] = useState(true);
   const [accessDenied, setAccessDenied] = useState(false);
+  const [showResolved, setShowResolved] = useState(false);
   const [activeReportAction, setActiveReportAction] = useState<{
     reportId: string;
     action: ReportAction;
@@ -66,8 +69,15 @@ function AdminDashboard() {
   const [reloadVersion, setReloadVersion] = useState(0);
   const currentUserId = localStorage.getItem("user_id");
   const suspendedUsers = users.filter((user) => user.role === "suspended");
+  const visibleReports = showResolved
+    ? reports
+    : reports.filter((report) => report.status !== "resolved");
 
   useEffect(() => {
+    if (authToken === null) {
+      return;
+    }
+
     let cancelled = false;
 
     async function load() {
@@ -166,7 +176,7 @@ function AdminDashboard() {
     return () => {
       cancelled = true;
     };
-  }, [reloadVersion]);
+  }, [authToken, reloadVersion]);
 
   async function resolveReport(reportId: string) {
     const response = await fetch(API_ENDPOINTS.reports.resolve(reportId), {
@@ -257,6 +267,10 @@ function AdminDashboard() {
     return getUserName(user);
   }
 
+  if (authToken === null) {
+    return <Navigate to="/login" replace />;
+  }
+
   if (accessDenied) {
     return (
       <main className="admin-dashboard">
@@ -269,7 +283,17 @@ function AdminDashboard() {
     <main className="admin-dashboard">
       <div className="admin-dashboard-header">
         <h1>Admin Dashboard</h1>
-        <p>{reports.length} reports</p>
+        <div className="admin-dashboard-header-actions">
+          <p>
+            {visibleReports.length} {showResolved ? "reports" : "open reports"}
+          </p>
+          <button
+            type="button"
+            className="admin-dashboard-toggle"
+            onClick={() => setShowResolved((value) => !value)}>
+            {showResolved ? "Hide Resolved" : "Show Resolved"}
+          </button>
+        </div>
       </div>
 
       {isLoading ? (
@@ -290,14 +314,14 @@ function AdminDashboard() {
                 </tr>
               </thead>
               <tbody>
-                {reports.length === 0 ? (
+                {visibleReports.length === 0 ? (
                   <tr>
                     <td colSpan={7} className="admin-dashboard-empty">
-                      No reports found.
+                      {showResolved ? "No reports found." : "No open reports found."}
                     </td>
                   </tr>
                 ) : (
-                  reports.map((report) => {
+                  visibleReports.map((report) => {
                     const isSelfSuspension = report.providerId === currentUserId;
 
                     return (
@@ -323,11 +347,7 @@ function AdminDashboard() {
                             <button
                               type="button"
                               className="admin-dashboard-action admin-dashboard-action-warning"
-                              disabled={
-                                isSelfSuspension ||
-                                (activeReportAction?.reportId === report.id &&
-                                  activeReportAction.action === "suspend")
-                              }
+                              disabled={isSelfSuspension}
                               onClick={() => void suspendUser(report)}>
                               Suspend User
                             </button>

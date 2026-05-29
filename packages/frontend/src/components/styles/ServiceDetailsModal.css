@@ -335,6 +335,16 @@
   border: 1px solid #ccc;
 }
 
+.report-dialog input {
+  box-sizing: border-box;
+  width: 100%;
+  padding: 8px;
+  margin-bottom: 12px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  font: inherit;
+}
+
 .report-dialog-actions {
   display: flex;
   gap: 8px;

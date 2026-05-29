@@ -39,6 +39,7 @@ function ServiceCard({ service }: ServiceCardProps) {
   const price = formatPrice(service.priceMin, service.priceMax, service.priceUnit);
   const modalService: ServiceDetails = {
     id: service.id,
+    userId: service.userId,
     title: service.title,
     price,
     priceMin: service.priceMin,

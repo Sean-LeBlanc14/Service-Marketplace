@@ -36,7 +36,16 @@ export default function LoginPage() {
       const data = await response.json();
 
         //Using local storage to store token for now, possibly use cookies in the future
+        localStorage.setItem("user_role", data.role);
+        if (data.role === "suspended") {
+          localStorage.removeItem("jwt_token");
+          localStorage.removeItem("user_id");
+          toast.error("Your account has been suspended");
+          return;
+        }
+
         localStorage.setItem("jwt_token", data.token);
+        localStorage.setItem("user_id", data.id);
         navigate("/homepage");
       } else if (response.status === 401) {
         toast.error("Invalid Email or Password!");

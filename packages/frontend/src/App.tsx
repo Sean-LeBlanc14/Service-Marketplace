@@ -32,7 +32,7 @@ function AppRoutes() {
         <Route path="profile" element={<ProfilePage />} />
         <Route path="settings" element={<Settings />} />
         <Route
-          path="requests"
+          path="dashboard"
           element={<ServiceDashboard />}
         />
         <Route path="inbox" element={<Inbox />} />

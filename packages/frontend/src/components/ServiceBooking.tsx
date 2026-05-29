@@ -8,7 +8,9 @@ import { useEffect, useState } from "react";
 
 interface ServiceBookingProps {
   booking: ApiBooking;
-  user?: ApiUserProfile;
+  confirmBooking?: (booking: ApiBooking) => void;
+  rejectBooking?: (booking: ApiBooking) => void;
+  cancelBooking?: (booking: ApiBooking) => void;
 }
 
 function formatBookingTime(
@@ -45,9 +47,10 @@ function getStatusLabel(status: string): string {
     .join(" ");
 }
 
-function ServiceBooking({ booking }: ServiceBookingProps) {
+function ServiceBooking({ booking, confirmBooking, cancelBooking, rejectBooking }: ServiceBookingProps) {
   const [customer, setCustomer] = useState<ApiUserProfile>();
   const [isUpdating, setIsUpdating] = useState(false);
+  const [ isRejecting, setIsRejecting] = useState(false);
 
   const authToken = window.localStorage.getItem("jwt_token");
   const customerName = customer
@@ -84,64 +87,7 @@ function ServiceBooking({ booking }: ServiceBookingProps) {
     getBookingUser();
   }, [authToken, booking.customerId]);
 
-  async function confirmBooking() {
-    setIsUpdating(true);
-
-    try {
-      const confirmResponse = await fetch(
-        API_ENDPOINTS.bookings.confirm(booking.id),
-        {
-          method: "PUT",
-          headers: {
-            Authorization: `Bearer ${authToken}`,
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify({ confirmedPrice: booking.agreedPrice })
-        }
-      );
-
-      if (confirmResponse.ok) {
-        toast.success("Booking accepted");
-      } else {
-        toast.error("Something went wrong");
-      }
-    } catch (e) {
-      console.error(e);
-      toast.warning(
-        "A network error occurred when confirming this booking, please try again."
-      );
-    } finally {
-      setIsUpdating(false);
-    }
-  }
-
-  async function cancelBooking() {
-    setIsUpdating(true);
-
-    try {
-      const cancelResponse = await fetch(
-        API_ENDPOINTS.bookings.cancel(booking.id),
-        {
-          method: "PUT",
-          headers: {
-            Authorization: `Bearer ${authToken}`,
-            "Content-Type": "application/json"
-          }
-        }
-      );
-
-      if (cancelResponse.ok) {
-        toast.success("Booking canceled");
-      } else {
-        toast.error("Something went wrong");
-      }
-    } catch (e) {
-      toast.warning("A network error occurred, please try again");
-      console.error(e);
-    } finally {
-      setIsUpdating(false);
-    }
-  }
+  
 
   return (
     <Card className="booking-card">
@@ -177,21 +123,33 @@ function ServiceBooking({ booking }: ServiceBookingProps) {
           </span>
 
           {booking.status === "AWAITING_PROVIDER_CONFIRMATION" && (
-            <button
-              type="button"
-              className="booking-action booking-action-primary"
-              disabled={isUpdating}
-              onClick={confirmBooking}>
-              {isUpdating ? "Accepting..." : "Accept Booking"}
-            </button>
+            <div className="booking-action-container">
+              <button
+                type="button"
+                className="booking-action booking-action-primary"
+                disabled={isUpdating}
+                onClick={() => { setIsUpdating(true); confirmBooking(booking)}}>
+                {isUpdating ? "Accepting..." : "Accept Booking"}
+              </button>
+              <button
+                type="button"
+                className="booking-action booking-action-secondary"
+                disabled={isRejecting}
+                onClick={() => {setIsRejecting(true); rejectBooking(booking)}}
+              >
+                {isRejecting ? "Rejecting..." : "Reject Booking"}
+              </button>
+            </div>
+            
+            
           )}
 
           {booking.status === "CONFIRMED" && (
             <button
               type="button"
-              className="booking-action booking-action-secondary"
+              className="booking-action booking-action-primary"
               disabled={isUpdating}
-              onClick={cancelBooking}>
+              onClick={() => {setIsUpdating(true); cancelBooking(booking)}}>
               {isUpdating ? "Canceling..." : "Cancel Booking"}
             </button>
           )}

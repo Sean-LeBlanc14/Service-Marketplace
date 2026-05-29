@@ -1,5 +1,5 @@
 import { API_ENDPOINTS } from "../utils/api";
-import type { ApiUserProfile, ApiBooking } from "../utils/types";
+import type { ApiBooking } from "../utils/types";
 import ServiceBooking from "../components/ServiceBooking";
 import { toast } from "react-toastify";
 import { useEffect, useState } from "react";
@@ -10,48 +10,21 @@ export default function ServiceDashboard() {
 
   const navigate = useNavigate();
 
-  const [ user, setUser ] = useState<ApiUserProfile>();
-
   const [ bookingRequests, setBookingRequests ] = useState<ApiBooking[]>() || [];
 
   const [ serviceHistory, setServiceHistory ] = useState<ApiBooking[]>() || [];
 
   const [ upcomingBookings, setUpcomingBookings ] = useState<ApiBooking[]>() || [];
 
+  const authToken = window.localStorage.getItem("jwt_token")
 
-  
   useEffect(()=> {
-    const authToken = window.localStorage.getItem("jwt_token");
 
     if (!authToken){
       navigate("/login");
       toast.error("Please login");
     }
 
-    //Gets the user
-    const fetchUser = async() => {
-      try{
-        const response = await fetch(API_ENDPOINTS.user.profile, {
-          headers: {
-            Authorization: `Bearer ${authToken}`
-          }});
-
-          if (!response.ok){
-            toast.error("An error occured when fetching your profile");
-            return;
-          }
-
-          const userData = (await response.json()) as ApiUserProfile;
-
-          setUser(userData);
-
-      }catch(e){
-          console.error(e);
-          toast.warning("A network error occurred, please try again.");
-      }
-
-      
-  }
   //Will pull up all bookings
   const fetchUserServices = async() => {
         try{
@@ -115,10 +88,65 @@ export default function ServiceDashboard() {
           toast.warning("A network error occurred, please reload the page.");
         }
       }
-    fetchUser();
     fetchUserServices();
-  }, [navigate, setBookingRequests, setServiceHistory, setUpcomingBookings, setUser])
+  }, [navigate, setBookingRequests, setServiceHistory, setUpcomingBookings, authToken]);
 
+  async function confirmBooking(booking: ApiBooking) {
+
+    try {
+      const confirmResponse = await fetch(
+        API_ENDPOINTS.bookings.confirm(booking.id),
+        {
+          method: "PUT",
+          headers: {
+            Authorization: `Bearer ${authToken}`,
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({ confirmedPrice: booking.agreedPrice })
+        }
+      );
+
+      if (confirmResponse.ok) {
+        toast.success("Booking accepted, you will recieve payment shortly!");
+        setBookingRequests(bookingRequests?.filter((request) => booking.id !== request.id));
+        return;
+      } else {
+        toast.error("Something went wrong");
+      }
+    } catch (e) {
+      console.error(e);
+      toast.warning(
+        "A network error occurred when confirming this booking, please try again."
+      );
+    } 
+  }
+
+  async function cancelBooking(booking: ApiBooking) {
+
+    try {
+      const cancelResponse = await fetch(
+        API_ENDPOINTS.bookings.cancel(booking.id),
+        {
+          method: "PUT",
+          headers: {
+            Authorization: `Bearer ${authToken}`,
+            "Content-Type": "application/json"
+          }
+        }
+      );
+
+      if (cancelResponse.ok) {
+        toast.success("Booking canceled");
+        setUpcomingBookings(upcomingBookings?.filter((appointment) => appointment.id !== booking.id));
+        return;
+      } else {
+        toast.error("Something went wrong");
+      }
+    } catch (e) {
+      toast.warning("A network error occurred, please try again");
+      console.error(e);
+    } 
+  }
 
   return (
     <div className="serviceDashboard-wrapper">
@@ -128,7 +156,7 @@ export default function ServiceDashboard() {
 
         <div className="booking-container">
           {bookingRequests && bookingRequests.length > 0 ? ( bookingRequests.map((booking: ApiBooking) => (
-              <ServiceBooking key={booking.id} booking={booking}/>
+              <ServiceBooking key={booking.id} booking={booking} confirmBooking={confirmBooking}/>
             ))
           ) : (
             "No incoming requests"
@@ -141,7 +169,7 @@ export default function ServiceDashboard() {
 
         <div className="booking-container">
           {upcomingBookings && upcomingBookings.length > 0 ? ( upcomingBookings.map((booking: ApiBooking) => (
-              <ServiceBooking key={booking.id} booking={booking} user={user} />
+              <ServiceBooking key={booking.id} booking={booking} cancelBooking={cancelBooking}/>
             ))
           ) : (
             "No incoming requests"
@@ -149,12 +177,12 @@ export default function ServiceDashboard() {
         </div>
       </section>
 
-      <section>
+      <section className="bottom">
         <h2>Your Service History</h2>
 
         <div className="booking-container">
           {serviceHistory && serviceHistory.length > 0 ? ( serviceHistory.map((booking: ApiBooking) => (
-              <ServiceBooking key={booking.id} booking={booking} user={user} />
+              <ServiceBooking key={booking.id} booking={booking}/>
             ))
           ) : (
             "No incoming requests"

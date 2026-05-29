@@ -87,7 +87,7 @@ public class BookingController {
 
     @GetMapping("/requests")
     public ResponseEntity<List<BookingResponse>> getRequests(@AuthenticationPrincipal UserDetails userDetails) {
-      List<BookingResponse> response = bookingService.getUserServiceRequests(userDetails);
+      List<BookingResponse> response = bookingService.getUserBookingRequests(userDetails);
 
       return ResponseEntity.status(HttpStatus.OK).body(response);
     }

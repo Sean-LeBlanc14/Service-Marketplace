@@ -76,7 +76,7 @@ export default function SideBar() {
         />
 
         <NavigationButton
-          to={"/requests"}
+          to={"/dashboard"}
           label={"Service Dashboard"}
           icon={<FaMoneyBill />}
         />

@@ -1050,12 +1050,6 @@ function ProfilePage() {
                   booking.status === REVIEWABLE_BOOKING_STATUS;
                 const hasReview =
                   booking.rating !== null && booking.review.length > 0;
-                const draft = reviewDrafts[booking.id] ?? {
-                  rating: "5",
-                  review: ""
-                };
-                const isSubmittingReview =
-                  submittingReviewId === booking.id;
 
                 return (
                   <article className="booking-card" key={booking.id}>

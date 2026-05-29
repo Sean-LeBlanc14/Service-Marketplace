@@ -212,8 +212,8 @@ public class BookingService {
             throw new AccessDeniedException("You can only review your own bookings.");
         }
 
-        if (booking.getStatus() != BookingStatus.CONFIRMED) {
-            throw new InvalidBookingReviewException("You can only review confirmed bookings.");
+        if (booking.getStatus() != BookingStatus.COMPLETED) {
+            throw new InvalidBookingReviewException("You can only review completed bookings.");
         }
 
         booking.setRating(request.getRating());

@@ -173,8 +173,8 @@ class BookingServiceTest {
     }
 
     @Test
-    void submitReview_confirmedCustomerBooking_savesReview() {
-        Booking booking = createBookingWithStatus(BookingStatus.CONFIRMED);
+    void submitReview_completedCustomerBooking_savesReview() {
+        Booking booking = createBookingWithStatus(BookingStatus.COMPLETED);
         SubmitReviewRequest request = new SubmitReviewRequest();
         request.setRating(5);
         request.setReview(" Great help with the final project. ");
@@ -193,7 +193,7 @@ class BookingServiceTest {
     }
 
     @Test
-    void submitReview_pendingBooking_throwsException() {
+    void submitReview_uncompletedBooking_throwsException() {
         Booking booking = createBookingWithStatus(BookingStatus.PENDING_PAYMENT);
         SubmitReviewRequest request = new SubmitReviewRequest();
         request.setRating(4);
@@ -204,7 +204,22 @@ class BookingServiceTest {
 
         assertThatThrownBy(() -> bookingService.submitReview("booking-123", request, userDetails))
             .isInstanceOf(InvalidBookingReviewException.class)
-            .hasMessageContaining("confirmed");
+            .hasMessageContaining("completed");
+    }
+
+    @Test
+    void submitReview_confirmedBooking_throwsException() {
+        Booking booking = createBookingWithStatus(BookingStatus.CONFIRMED);
+        SubmitReviewRequest request = new SubmitReviewRequest();
+        request.setRating(4);
+        request.setReview("Helpful.");
+
+        when(userRepository.findByEmail("student@calpoly.edu")).thenReturn(Optional.of(mockCustomer));
+        when(bookingRepository.findById("booking-123")).thenReturn(Optional.of(booking));
+
+        assertThatThrownBy(() -> bookingService.submitReview("booking-123", request, userDetails))
+            .isInstanceOf(InvalidBookingReviewException.class)
+            .hasMessageContaining("completed");
     }
 
     @Test

@@ -29,7 +29,7 @@ const SERVICE_DESCRIPTION_MAX_LENGTH = 1000;
 const SERVICE_TAG_MAX_COUNT = 5;
 const SERVICE_TAG_MAX_LENGTH = 50;
 const REVIEW_MAX_LENGTH = 1000;
-const REVIEWABLE_BOOKING_STATUS = "CONFIRMED";
+const REVIEWABLE_BOOKING_STATUS = "COMPLETED";
 
 interface ServiceListing {
   id: string;
@@ -801,7 +801,7 @@ function ProfilePage() {
     }
 
     if (booking.status !== REVIEWABLE_BOOKING_STATUS) {
-      toast.error("You can only review confirmed bookings.");
+      toast.error("You can only review completed bookings.");
       return;
     }
 

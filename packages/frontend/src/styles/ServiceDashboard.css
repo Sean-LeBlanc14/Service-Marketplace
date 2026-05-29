@@ -1,18 +1,27 @@
 .serviceDashboard-wrapper {
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: stretch;
   background-color: #f4f4f4;
+  width: 100%;
+  min-width: 0;
   max-width: 100%;
+  overflow-x: hidden;
 }
 
 .serviceDashboard-wrapper section {
   width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
   border-bottom: 2px solid #333;
   display: flex;
   flex-direction: column;
   flex: 1;
   padding: 15px;
+  overflow-x: scroll;
+  overflow-y: visible;
+  scroll-behavior: smooth;
+  scrollbar-gutter: stable;
 }
 
 .serviceDashboard-wrapper section.bottom{
@@ -23,7 +32,11 @@
 .booking-container{
   display: flex;
   flex-direction: row;
-  margin: 10px;
+  flex-wrap: nowrap;
+  width: max-content;
+  min-width: 100%;
+  margin: 10px 0;
   gap: 10px;
   min-height: 0;
+  padding-bottom: 12px;
 }

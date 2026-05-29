@@ -40,12 +40,7 @@ export default function ServiceDashboard() {
             const bookings = (await bookingRequestResponse.json()) as ApiBooking[];
 
             setBookingRequests(bookings);
-          }else if (bookingRequestResponse.status === 401){
-            toast.error("Please sign in");
-          } else if (bookingRequestResponse.status === 404){
-            setBookingRequests([]);
           }else{
-            console.log(bookingRequestResponse.status);
             toast.warning("Something went wrong");
           }
 
@@ -60,8 +55,6 @@ export default function ServiceDashboard() {
             const serviceHistory = (await serviceHistoryResponse.json()) as ApiBooking[];
             
             setServiceHistory(serviceHistory);
-          }else if (serviceHistoryResponse.status === 404){
-            setServiceHistory([]);
           }else{
             toast.warning("Something went wrong");
           }
@@ -77,8 +70,6 @@ export default function ServiceDashboard() {
             const scheduledBookings = (await scheduledBookingsResponse.json()) as ApiBooking[];
 
             setUpcomingBookings(scheduledBookings);
-          }else if (scheduledBookingsResponse.status === 404){
-            setUpcomingBookings([]);
           }else{
             toast.warning("A network error occurred");
           }

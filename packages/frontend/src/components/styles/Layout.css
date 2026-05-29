@@ -9,10 +9,13 @@
   display: flex;
   flex-direction: column; /* NavBar top, Main content bottom */
   flex-grow: 1;
+  min-width: 0;
 }
 
 .main-content {
   flex-grow: 1;
+  min-width: 0;
   background-color: #ffffff;
+  overflow-x: hidden;
   overflow-y: auto;
 }

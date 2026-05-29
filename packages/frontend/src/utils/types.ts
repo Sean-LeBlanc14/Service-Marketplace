@@ -36,6 +36,9 @@ export interface ApiBooking {
   serviceTitle?: string;
   customerId?: string;
   providerId?: string;
+  customerName?: string;
+  providerName?: string;
+  reviewerName?: string;
   agreedPrice?: number | string | null;
   priceUnit?: string | null;
   scheduledAt?: string | null;

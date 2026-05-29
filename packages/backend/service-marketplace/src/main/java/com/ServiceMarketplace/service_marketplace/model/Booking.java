@@ -41,6 +41,8 @@ public class Booking {
 
     private String review;
 
+    private String reviewerName;
+
     private Instant reviewedAt;
 
     private String stripeSetupIntentId;

@@ -57,6 +57,9 @@ interface CustomerBooking {
   id: string;
   serviceId: string;
   serviceTitle: string;
+  customerName: string;
+  providerName: string;
+  reviewerName: string;
   agreedPrice: string;
   priceUnit: string;
   scheduledAt: string;
@@ -227,6 +230,12 @@ function normalizeBookings(
     id: cleanText(booking.id) || `booking-${index}`,
     serviceId: cleanText(booking.serviceId),
     serviceTitle: cleanText(booking.serviceTitle) || "Booked service",
+    customerName: cleanText(booking.customerName) || "You",
+    providerName: cleanText(booking.providerName),
+    reviewerName:
+      cleanText(booking.reviewerName) ||
+      cleanText(booking.customerName) ||
+      "You",
     agreedPrice: cleanPriceValue(booking.agreedPrice),
     priceUnit: cleanText(booking.priceUnit ?? undefined),
     scheduledAt: cleanText(booking.scheduledAt ?? undefined),
@@ -1063,75 +1072,208 @@ function ProfilePage() {
                     <p className="booking-scheduled">
                       Scheduled {formatDateTime(booking.scheduledAt)}
                     </p>
+                    {booking.providerName && (
+                      <p className="booking-user">
+                        Provider {booking.providerName}
+                      </p>
+                    )}
 
-                    {hasReview ? (
-                      <div className="submitted-review">
-                        <p>
-                          <strong>Your rating:</strong>{" "}
-                          {booking.rating}/5
-                        </p>
-                        <p>{booking.review}</p>
-                        {booking.reviewedAt && (
-                          <p className="reviewed-at">
-                            Reviewed {formatDateTime(booking.reviewedAt)}
-                          </p>
-                        )}
-                      </div>
-                    ) : canReview ? (
-                      <form
-                        className="review-form"
-                        onSubmit={(event) =>
-                          void handleReviewSubmit(event, booking)
-                        }>
-                        <label>
-                          <span>Rating</span>
-                          <select
-                            value={draft.rating}
-                            onChange={(event) =>
-                              updateReviewDraft(booking.id, {
-                                rating: event.target.value
-                              })
-                            }>
-                            <option value="5">5</option>
-                            <option value="4">4</option>
-                            <option value="3">3</option>
-                            <option value="2">2</option>
-                            <option value="1">1</option>
-                          </select>
-                        </label>
-
-                        <label className="review-textarea-label">
-                          <span>Written review</span>
-                          <textarea
-                            value={draft.review}
-                            onChange={(event) =>
-                              updateReviewDraft(booking.id, {
-                                review: event.target.value
-                              })
-                            }
-                            maxLength={REVIEW_MAX_LENGTH}
-                            rows={3}
-                            required
-                          />
-                        </label>
-
-                        <button
-                          type="submit"
-                          disabled={isSubmittingReview}>
-                          {isSubmittingReview
-                            ? "Submitting..."
-                            : "Submit Review"}
-                        </button>
-                      </form>
-                    ) : (
+                    {canReview && !hasReview && (
                       <p className="booking-review-note">
-                        Review available when booking is confirmed.
+                        Leave a review in the Reviews section below.
                       </p>
                     )}
                   </article>
                 );
               })}
             </div>
+          )}
+        </section>
+
+        <section
+          className="profile-section reviews-section"
+          aria-label="Reviews">
+          <div className="section-heading">
+            <div>
+              <h2>Reviews</h2>
+              <p>Reviews you've left and reviews you can leave.</p>
+            </div>
+          </div>
+
+          {isLoadingBookings ? (
+            <p className="empty-state">Loading reviews...</p>
+          ) : (
+            <>
+              {customerBookings.some(
+                (b) =>
+                  b.status === REVIEWABLE_BOOKING_STATUS &&
+                  b.rating === null
+              ) && (
+                <div className="reviews-subsection">
+                  <h3>Pending Reviews</h3>
+                  <div className="review-items">
+                    {customerBookings
+                      .filter(
+                        (b) =>
+                          b.status === REVIEWABLE_BOOKING_STATUS &&
+                          b.rating === null
+                      )
+                      .map((booking) => {
+                        const draft = reviewDrafts[booking.id] ?? {
+                          rating: "5",
+                          review: ""
+                        };
+                        const isSubmitting =
+                          submittingReviewId === booking.id;
+
+                        return (
+                          <article
+                            className="review-pending-item"
+                            key={booking.id}>
+                            <div className="review-item-header">
+                              <div>
+                                <h4>{booking.serviceTitle}</h4>
+                                {booking.providerName && (
+                                  <p className="review-item-provider">
+                                    Provider {booking.providerName}
+                                  </p>
+                                )}
+                              </div>
+                              <p className="review-item-date">
+                                {formatDateTime(
+                                  booking.scheduledAt
+                                )}
+                              </p>
+                            </div>
+
+                            <form
+                              className="review-form"
+                              onSubmit={(event) =>
+                                void handleReviewSubmit(
+                                  event,
+                                  booking
+                                )
+                              }>
+                              <label>
+                                <span>Rating</span>
+                                <select
+                                  value={draft.rating}
+                                  onChange={(event) =>
+                                    updateReviewDraft(
+                                      booking.id,
+                                      {
+                                        rating:
+                                          event.target.value
+                                      }
+                                    )
+                                  }>
+                                  <option value="5">5</option>
+                                  <option value="4">4</option>
+                                  <option value="3">3</option>
+                                  <option value="2">2</option>
+                                  <option value="1">1</option>
+                                </select>
+                              </label>
+
+                              <label className="review-textarea-label">
+                                <span>Written review</span>
+                                <textarea
+                                  value={draft.review}
+                                  onChange={(event) =>
+                                    updateReviewDraft(
+                                      booking.id,
+                                      {
+                                        review:
+                                          event.target.value
+                                      }
+                                    )
+                                  }
+                                  maxLength={REVIEW_MAX_LENGTH}
+                                  rows={3}
+                                  required
+                                />
+                              </label>
+
+                              <button
+                                type="submit"
+                                disabled={isSubmitting}>
+                                {isSubmitting
+                                  ? "Submitting..."
+                                  : "Submit Review"}
+                              </button>
+                            </form>
+                          </article>
+                        );
+                      })}
+                  </div>
+                </div>
+              )}
+
+              {customerBookings.some(
+                (b) => b.rating !== null && b.review.length > 0
+              ) && (
+                <div className="reviews-subsection">
+                  <h3>Submitted Reviews</h3>
+                  <div className="review-items">
+                    {customerBookings
+                      .filter(
+                        (b) =>
+                          b.rating !== null && b.review.length > 0
+                      )
+                      .map((booking) => (
+                        <article
+                          className="review-submitted-item"
+                          key={booking.id}>
+                          <div className="review-item-header">
+                            <div>
+                              <h4>{booking.serviceTitle}</h4>
+                              {booking.providerName && (
+                                <p className="review-item-provider">
+                                  Provider {booking.providerName}
+                                </p>
+                              )}
+                            </div>
+                            <div className="review-item-meta">
+                              <p className="review-item-rating">
+                                <strong>
+                                  {booking.rating}/5
+                                </strong>
+                              </p>
+                            </div>
+                          </div>
+
+                          <p className="review-item-text">
+                            {booking.review}
+                          </p>
+
+                          {booking.reviewedAt && (
+                            <p className="review-item-date">
+                              Reviewed{" "}
+                              {formatDateTime(
+                                booking.reviewedAt
+                              )}
+                            </p>
+                          )}
+                        </article>
+                      ))}
+                  </div>
+                </div>
+              )}
+
+              {!customerBookings.some(
+                (b) =>
+                  b.status === REVIEWABLE_BOOKING_STATUS &&
+                  b.rating === null
+              ) &&
+                !customerBookings.some(
+                  (b) => b.rating !== null && b.review.length > 0
+                ) && (
+                  <p className="empty-state">
+                    No reviews yet. Once you complete a booking,
+                    you can leave a review here.
+                  </p>
+                )}
+            </>
           )}
         </section>
 

@@ -218,6 +218,7 @@ public class BookingService {
 
         booking.setRating(request.getRating());
         booking.setReview(clean(request.getReview()));
+        booking.setReviewerName(getUserDisplayName(customer));
         booking.setReviewedAt(Instant.now());
 
         return toBookingResponse(bookingRepository.save(booking));
@@ -235,6 +236,9 @@ public class BookingService {
             booking.getServiceTitle(),
             booking.getCustomerId(),
             booking.getProviderId(),
+            getUserDisplayName(booking.getCustomerId()),
+            getUserDisplayName(booking.getProviderId()),
+            getReviewerName(booking),
             booking.getAgreedPrice(),
             booking.getPriceUnit(),
             booking.getScheduledAt(),
@@ -248,5 +252,38 @@ public class BookingService {
 
     private String clean(String value) {
         return value == null ? "" : value.trim();
+    }
+
+    private String getUserDisplayName(String userId) {
+        String cleanUserId = clean(userId);
+
+        if (cleanUserId.isBlank()) {
+            return "";
+        }
+
+        var user = userRepository.findById(cleanUserId);
+
+        if (user == null || user.isEmpty()) {
+            return cleanUserId;
+        }
+
+        User foundUser = user.get();
+        return getUserDisplayName(foundUser);
+    }
+
+    private String getUserDisplayName(User user) {
+        String fullName = (clean(user.getFirstName()) + " " + clean(user.getLastName())).trim();
+
+        if (!fullName.isBlank()) {
+            return fullName;
+        }
+
+        String email = clean(user.getEmail());
+        return email.isBlank() ? clean(user.getId()) : email;
+    }
+
+    private String getReviewerName(Booking booking) {
+        String reviewerName = clean(booking.getReviewerName());
+        return reviewerName.isBlank() ? getUserDisplayName(booking.getCustomerId()) : reviewerName;
     }
 }

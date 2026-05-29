@@ -187,6 +187,7 @@ class BookingServiceTest {
 
         assertThat(result.getRating()).isEqualTo(5);
         assertThat(result.getReview()).isEqualTo("Great help with the final project.");
+        assertThat(result.getReviewerName()).isEqualTo("Alice Student");
         assertThat(result.getReviewedAt()).isNotNull();
         verify(bookingRepository).save(booking);
     }

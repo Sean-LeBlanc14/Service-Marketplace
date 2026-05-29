@@ -45,6 +45,7 @@ function ServiceCard({ service }: ServiceCardProps) {
   );
   const modalService: ServiceDetails = {
     id: service.id,
+    userId: service.userId,
     title: service.title,
     price,
     priceMin: service.priceMin,

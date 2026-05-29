@@ -1,0 +1,153 @@
+.admin-dashboard {
+  width: min(1180px, calc(100% - 32px));
+  margin: 32px auto;
+  color: #071b2d;
+}
+
+.admin-dashboard-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 18px;
+  margin-bottom: 18px;
+}
+
+.admin-dashboard-header h1 {
+  margin: 0;
+  font-size: 30px;
+  font-weight: 800;
+  letter-spacing: 0;
+}
+
+.admin-dashboard-header p,
+.admin-dashboard-message {
+  margin: 0;
+  color: #5f6f82;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.admin-dashboard-table-wrap {
+  overflow-x: auto;
+  border: 1px solid #cfd6df;
+  border-radius: 8px;
+  background: #ffffff;
+}
+
+.admin-dashboard-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 980px;
+}
+
+.admin-dashboard-table th,
+.admin-dashboard-table td {
+  border-bottom: 1px solid #dbe1e8;
+  padding: 12px 14px;
+  text-align: left;
+  vertical-align: middle;
+}
+
+.admin-dashboard-table th {
+  background: #071b2d;
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.admin-dashboard-table td {
+  color: #25364a;
+  font-size: 14px;
+}
+
+.admin-dashboard-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.admin-dashboard-section {
+  margin-top: 34px;
+}
+
+.admin-dashboard-section-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 18px;
+  margin-bottom: 14px;
+}
+
+.admin-dashboard-section-header h2 {
+  margin: 0;
+  color: #071b2d;
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: 0;
+}
+
+.admin-dashboard-section-header p {
+  margin: 0;
+  color: #5f6f82;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.admin-dashboard-users-table {
+  min-width: 620px;
+}
+
+.admin-dashboard-empty {
+  color: #5f6f82;
+  text-align: center;
+}
+
+.admin-dashboard-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.admin-dashboard-action {
+  border: none;
+  border-radius: 8px;
+  padding: 8px 12px;
+  color: #ffffff;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.admin-dashboard-action-danger {
+  background: #b42318;
+}
+
+.admin-dashboard-action-warning {
+  background: #c06b16;
+}
+
+.admin-dashboard-action-success {
+  background: #1f7a4d;
+}
+
+.admin-dashboard-action:disabled {
+  cursor: not-allowed;
+  opacity: 0.68;
+}
+
+@media (max-width: 720px) {
+  .admin-dashboard {
+    width: min(100% - 24px, 1180px);
+    margin: 20px auto;
+  }
+
+  .admin-dashboard-header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .admin-dashboard-section-header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}

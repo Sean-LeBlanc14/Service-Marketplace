@@ -1,6 +1,7 @@
 import {
   FaHome,
   FaMoneyBill,
+  FaUserShield,
   FaSignOutAlt
 } from "react-icons/fa";
 import { HiUser } from "react-icons/hi2";
@@ -15,6 +16,8 @@ import { API_ENDPOINTS } from "../utils/api";
 
 export default function SideBar() {
   const navigate = useNavigate();
+  const isAdmin = localStorage.getItem("user_role") === "admin";
+  
 
   const handleLogout = async () => {
     const confirmed = window.confirm(
@@ -34,10 +37,15 @@ export default function SideBar() {
 
       if (response.ok) {
         localStorage.removeItem("jwt_token");
+        localStorage.removeItem("user_role");
+        localStorage.removeItem("user_id");
         toast.success("Successfully logged out");
         navigate("/login");
       } else if (response.status === 401) {
         // Backend sends a 401 if the user is not logged in to begin with
+        localStorage.removeItem("jwt_token");
+        localStorage.removeItem("user_role");
+        localStorage.removeItem("user_id");
         navigate("/login");
       } else {
         toast.error("Could not logout, please try again.");
@@ -72,6 +80,14 @@ export default function SideBar() {
           label={"Service Dashboard"}
           icon={<FaMoneyBill />}
         />
+
+        {isAdmin && (
+          <NavigationButton
+            to={"/admin"}
+            label={"Admin"}
+            icon={<FaUserShield />}
+          />
+        )}
 
         <NavigationButton
           to="/inbox"

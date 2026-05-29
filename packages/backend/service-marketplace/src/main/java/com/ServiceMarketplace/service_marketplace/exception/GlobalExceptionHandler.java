@@ -78,6 +78,11 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
     }
 
+    @ExceptionHandler(InvalidBookingReviewException.class)
+    public ResponseEntity<String> handleInvalidBookingReview(InvalidBookingReviewException e) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+    }
+
     @ExceptionHandler(BookingStateException.class)
     public ResponseEntity<String> handleBookingState(BookingStateException e) {
         return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());

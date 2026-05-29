@@ -314,6 +314,175 @@
   font-weight: 600;
 }
 
+.bookings-section {
+  padding-bottom: 8px;
+}
+
+.booking-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 16px;
+}
+
+.booking-card {
+  display: grid;
+  gap: 16px;
+  border: 1px solid #dde4ea;
+  border-radius: 8px;
+  padding: 20px;
+  background: #ffffff;
+  box-shadow: 0 8px 22px rgba(20, 38, 46, 0.08);
+}
+
+.booking-card-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.booking-card-heading h3 {
+  margin: 0;
+  color: #071b2d;
+  font-size: 20px;
+  font-weight: 800;
+  letter-spacing: 0;
+}
+
+.booking-card-heading strong {
+  flex: 0 0 auto;
+  color: #c89418;
+  font-size: 22px;
+  line-height: 1;
+}
+
+.booking-status,
+.booking-scheduled,
+.booking-user,
+.booking-review-note,
+.submitted-review p {
+  margin: 0;
+  color: #25364a;
+  line-height: 1.5;
+}
+
+.booking-user {
+  color: #52635d;
+  font-size: 14px;
+}
+
+.add-review-button {
+  justify-self: end;
+  border: none;
+  border-radius: 8px;
+  padding: 12px 18px;
+  background: var(--cp-green);
+  color: #ffffff;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.add-review-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.65;
+}
+
+.booking-status {
+  margin-top: 6px;
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.booking-status--confirmed {
+  color: #0d473f;
+}
+
+.booking-status--pending_payment {
+  color: #85620d;
+}
+
+.booking-status--cancelled {
+  color: #9b1c31;
+}
+
+.review-form {
+  display: grid;
+  gap: 12px;
+}
+
+.review-form label {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  color: #202020;
+  font-weight: 700;
+}
+
+.review-form span {
+  font-size: 14px;
+}
+
+.review-form select,
+.review-form textarea {
+  box-sizing: border-box;
+  width: 100%;
+  border: 1px solid #cfcfcf;
+  border-radius: 8px;
+  padding: 12px;
+  color: #161616;
+  font: inherit;
+}
+
+.review-form select {
+  min-height: 48px;
+  appearance: none;
+  padding-right: 44px;
+  background-color: #ffffff;
+  background-image:
+    linear-gradient(45deg, transparent 50%, #4f625c 50%),
+    linear-gradient(135deg, #4f625c 50%, transparent 50%);
+  background-position:
+    calc(100% - 18px) 54%,
+    calc(100% - 13px) 54%;
+  background-repeat: no-repeat;
+  background-size: 5px 5px;
+}
+
+.review-form textarea {
+  min-height: 96px;
+  resize: vertical;
+}
+
+.review-form button {
+  justify-self: start;
+  border: none;
+  border-radius: 8px;
+  padding: 12px 18px;
+  background: var(--cp-green);
+  color: #ffffff;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.review-form button:disabled {
+  cursor: not-allowed;
+  opacity: 0.65;
+}
+
+.submitted-review {
+  display: grid;
+  gap: 8px;
+  border-top: 1px solid #e4e0da;
+  padding-top: 14px;
+}
+
+.submitted-review .reviewed-at {
+  color: #68746f;
+  font-size: 14px;
+}
+
 .listing-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
@@ -476,6 +645,10 @@
   box-shadow: 0 24px 60px rgba(12, 18, 24, 0.24);
 }
 
+.profile-confirm-modal.review-modal {
+  width: min(600px, 100%);
+}
+
 .profile-confirm-modal h2 {
   margin: 0;
   color: #161616;
@@ -565,6 +738,10 @@
 
   .listing-card-footer {
     align-items: stretch;
+    flex-direction: column;
+  }
+
+  .booking-card-heading {
     flex-direction: column;
   }
 

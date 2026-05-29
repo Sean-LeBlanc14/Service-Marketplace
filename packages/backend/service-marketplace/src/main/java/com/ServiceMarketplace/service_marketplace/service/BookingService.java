@@ -1,6 +1,9 @@
 package com.ServiceMarketplace.service_marketplace.service;
 
 import java.math.BigDecimal;
+import java.time.Instant;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -13,7 +16,9 @@ import com.ServiceMarketplace.service_marketplace.dto.CreateBookingRequest;
 import com.ServiceMarketplace.service_marketplace.dto.CreateBookingResponse;
 import com.ServiceMarketplace.service_marketplace.dto.PaymentIntentResult;
 import com.ServiceMarketplace.service_marketplace.dto.SetupIntentResult;
+import com.ServiceMarketplace.service_marketplace.dto.SubmitReviewRequest;
 import com.ServiceMarketplace.service_marketplace.exception.BookingStateException;
+import com.ServiceMarketplace.service_marketplace.exception.InvalidBookingReviewException;
 import com.ServiceMarketplace.service_marketplace.exception.InvalidPriceException;
 import com.ServiceMarketplace.service_marketplace.exception.ResourceNotFoundException;
 import com.ServiceMarketplace.service_marketplace.model.Booking;
@@ -189,6 +194,41 @@ public class BookingService {
         return toBookingResponse(booking);
     }
 
+    public List<BookingResponse> getCustomerBookings(UserDetails userDetails) {
+        var customer = getCurrentUser(userDetails);
+
+        return bookingRepository.findByCustomerIdOrderByCreatedAtDesc(customer.getId())
+            .stream()
+            .map(this::toBookingResponse)
+            .collect(Collectors.toList());
+    }
+
+    public BookingResponse submitReview(String bookingId, SubmitReviewRequest request, UserDetails userDetails) {
+        var customer = getCurrentUser(userDetails);
+        var booking = bookingRepository.findById(bookingId)
+            .orElseThrow(() -> new ResourceNotFoundException("Booking", bookingId));
+
+        if (!customer.getId().equals(booking.getCustomerId())) {
+            throw new AccessDeniedException("You can only review your own bookings.");
+        }
+
+        if (booking.getStatus() != BookingStatus.COMPLETED) {
+            throw new InvalidBookingReviewException("You can only review completed bookings.");
+        }
+
+        booking.setRating(request.getRating());
+        booking.setReview(clean(request.getReview()));
+        booking.setReviewerName(getUserDisplayName(customer));
+        booking.setReviewedAt(Instant.now());
+
+        return toBookingResponse(bookingRepository.save(booking));
+    }
+
+    private User getCurrentUser(UserDetails userDetails) {
+        return userRepository.findByEmail(userDetails.getUsername())
+            .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+    }
+
     private BookingResponse toBookingResponse(Booking booking) {
         return new BookingResponse(
             booking.getId(),
@@ -196,11 +236,54 @@ public class BookingService {
             booking.getServiceTitle(),
             booking.getCustomerId(),
             booking.getProviderId(),
+            getUserDisplayName(booking.getCustomerId()),
+            getUserDisplayName(booking.getProviderId()),
+            getReviewerName(booking),
             booking.getAgreedPrice(),
             booking.getPriceUnit(),
             booking.getScheduledAt(),
             booking.getStatus(),
+            booking.getRating(),
+            booking.getReview(),
+            booking.getReviewedAt(),
             booking.getCreatedAt()
         );
+    }
+
+    private String clean(String value) {
+        return value == null ? "" : value.trim();
+    }
+
+    private String getUserDisplayName(String userId) {
+        String cleanUserId = clean(userId);
+
+        if (cleanUserId.isBlank()) {
+            return "";
+        }
+
+        var user = userRepository.findById(cleanUserId);
+
+        if (user == null || user.isEmpty()) {
+            return cleanUserId;
+        }
+
+        User foundUser = user.get();
+        return getUserDisplayName(foundUser);
+    }
+
+    private String getUserDisplayName(User user) {
+        String fullName = (clean(user.getFirstName()) + " " + clean(user.getLastName())).trim();
+
+        if (!fullName.isBlank()) {
+            return fullName;
+        }
+
+        String email = clean(user.getEmail());
+        return email.isBlank() ? clean(user.getId()) : email;
+    }
+
+    private String getReviewerName(Booking booking) {
+        String reviewerName = clean(booking.getReviewerName());
+        return reviewerName.isBlank() ? getUserDisplayName(booking.getCustomerId()) : reviewerName;
     }
 }

@@ -1,5 +1,7 @@
 package com.ServiceMarketplace.service_marketplace.controller;
 
+import java.util.List;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -18,6 +20,7 @@ import com.ServiceMarketplace.service_marketplace.dto.BookingResponse;
 import com.ServiceMarketplace.service_marketplace.dto.ConfirmBookingRequest;
 import com.ServiceMarketplace.service_marketplace.dto.CreateBookingResponse;
 import com.ServiceMarketplace.service_marketplace.dto.CreateBookingRequest;
+import com.ServiceMarketplace.service_marketplace.dto.SubmitReviewRequest;
 import com.ServiceMarketplace.service_marketplace.exception.BookingStateException;
 import com.ServiceMarketplace.service_marketplace.exception.BookingTokenException;
 import com.ServiceMarketplace.service_marketplace.model.BookingTokenAction;
@@ -41,6 +44,22 @@ public class BookingController {
             @AuthenticationPrincipal UserDetails userDetails) {
         CreateBookingResponse response = bookingService.createBooking(request, userDetails);
         return new ResponseEntity<>(response, HttpStatus.CREATED);
+    }
+
+    @GetMapping("/me")
+    public ResponseEntity<List<BookingResponse>> getCustomerBookings(
+            @AuthenticationPrincipal UserDetails userDetails) {
+        List<BookingResponse> response = bookingService.getCustomerBookings(userDetails);
+        return ResponseEntity.status(HttpStatus.OK).body(response);
+    }
+
+    @PostMapping("/{bookingId}/review")
+    public ResponseEntity<BookingResponse> submitReview(
+            @PathVariable String bookingId,
+            @Valid @RequestBody SubmitReviewRequest request,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        BookingResponse response = bookingService.submitReview(bookingId, request, userDetails);
+        return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 
     @PutMapping("/{id}/confirm")

@@ -287,6 +287,7 @@ function ProfilePage() {
   const [isLoadingBookings, setIsLoadingBookings] = useState(Boolean(authToken));
   const [reviewDrafts, setReviewDrafts] = useState<Record<string, ReviewDraft>>({});
   const [submittingReviewId, setSubmittingReviewId] = useState<string | null>(null);
+  const [reviewingBookingId, setReviewingBookingId] = useState<string | null>(null);
   const [serviceTitle, setServiceTitle] = useState("");
   const [serviceCategory, setServiceCategory] = useState("");
   const [servicePricingType, setServicePricingType] =
@@ -1079,201 +1080,33 @@ function ProfilePage() {
                     )}
 
                     {canReview && !hasReview && (
-                      <p className="booking-review-note">
-                        Leave a review in the Reviews section below.
-                      </p>
+                      <button
+                        type="button"
+                        className="add-review-button"
+                        onClick={() =>
+                          setReviewingBookingId(booking.id)
+                        }>
+                        Add Review
+                      </button>
+                    )}
+                    {hasReview && (
+                      <div className="submitted-review">
+                        <p>
+                          <strong>Rating by {booking.reviewerName}:</strong>{" "}
+                          {booking.rating}/5
+                        </p>
+                        <p>{booking.review}</p>
+                        {booking.reviewedAt && (
+                          <p className="reviewed-at">
+                            Reviewed {formatDateTime(booking.reviewedAt)}
+                          </p>
+                        )}
+                      </div>
                     )}
                   </article>
                 );
               })}
             </div>
-          )}
-        </section>
-
-        <section
-          className="profile-section reviews-section"
-          aria-label="Reviews">
-          <div className="section-heading">
-            <div>
-              <h2>Reviews</h2>
-              <p>Reviews you've left and reviews you can leave.</p>
-            </div>
-          </div>
-
-          {isLoadingBookings ? (
-            <p className="empty-state">Loading reviews...</p>
-          ) : (
-            <>
-              {customerBookings.some(
-                (b) =>
-                  b.status === REVIEWABLE_BOOKING_STATUS &&
-                  b.rating === null
-              ) && (
-                <div className="reviews-subsection">
-                  <h3>Pending Reviews</h3>
-                  <div className="review-items">
-                    {customerBookings
-                      .filter(
-                        (b) =>
-                          b.status === REVIEWABLE_BOOKING_STATUS &&
-                          b.rating === null
-                      )
-                      .map((booking) => {
-                        const draft = reviewDrafts[booking.id] ?? {
-                          rating: "5",
-                          review: ""
-                        };
-                        const isSubmitting =
-                          submittingReviewId === booking.id;
-
-                        return (
-                          <article
-                            className="review-pending-item"
-                            key={booking.id}>
-                            <div className="review-item-header">
-                              <div>
-                                <h4>{booking.serviceTitle}</h4>
-                                {booking.providerName && (
-                                  <p className="review-item-provider">
-                                    Provider {booking.providerName}
-                                  </p>
-                                )}
-                              </div>
-                              <p className="review-item-date">
-                                {formatDateTime(
-                                  booking.scheduledAt
-                                )}
-                              </p>
-                            </div>
-
-                            <form
-                              className="review-form"
-                              onSubmit={(event) =>
-                                void handleReviewSubmit(
-                                  event,
-                                  booking
-                                )
-                              }>
-                              <label>
-                                <span>Rating</span>
-                                <select
-                                  value={draft.rating}
-                                  onChange={(event) =>
-                                    updateReviewDraft(
-                                      booking.id,
-                                      {
-                                        rating:
-                                          event.target.value
-                                      }
-                                    )
-                                  }>
-                                  <option value="5">5</option>
-                                  <option value="4">4</option>
-                                  <option value="3">3</option>
-                                  <option value="2">2</option>
-                                  <option value="1">1</option>
-                                </select>
-                              </label>
-
-                              <label className="review-textarea-label">
-                                <span>Written review</span>
-                                <textarea
-                                  value={draft.review}
-                                  onChange={(event) =>
-                                    updateReviewDraft(
-                                      booking.id,
-                                      {
-                                        review:
-                                          event.target.value
-                                      }
-                                    )
-                                  }
-                                  maxLength={REVIEW_MAX_LENGTH}
-                                  rows={3}
-                                  required
-                                />
-                              </label>
-
-                              <button
-                                type="submit"
-                                disabled={isSubmitting}>
-                                {isSubmitting
-                                  ? "Submitting..."
-                                  : "Submit Review"}
-                              </button>
-                            </form>
-                          </article>
-                        );
-                      })}
-                  </div>
-                </div>
-              )}
-
-              {customerBookings.some(
-                (b) => b.rating !== null && b.review.length > 0
-              ) && (
-                <div className="reviews-subsection">
-                  <h3>Submitted Reviews</h3>
-                  <div className="review-items">
-                    {customerBookings
-                      .filter(
-                        (b) =>
-                          b.rating !== null && b.review.length > 0
-                      )
-                      .map((booking) => (
-                        <article
-                          className="review-submitted-item"
-                          key={booking.id}>
-                          <div className="review-item-header">
-                            <div>
-                              <h4>{booking.serviceTitle}</h4>
-                              {booking.providerName && (
-                                <p className="review-item-provider">
-                                  Provider {booking.providerName}
-                                </p>
-                              )}
-                            </div>
-                            <div className="review-item-meta">
-                              <p className="review-item-rating">
-                                <strong>
-                                  {booking.rating}/5
-                                </strong>
-                              </p>
-                            </div>
-                          </div>
-
-                          <p className="review-item-text">
-                            {booking.review}
-                          </p>
-
-                          {booking.reviewedAt && (
-                            <p className="review-item-date">
-                              Reviewed{" "}
-                              {formatDateTime(
-                                booking.reviewedAt
-                              )}
-                            </p>
-                          )}
-                        </article>
-                      ))}
-                  </div>
-                </div>
-              )}
-
-              {!customerBookings.some(
-                (b) =>
-                  b.status === REVIEWABLE_BOOKING_STATUS &&
-                  b.rating === null
-              ) &&
-                !customerBookings.some(
-                  (b) => b.rating !== null && b.review.length > 0
-                ) && (
-                  <p className="empty-state">
-                    No reviews yet. Once you complete a booking,
-                    you can leave a review here.
-                  </p>
-                )}
-            </>
           )}
         </section>
 
@@ -1695,6 +1528,91 @@ function ProfilePage() {
                 Cancel
               </button>
             </div>
+          </section>
+        </div>
+      )}
+
+      {reviewingBookingId && (
+        <div
+          className="profile-modal-backdrop"
+          role="presentation"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget) {
+              setReviewingBookingId(null);
+            }
+          }}>
+          <section
+            className="profile-confirm-modal review-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="review-title">
+            <h2 id="review-title">Leave a Review</h2>
+            {customerBookings.find((b) => b.id === reviewingBookingId) && (
+              <form
+                className="review-form"
+                onSubmit={(event) => {
+                  const booking = customerBookings.find(
+                    (b) => b.id === reviewingBookingId
+                  );
+                  if (booking) {
+                    void handleReviewSubmit(event, booking).then(() =>
+                      setReviewingBookingId(null)
+                    );
+                  }
+                }}>
+                <label>
+                  <span>Rating</span>
+                  <select
+                    value={
+                      reviewDrafts[reviewingBookingId]?.rating ?? "5"
+                    }
+                    onChange={(event) =>
+                      updateReviewDraft(reviewingBookingId, {
+                        rating: event.target.value
+                      })
+                    }>
+                    <option value="5">5</option>
+                    <option value="4">4</option>
+                    <option value="3">3</option>
+                    <option value="2">2</option>
+                    <option value="1">1</option>
+                  </select>
+                </label>
+
+                <label className="review-textarea-label">
+                  <span>Written review</span>
+                  <textarea
+                    value={
+                      reviewDrafts[reviewingBookingId]?.review ?? ""
+                    }
+                    onChange={(event) =>
+                      updateReviewDraft(reviewingBookingId, {
+                        review: event.target.value
+                      })
+                    }
+                    maxLength={REVIEW_MAX_LENGTH}
+                    rows={4}
+                    required
+                  />
+                </label>
+
+                <div className="profile-confirm-actions">
+                  <button
+                    type="submit"
+                    disabled={submittingReviewId === reviewingBookingId}>
+                    {submittingReviewId === reviewingBookingId
+                      ? "Submitting..."
+                      : "Submit Review"}
+                  </button>
+                  <button
+                    type="button"
+                    className="profile-confirm-cancel"
+                    onClick={() => setReviewingBookingId(null)}>
+                    Cancel
+                  </button>
+                </div>
+              </form>
+            )}
           </section>
         </div>
       )}

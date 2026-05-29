@@ -191,6 +191,7 @@ public class BookingService {
         return toBookingResponse(booking);
     }
 
+    //Gets all pending bookings for a provider
     public List<BookingResponse> getUserBookingRequests(UserDetails userDetails){
 
         var user = userRepository.findByEmail(userDetails.getUsername()).orElseThrow(() -> new UsernameNotFoundException("user not found"));
@@ -203,8 +204,9 @@ public class BookingService {
         
         return response;
         
-    }
+    }   
 
+    //Gets all completed services/bookings for a provider
     public List<BookingResponse> getUserCompletedBookings(UserDetails userDetails){
         
         var user = userRepository.findByEmail(userDetails.getUsername()).orElseThrow(() -> new UsernameNotFoundException("user not found"));
@@ -216,6 +218,7 @@ public class BookingService {
         return response;
     }
 
+    //Gets all upcoming bookings for a provider
     public List<BookingResponse> getUserScheduledBookings(UserDetails userDetails){
         var user = userRepository.findByEmail(userDetails.getUsername()).orElseThrow(() -> new UsernameNotFoundException("User not found"));
 

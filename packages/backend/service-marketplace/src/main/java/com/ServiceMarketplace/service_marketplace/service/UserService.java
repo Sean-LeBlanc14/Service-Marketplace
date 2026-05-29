@@ -105,7 +105,8 @@ public class UserService {
         return toUserProfile(user);
         
     }
-
+    
+    //Temp function -> Need it for booking first name + last name -> we can add these fields to the booking response in the future if needed
     public UserProfile getUserById(String id){
         var user = userRepository.findById(id).orElseThrow(() -> new UsernameNotFoundException("User not found"));
 

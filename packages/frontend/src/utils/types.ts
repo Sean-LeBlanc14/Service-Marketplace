@@ -1,6 +1,5 @@
-
 export interface ApiService {
-    id?: string;
+  id?: string;
   title?: string;
   category?: string;
   userId?: string;
@@ -14,12 +13,34 @@ export interface ApiService {
 }
 
 export interface ApiUserProfile {
-    email: string;
-    firstName: string;
-    lastName: string;
-    major: string;
-    campus: string;
-    bio: string;
-    verified: string;
-    services: ApiService[];
+  email: string;
+  firstName: string;
+  lastName: string;
+  major: string;
+  campus: string;
+  bio: string;
+  verified: string;
+  services: ApiService[];
+}
+
+export type ApiBookingStatus =
+  | "PENDING_PAYMENT"
+  | "CONFIRMED"
+  | "COMPLETED"
+  | "CANCELLED";
+
+export interface ApiBooking {
+  id?: string;
+  serviceId?: string;
+  serviceTitle?: string;
+  customerId?: string;
+  providerId?: string;
+  agreedPrice?: number | string | null;
+  priceUnit?: string | null;
+  scheduledAt?: string | null;
+  status?: ApiBookingStatus | string | null;
+  rating?: number | null;
+  review?: string | null;
+  reviewedAt?: string | null;
+  createdAt?: string | null;
 }

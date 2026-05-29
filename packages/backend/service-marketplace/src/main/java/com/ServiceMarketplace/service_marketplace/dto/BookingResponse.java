@@ -18,5 +18,8 @@ public class BookingResponse {
     private String priceUnit;
     private Instant scheduledAt;
     private BookingStatus status;
+    private Integer rating;
+    private String review;
+    private Instant reviewedAt;
     private Instant createdAt;
 }

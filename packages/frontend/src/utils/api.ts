@@ -23,6 +23,9 @@ export const API_ENDPOINTS = {
     connectStatus: `${API_ROUTE}/payments/connect/status`
   },
   bookings: {
-    create: `${API_ROUTE}/bookings`
+    create: `${API_ROUTE}/bookings`,
+    mine: `${API_ROUTE}/bookings/me`,
+    review: (bookingId: string) =>
+      `${API_ROUTE}/bookings/${encodeURIComponent(bookingId)}/review`
   }
 };

@@ -1,6 +1,7 @@
 package com.ServiceMarketplace.service_marketplace.service;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -10,6 +11,7 @@ import org.springframework.stereotype.Service;
 import com.ServiceMarketplace.service_marketplace.dto.ConnectOnboardingResponse;
 import com.ServiceMarketplace.service_marketplace.dto.ConnectStatusResponse;
 import com.ServiceMarketplace.service_marketplace.dto.PaymentIntentResult;
+import com.ServiceMarketplace.service_marketplace.dto.SetupIntentResult;
 import com.ServiceMarketplace.service_marketplace.exception.InvalidWebhookSignatureException;
 import com.ServiceMarketplace.service_marketplace.exception.PaymentProcessingException;
 import com.ServiceMarketplace.service_marketplace.exception.ResourceNotFoundException;
@@ -24,13 +26,20 @@ import com.stripe.Stripe;
 import com.stripe.exception.StripeException;
 import com.stripe.model.Account;
 import com.stripe.model.AccountLink;
+import com.stripe.model.Customer;
 import com.stripe.model.Event;
 import com.stripe.model.PaymentIntent;
+import com.stripe.model.PaymentMethod;
+import com.stripe.model.PaymentMethodCollection;
+import com.stripe.model.SetupIntent;
 import com.stripe.model.StripeObject;
 import com.stripe.net.Webhook;
 import com.stripe.param.AccountCreateParams;
 import com.stripe.param.AccountLinkCreateParams;
+import com.stripe.param.CustomerCreateParams;
 import com.stripe.param.PaymentIntentCreateParams;
+import com.stripe.param.PaymentMethodListParams;
+import com.stripe.param.SetupIntentCreateParams;
 
 @Service
 public class PaymentService {
@@ -52,13 +61,38 @@ public class PaymentService {
 
     private final BookingRepository bookingRepository;
     private final UserRepository userRepository;
+    private final EmailService emailService;
 
-    public PaymentService(BookingRepository bookingRepository, UserRepository userRepository) {
+    public PaymentService(BookingRepository bookingRepository, UserRepository userRepository, EmailService emailService) {
         this.bookingRepository = bookingRepository;
         this.userRepository = userRepository;
+        this.emailService = emailService;
     }
 
-    public PaymentIntentResult createPaymentIntent(BigDecimal amount, String serviceId, String customerId, String providerStripeAccountId) {
+    public SetupIntentResult createSetupIntent(String customerEmail, String customerName) {
+        Stripe.apiKey = STRIPE_SECRET_KEY;
+
+        try {
+            CustomerCreateParams customerParams = CustomerCreateParams.builder()
+                .setEmail(customerEmail)
+                .setName(customerName)
+                .build();
+            Customer customer = Customer.create(customerParams);
+
+            SetupIntentCreateParams setupParams = SetupIntentCreateParams.builder()
+                .setCustomer(customer.getId())
+                .addPaymentMethodType("card")
+                .setUsage(SetupIntentCreateParams.Usage.OFF_SESSION)
+                .build();
+            SetupIntent setupIntent = SetupIntent.create(setupParams);
+
+            return new SetupIntentResult(setupIntent.getClientSecret(), customer.getId(), setupIntent.getId());
+        } catch (StripeException e) {
+            throw new PaymentProcessingException("Failed to create setup intent: " + e.getMessage());
+        }
+    }
+
+    public PaymentIntentResult createAndConfirmPaymentIntent(BigDecimal amount, String stripeCustomerId, String serviceId, String customerId, String providerStripeAccountId) {
         Stripe.apiKey = STRIPE_SECRET_KEY;
 
         long amountInCents = amount
@@ -66,9 +100,27 @@ public class PaymentService {
             .longValue();
 
         try {
+            PaymentMethodListParams listParams = PaymentMethodListParams.builder()
+                .setCustomer(stripeCustomerId)
+                .setType(PaymentMethodListParams.Type.CARD)
+                .build();
+            PaymentMethodCollection methods = PaymentMethod.list(listParams);
+
+            List<PaymentMethod> paymentMethods = methods.getData();
+            if (paymentMethods.isEmpty()) {
+                throw new PaymentProcessingException("No payment method saved for this booking");
+            }
+
+            String paymentMethodId = paymentMethods.get(0).getId();
+
             PaymentIntentCreateParams.Builder paramsBuilder = PaymentIntentCreateParams.builder()
                 .setAmount(amountInCents)
                 .setCurrency("usd")
+                .setCustomer(stripeCustomerId)
+                .setPaymentMethod(paymentMethodId)
+                .setConfirmationMethod(PaymentIntentCreateParams.ConfirmationMethod.AUTOMATIC)
+                .setConfirm(true)
+                .setOffSession(true)
                 .putMetadata("serviceId", serviceId)
                 .putMetadata("customerId", customerId);
 
@@ -84,7 +136,18 @@ public class PaymentService {
             PaymentIntent paymentIntent = PaymentIntent.create(paramsBuilder.build());
             return new PaymentIntentResult(paymentIntent.getClientSecret(), paymentIntent.getId());
         } catch (StripeException e) {
-            throw new PaymentProcessingException("Failed to create payment intent: " + e.getMessage());
+            throw new PaymentProcessingException("Failed to process payment: " + e.getMessage());
+        }
+    }
+
+    public void cleanupStripeCustomer(String stripeCustomerId) {
+        if (stripeCustomerId == null) return;
+        Stripe.apiKey = STRIPE_SECRET_KEY;
+        try {
+            Customer customer = Customer.retrieve(stripeCustomerId);
+            customer.delete();
+        } catch (StripeException ignored) {
+            // cleanup failure should not block the cancellation flow
         }
     }
 
@@ -178,5 +241,37 @@ public class PaymentService {
             .orElseThrow(() -> new ResourceNotFoundException("Booking", paymentIntentId));
         booking.setStatus(status);
         bookingRepository.save(booking);
+
+        if (status == BookingStatus.CONFIRMED) {
+            sendConfirmationEmails(booking);
+        } else if (status == BookingStatus.CANCELLED) {
+            cleanupStripeCustomer(booking.getStripeCustomerId());
+        }
+    }
+
+    private void sendConfirmationEmails(Booking booking) {
+        userRepository.findById(booking.getCustomerId()).ifPresent(customer ->
+            emailService.sendBookingConfirmedCustomerEmail(
+                customer.getEmail(),
+                customer.getFirstName(),
+                booking.getServiceTitle(),
+                booking.getAgreedPrice(),
+                booking.getPriceUnit(),
+                booking.getScheduledAt(),
+                booking.getId()
+            )
+        );
+
+        userRepository.findById(booking.getProviderId()).ifPresent(provider ->
+            emailService.sendBookingConfirmedProviderEmail(
+                provider.getEmail(),
+                provider.getFirstName(),
+                booking.getServiceTitle(),
+                booking.getAgreedPrice(),
+                booking.getPriceUnit(),
+                booking.getScheduledAt(),
+                booking.getId()
+            )
+        );
     }
 }

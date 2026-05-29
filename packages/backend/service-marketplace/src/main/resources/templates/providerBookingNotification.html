@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>New Booking Request</title>
+</head>
+<body style="margin: 0; padding: 0; background-color: #f4f4f4; font-family: Arial, sans-serif;">
+
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+    <tr>
+      <td align="center" style="padding: 40px 20px;">
+
+        <table width="100%" cellpadding="0" cellspacing="0" border="0"
+               style="max-width: 500px; background-color: #ffffff; border-radius: 8px; padding: 40px;">
+
+          <tr>
+            <td align="center">
+              <h1 style="margin: 0; color: #333333;">New Booking Request</h1>
+            </td>
+          </tr>
+
+          <tr>
+            <td style="padding-top: 20px; color: #555555; font-size: 16px; line-height: 24px;">
+              Hi <strong>[[${providerName}]]</strong>,
+              <br /><br />
+              <strong>[[${customerName}]]</strong> has requested a booking for your service. Please review the details below and confirm the final price.
+            </td>
+          </tr>
+
+          <tr>
+            <td style="padding-top: 24px;">
+              <table width="100%" cellpadding="0" cellspacing="0" border="0"
+                     style="background-color: #f8f8f8; border-radius: 6px; padding: 20px;">
+                <tr>
+                  <td style="padding: 6px 0; color: #555555; font-size: 15px;">
+                    <strong>Service:</strong> [[${serviceTitle}]]
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding: 6px 0; color: #555555; font-size: 15px;">
+                    <strong>Proposed Price:</strong> [[${proposedPrice}]] <span style="color: #888888;">[[${priceUnit}]]</span>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding: 6px 0; color: #555555; font-size: 15px;">
+                    <strong>Scheduled:</strong> [[${scheduledAt}]]
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <tr>
+            <td style="padding-top: 28px;" align="center">
+              <table cellpadding="0" cellspacing="0" border="0">
+                <tr>
+                  <td style="padding-right: 8px;">
+                    <a th:href="${confirmUrl}"
+                       style="display:inline-block;background-color:#2e7d32;color:#ffffff;text-decoration:none;
+                              padding:12px 28px;border-radius:6px;font-size:15px;font-weight:bold;">
+                      Confirm Booking
+                    </a>
+                  </td>
+                  <td style="padding-left: 8px;">
+                    <a th:href="${cancelUrl}"
+                       style="display:inline-block;background-color:#c62828;color:#ffffff;text-decoration:none;
+                              padding:12px 28px;border-radius:6px;font-size:15px;font-weight:bold;">
+                      Decline
+                    </a>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <tr>
+            <td style="padding-top: 16px; color: #777777; font-size: 13px; line-height: 20px; text-align: center;">
+              These links expire in 48 hours. You can also confirm or cancel from your account.
+            </td>
+          </tr>
+
+          <tr>
+            <td align="center" style="padding-top: 30px; font-size: 12px; color: #999999;">
+              &copy; 2026 Service Market Place. All rights reserved.
+            </td>
+          </tr>
+
+        </table>
+      </td>
+    </tr>
+  </table>
+
+</body>
+</html>

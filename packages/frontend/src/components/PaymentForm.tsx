@@ -27,7 +27,7 @@ function PaymentFormInner({ onSuccess, onError }: PaymentFormInnerProps) {
 
         setIsLoading(true);
 
-        const { error } = await stripe.confirmPayment({
+        const { error } = await stripe.confirmSetup({
         elements,
         confirmParams: {
             return_url: window.location.href
@@ -36,7 +36,7 @@ function PaymentFormInner({ onSuccess, onError }: PaymentFormInnerProps) {
         });
 
         if (error) {
-        onError(error.message ?? "Payment failed.");
+        onError(error.message ?? "Failed to save card.");
         } else {
         onSuccess();
         }
@@ -49,7 +49,7 @@ function PaymentFormInner({ onSuccess, onError }: PaymentFormInnerProps) {
         <PaymentElement />
         <div style={{ marginTop: "1rem" }}>
             <SubmitButton
-            label={isLoading ? "Processing..." : "Pay Now"}
+            label={isLoading ? "Saving..." : "Submit Booking"}
             onClick={handleSubmit}
             />
         </div>

@@ -2,13 +2,15 @@ import { useState } from "react";
 import InputField from "./InputField";
 import SubmitButton from "./SubmitButton";
 import PaymentForm from "./PaymentForm";
-import { API_ENDPOINTS } from "../utils/api";
 import "./styles/ServiceDetailsModal.css";
+import { API_ENDPOINTS } from "../utils/api";
+import { toast } from "react-toastify";
 
 const TOKEN_STORAGE_KEY = "jwt_token";
 
 interface ServiceDetails {
   id: string;
+  userId: string;
   title: string;
   price: string;
   priceMin: number;
@@ -56,6 +58,10 @@ function ServiceDetailsModal({
   onClose
 }: ServiceDetailsModalProps) {
   const [view, setView] = useState<ModalView>("details");
+  const currentUserId = localStorage.getItem("user_id");
+  const [showReportDialog, setShowReportDialog] = useState(false);
+  const [reportReason, setReportReason] = useState("Inappropriate content");
+  const [isReporting, setIsReporting] = useState(false);
   const [setupClientSecret, setSetupClientSecret] = useState("");
   const [form, setForm] = useState<BookingFormState>({
     agreedPrice: String(service.priceMin),
@@ -111,6 +117,36 @@ function ServiceDetailsModal({
       }));
     } finally {
       setForm(f => ({ ...f, isLoading: false }));
+    }
+  }
+
+  async function handleReportSubmit() {
+    setIsReporting(true);
+    try {
+      const token = localStorage.getItem("jwt_token");
+      const response = await fetch(API_ENDPOINTS.reports.create, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          listingId: service.id,
+          providerId: service.userId,
+          reason: reportReason
+        })
+      });
+
+      if (response.ok) {
+        toast.success("Report submitted successfully");
+        setShowReportDialog(false);
+      } else {
+        toast.error("Failed to submit report");
+      }
+    } catch {
+      toast.error("Failed to submit report");
+    } finally {
+      setIsReporting(false);
     }
   }
 
@@ -185,6 +221,45 @@ function ServiceDetailsModal({
                 Message
               </button>
             </div>
+
+            {currentUserId !== service.userId && (
+              <>
+                <button
+                  type="button"
+                  className="service-details-report-link"
+                  onClick={() => setShowReportDialog(true)}>
+                  Report this listing
+                </button>
+
+                {showReportDialog && (
+                  <div className="report-dialog">
+                    <h4>Report this listing</h4>
+                    <select
+                      value={reportReason}
+                      onChange={e => setReportReason(e.target.value)}>
+                      <option>Inappropriate content</option>
+                      <option>Spam or misleading</option>
+                      <option>Fraudulent service</option>
+                      <option>Harassment</option>
+                      <option>Other</option>
+                    </select>
+                    <div className="report-dialog-actions">
+                      <button
+                        type="button"
+                        onClick={handleReportSubmit}
+                        disabled={isReporting}>
+                        {isReporting ? "Submitting..." : "Submit Report"}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setShowReportDialog(false)}>
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </>
+            )}
           </>
         )}
 

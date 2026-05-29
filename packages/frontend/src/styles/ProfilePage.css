@@ -372,7 +372,7 @@
 }
 
 .add-review-button {
-  justify-self: start;
+  justify-self: end;
   border: none;
   border-radius: 8px;
   padding: 12px 18px;

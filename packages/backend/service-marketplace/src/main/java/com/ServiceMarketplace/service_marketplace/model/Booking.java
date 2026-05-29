@@ -43,6 +43,10 @@ public class Booking {
 
     private Instant reviewedAt;
 
+    private String stripeSetupIntentId;
+
+    private String stripeCustomerId;
+
     @CreatedDate
     private Instant createdAt;
 }

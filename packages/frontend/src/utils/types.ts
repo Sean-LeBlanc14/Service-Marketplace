@@ -24,6 +24,7 @@ export interface ApiUserProfile {
 }
 
 export type ApiBookingStatus =
+  | "AWAITING_PROVIDER_CONFIRMATION"
   | "PENDING_PAYMENT"
   | "CONFIRMED"
   | "COMPLETED"

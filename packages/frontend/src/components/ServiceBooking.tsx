@@ -124,21 +124,29 @@ function ServiceBooking({ booking, confirmBooking, cancelBooking, rejectBooking 
 
           {booking.status === "AWAITING_PROVIDER_CONFIRMATION" && (
             <div className="booking-action-container">
-              <button
-                type="button"
-                className="booking-action booking-action-primary"
-                disabled={isUpdating}
-                onClick={() => { setIsUpdating(true); confirmBooking(booking)}}>
-                {isUpdating ? "Accepting..." : "Accept Booking"}
-              </button>
-              <button
-                type="button"
-                className="booking-action booking-action-secondary"
-                disabled={isRejecting}
-                onClick={() => {setIsRejecting(true); rejectBooking(booking)}}
-              >
-                {isRejecting ? "Rejecting..." : "Reject Booking"}
-              </button>
+             <button
+              type="button"
+              className="booking-action booking-action-primary"
+              disabled={isUpdating}
+              onClick={() => {
+                setIsUpdating(true);
+                confirmBooking?.(booking);
+              }}
+            >
+              {isUpdating ? "Accepting..." : "Accept Booking"}
+            </button>
+
+            <button
+              type="button"
+              className="booking-action booking-action-secondary"
+              disabled={isRejecting}
+              onClick={() => {
+                setIsRejecting(true);
+                rejectBooking?.(booking);
+              }}
+            >
+              {isRejecting ? "Rejecting..." : "Reject Booking"}
+            </button>
             </div>
             
             
@@ -149,7 +157,11 @@ function ServiceBooking({ booking, confirmBooking, cancelBooking, rejectBooking 
               type="button"
               className="booking-action booking-action-primary"
               disabled={isUpdating}
-              onClick={() => {setIsUpdating(true); cancelBooking(booking)}}>
+              onClick={() => {
+                setIsUpdating(true);
+                cancelBooking?.(booking);
+              }}
+            >
               {isUpdating ? "Canceling..." : "Cancel Booking"}
             </button>
           )}

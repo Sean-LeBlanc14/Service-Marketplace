@@ -268,7 +268,7 @@ class BookingServiceTest {
     @Test
     void cancelBooking_notAwaitingConfirmation_throwsBookingStateException() {
         Booking booking = buildAwaitingBooking();
-        booking.setStatus(BookingStatus.CONFIRMED);
+        booking.setStatus(BookingStatus.COMPLETED);
 
         when(userRepository.findByEmail("student@calpoly.edu")).thenReturn(Optional.of(mockCustomer));
         when(bookingRepository.findById("booking-001")).thenReturn(Optional.of(booking));

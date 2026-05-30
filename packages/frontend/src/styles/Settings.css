@@ -1,0 +1,77 @@
+.settings-wrapper{
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.settings-wrapper h4 {
+    color: var(--cp-green);
+}
+
+.account-settings-wrapper{
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    flex : 1;
+}
+
+.change-name-container {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 10px;
+    border-radius: 10px;
+    border: 1px solid #333;
+}
+
+.name-container {
+    display: flex;
+    gap: 10px;
+}
+
+.change-password-container {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 10px;
+    border-radius: 10px;
+    border: 1px solid #333;
+}
+
+.delete-account-container {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 10px;
+    border-radius: 10px;
+    border: 1px solid #333;
+}
+
+.support-container{
+    display: flex;
+    gap: 10px
+}
+
+.support-container div {
+    flex : 1;
+    display: flex;
+    border-radius: 7px;
+    border: 1px solid #333;
+    padding: 10px
+}
+
+.support-container span {
+    flex: 1;
+}
+
+.contact-button {
+    margin-right: 0 auto;
+    border: transparent;
+    background-color: white;
+    transition: all 0.2s ease-in-out;
+}
+
+.contact-button:hover{
+    transform: scale(1.01);
+}
+

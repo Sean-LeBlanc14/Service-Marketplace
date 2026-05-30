@@ -12,12 +12,14 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import com.ServiceMarketplace.service_marketplace.dto.AuthResponse;
+import com.ServiceMarketplace.service_marketplace.dto.DeleteAccountRequest;
 import com.ServiceMarketplace.service_marketplace.dto.LoginRequest;
 import com.ServiceMarketplace.service_marketplace.dto.RegisterRequest;
 import com.ServiceMarketplace.service_marketplace.dto.ServiceDto;
 import com.ServiceMarketplace.service_marketplace.dto.UpdateUserProfileRequest;
 import com.ServiceMarketplace.service_marketplace.dto.UserProfile;
 import com.ServiceMarketplace.service_marketplace.exception.EmailAlreadyExistsException;
+import com.ServiceMarketplace.service_marketplace.exception.FailedToDeleteUser;
 import com.ServiceMarketplace.service_marketplace.model.User;
 import com.ServiceMarketplace.service_marketplace.repository.UserRepository;
 
@@ -104,6 +106,13 @@ public class UserService {
 
         return toUserProfile(user);
         
+    }
+
+    public UserProfile deleteUserProfile(UserDetails userDetails, DeleteAccountRequest request){
+        var user = userRepository.deleteByEmail(userDetails.getUsername())
+            .orElseThrow(() -> new FailedToDeleteUser("Could not delete the user: " +userDetails.getUsername()));
+
+        return toUserProfile(user); 
     }
     
     //Temp function -> Need it for booking first name + last name -> we can add these fields to the booking response in the future if needed

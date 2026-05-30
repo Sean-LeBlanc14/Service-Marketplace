@@ -12,7 +12,8 @@ export const API_ENDPOINTS = {
   },
   user: {
     profile: `${API_ROUTE}/users/me`,
-    other: (userId: string) => `${API_ROUTE}/users/profile/${(encodeURIComponent(userId))}`
+    other: (userId: string) => `${API_ROUTE}/users/profile/${(encodeURIComponent(userId))}`,
+    delete: `${API_ROUTE}/users/delete`
   },
   users: {
     all: `${API_ROUTE}/users`,

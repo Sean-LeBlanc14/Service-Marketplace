@@ -222,14 +222,30 @@ function AdminDashboard() {
       });
 
       if (!response.ok) {
-        throw new Error("Failed to suspend user");
+        if (response.status === 403) {
+          const responseText = await response.text();
+          toast.error(
+            responseText.includes("Cannot suspend another admin")
+              ? "Cannot suspend another admin."
+              : "You do not have permission to perform this action."
+          );
+          return;
+        }
+
+        if (response.status === 404) {
+          toast.error("User not found.");
+          return;
+        }
+
+        toast.error("Failed to suspend user. Please try again.");
+        return;
       }
 
       await resolveReport(report.id);
       toast.success("User suspended");
       setReloadVersion((version) => version + 1);
     } catch {
-      toast.error("Failed to suspend user");
+      toast.error("Failed to suspend user. Please try again.");
     } finally {
       setActiveReportAction(null);
     }

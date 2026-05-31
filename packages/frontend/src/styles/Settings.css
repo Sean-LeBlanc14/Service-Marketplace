@@ -1,77 +1,99 @@
 .settings-wrapper{
     display: flex;
     flex-direction: column;
+    align-items: center;
+    padding: 20px;
+    width: 100%;
     gap: 20px;
 }
 
-.settings-wrapper h4 {
-    color: var(--cp-green);
+.setting-container{
+    min-width: 70%;
 }
 
 .account-settings-wrapper{
     display: flex;
     flex-direction: column;
-    gap: 15px;
-    flex : 1;
-}
-
-.change-name-container {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    padding: 10px;
+    width: 100%;
     border-radius: 10px;
     border: 1px solid #333;
+    align-items: flex-start;
 }
 
-.name-container {
-    display: flex;
-    gap: 10px;
-}
-
-.change-password-container {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
+.change-password-container{
     padding: 10px;
-    border-radius: 10px;
-    border: 1px solid #333;
+    border-bottom: 1px solid #333;
+    width: 100%;
 }
 
-.delete-account-container {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
+.change-password-button{
+    border: transparent;
+    background-color: transparent;
+    width: 100%;
+}
+
+.change-password-container:hover{
+    background-color: #e9e9e9;
+}
+
+.delete-account-container{
     padding: 10px;
-    border-radius: 10px;
-    border: 1px solid #333;
+    width: 100%;
+}
+
+.delete-account-button {
+    border: transparent;
+    background-color: transparent;
+    width: 100%;
+}
+
+.delete-account-container:hover{
+    background-color: rgba(231, 132, 132, 0.247);
 }
 
 .support-container{
     display: flex;
-    gap: 10px
+    flex-direction: column;
+    width: 100%;
+    border-radius: 10px;
+    border: 1px solid #333;
 }
 
 .support-container div {
-    flex : 1;
-    display: flex;
-    border-radius: 7px;
-    border: 1px solid #333;
-    padding: 10px
+    border-bottom: 1px solid #333;
+    min-width: 100%;
+    height: 50px;
 }
 
-.support-container span {
-    flex: 1;
-}
-
-.contact-button {
-    margin-right: 0 auto;
+.support-container div.bottom {
     border: transparent;
-    background-color: white;
-    transition: all 0.2s ease-in-out;
 }
 
-.contact-button:hover{
-    transform: scale(1.01);
+.support-button{
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content:space-between;
+    width: 100%;
+    background-color: inherit;
+    border:transparent;
+    padding: 6px;
+    height: 100%;
+}
+
+.support-button:hover{
+    background-color: #e9e9e9;
+}
+
+.modal-style {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.modal-title{
+    font-family: var(--font-heading);
+    color: var(--cp-green);
+    font-weight: 500;
 }
 

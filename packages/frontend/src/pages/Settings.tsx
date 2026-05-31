@@ -8,12 +8,12 @@ import SubmitButton from "../components/SubmitButton";
 import InputField from "../components/InputField";
 import { FaBug } from "react-icons/fa";
 import { BsBoxArrowUpRight } from "react-icons/bs";
+import Modal from "../components/Modal";
+import DropDown from "../components/DropDown";
 
 export default function Settings() {
 
   const navigate = useNavigate();
-
-  const isDarkMode = useState(false);
 
   const [ userEmail, setUserEmail ] = useState("");
 
@@ -23,8 +23,14 @@ export default function Settings() {
 
   const [ confirmNewPassword, setConfirmNewPassowrd ] = useState("");
 
-  const [ newFirstName, setNewFirstName ] = useState("");
-  const [ newLastName, setNewLastName ] = useState("");
+  const [ isDeleting, setIsDeleting ] = useState(false);
+
+  const [ isChangingPassword, setIsChangingPassword ] = useState(false);
+
+  const [ reportingBug, setReportingBug ] = useState(false);
+
+  const [ customerService, setCustomerService ] = useState(false);
+
 
 
   async function handleDeleteAccount(){
@@ -77,111 +83,148 @@ export default function Settings() {
     
   }
 
-  async function handleNameChange(){
-
-  }
-
-  return (
-    <div className="settings-wrapper">
-      <h2>Settings</h2>
-
-      <div className="account-settings-wrapper">
-        <h3>Account Settings</h3>
-        <div className="change-name-container">
-          <h4>Change Account Name</h4>
-
-          <div className="name-container">
-            <InputField
-              value={newFirstName}
-              placeHolder="New First Name"
-              onChange={(e) => setNewFirstName(e.target.value)}
-              type="text"
-            />
-            <InputField
-              value={newLastName}
-              placeHolder="New Last Name"
-              onChange={(e) => setNewLastName(e.target.value)}
-              type="text"
-            />
-
-          </div>
-
-          <InputField 
-            value={currentPassword} 
-            placeHolder="Current Password" 
-            onChange={(e) => setCurrentPassword(e.target.value)}
-            type="password"
-            />
-
-            <SubmitButton
-              label="Set New Name"
-              onClick={handleNameChange}
-            />
-
-        </div>
-
-        <div className="change-password-container">
-          <h4>Change Password</h4>
-
-          <InputField 
-            value={currentPassword} 
-            placeHolder="Current Password" 
-            onChange={(e) => setCurrentPassword(e.target.value)}
-            type="password"
-            />
+  function deleteModal(){
+    return (
+      <div className="modal-style">
+        <h1 className="modal-title">Delete your account</h1>
           <InputField
-            value={newPassword}
-            placeHolder="New Password"
-            onChange={(e) => setNewPassword(e.target.value)}
-            type="password"
-          />
-          <InputField
-            value={confirmNewPassword}
-            placeHolder="Confirm New Password"
-            onChange={(e) => setConfirmNewPassowrd(e.target.value)}
-            type="password"
-          />
-
-          <SubmitButton
-            label="Set new Password"
-            onClick={handleChangePassword}
-          />
-
-        </div>
-        <div className="delete-account-container">
-          <h4>Delete Account</h4>
-
-          <InputField
+            label=""
             value={userEmail}
-            placeHolder="Account Email"
-            onChange={(e) => setUserEmail(e.target.value)}
+            placeHolder="Account email"
             type="text"
+            onChange={(e) => setUserEmail(e.target.value)}
           />
-
-          <InputField 
-            value={currentPassword} 
-            placeHolder="Current Password" 
+          <InputField
+            label=""
+            placeHolder="Password"
+            value={currentPassword}
             onChange={(e) => setCurrentPassword(e.target.value)}
             type="password"
-            />
-
+          />
           <SubmitButton
             label="Delete Account"
             onClick={handleDeleteAccount}
           />
+    </div>
+    );
+  }
+
+  function changePasswordModal() {
+    return (
+      <div className="modal-style">
+        <h1 className="modal-title">Change your password</h1>
+        <InputField
+            label=""
+            value={currentPassword}
+            placeHolder="Current Password"
+            onChange={(e) => setCurrentPassword(e.target.value)}
+            type="password"
+          />
+          <InputField
+            label=""
+            placeHolder="New Password"
+            value={newPassword}
+            onChange={(e) => setNewPassword(e.target.value)}
+            type="password"
+          />
+          <InputField
+            label=""
+            placeHolder="Confirm New Password"
+            value={confirmNewPassword}
+            onChange={(e) => setConfirmNewPassowrd(e.target.value)}
+            type="password"
+
+          />
+          <SubmitButton
+            label="Change Password"
+            onClick={handleChangePassword}
+          />
+      </div>
+    );
+  }
+
+  function reportModal(){
+    return (
+      <div>
+        
+        <textarea></textarea>
+      </div>
+    );
+  }
+
+  return (
+    <div className="settings-wrapper">
+      <h1>Settings</h1>
+      <h3>Manage your account and preferences</h3>
+
+      <Modal
+        isOpen={isDeleting}
+        onClose={() => setIsDeleting(false)}
+        children={deleteModal()}
+      />
+
+      <Modal
+        isOpen={isChangingPassword}
+        onClose={() => setIsChangingPassword(false)}
+        children={changePasswordModal()}
+      />
+
+      <Modal
+        isOpen={reportingBug}
+        onClose={() => setReportingBug(false)}
+        children={reportModal()}
+      />
+
+      <div className="setting-container">
+        <h4 className="section-title">Account Settings</h4>
+      
+      <div className="account-settings-wrapper">
+
+        <div className="change-password-container">
+          <button className="change-password-button" onClick={() => setIsChangingPassword(true)}>Change Password</button>
         </div>
+
+        <div className="delete-account-container">
+          <button className="delete-account-button" onClick={() => setIsDeleting(true)}>Delete Account</button>
+        </div>
+       
       </div>
 
+      </div>
+
+      <div className="setting-container">
+        <h4 className="section-title">Support</h4>
+      
       <div className="support-container">
-        <div className="report-bug-container">'
-          <span>Report a Bug <FaBug color="orange"/></span>
-          <button className="contact-button"><BsBoxArrowUpRight/></button>
+        <div>
+          <button className="support-button" onClick={() => setReportingBug(true)}>
+          <span>Report a Bug <FaBug color="orange"/> </span> 
+          <BsBoxArrowUpRight className="arrow"/>
+        </button>
         </div>
 
-        <div className="contact-support-container">
-          <span>Contact Support</span>
-          <button className="contact-button"><BsBoxArrowUpRight/></button>
+        <div>
+          <button className="support-button">
+          <span>Contact Support</span> 
+          <BsBoxArrowUpRight/>
+        </button>
         </div>
+
+        <div>
+          <button className="support-button">
+          <span>Terms of Service</span> 
+          <BsBoxArrowUpRight/>
+        </button>
+        </div>
+
+        <div className="bottom">
+          <button className="support-button">
+          <span>Privacy Policy</span> 
+          <BsBoxArrowUpRight/>
+        </button>
+        </div>
+          
+      </div>
       </div>
 
     </div>

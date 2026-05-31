@@ -2,6 +2,7 @@ package com.ServiceMarketplace.service_marketplace.service;
 
 import java.util.List;
 
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.InternalAuthenticationServiceException;
@@ -18,6 +19,7 @@ import com.ServiceMarketplace.service_marketplace.dto.ServiceDto;
 import com.ServiceMarketplace.service_marketplace.dto.UpdateUserProfileRequest;
 import com.ServiceMarketplace.service_marketplace.dto.UserProfile;
 import com.ServiceMarketplace.service_marketplace.exception.EmailAlreadyExistsException;
+import com.ServiceMarketplace.service_marketplace.exception.ResourceNotFoundException;
 import com.ServiceMarketplace.service_marketplace.model.User;
 import com.ServiceMarketplace.service_marketplace.repository.UserRepository;
 
@@ -89,7 +91,7 @@ public class UserService {
             throw new BadCredentialsException("Invalid email or password.");
         }
 
-        var user = userRepository.findByEmail(request.getEmail()).orElseThrow(() -> new UsernameNotFoundException("User not found"));
+        User user = getUserByEmail(request.getEmail());
 
         String jwtToken = jwtService.generateToken(request.getEmail());
 
@@ -99,8 +101,7 @@ public class UserService {
 
     public UserProfile getUserProfile(UserDetails userDetails){
 
-        var user = userRepository.findByEmail(userDetails.getUsername())
-            .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+        User user = getUserByEmail(userDetails.getUsername());
 
         return toUserProfile(user);
         
@@ -108,8 +109,7 @@ public class UserService {
 
     public UserProfile updateUserProfile(UserDetails userDetails, UpdateUserProfileRequest request){
 
-        var user = userRepository.findByEmail(userDetails.getUsername())
-            .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+        User user = getUserByEmail(userDetails.getUsername());
 
         if (request.getBio() != null) {
             user.setBio(clean(request.getBio()));
@@ -121,9 +121,47 @@ public class UserService {
         
     }
 
+    public User getUserById(String userId) {
+        return userRepository.findById(userId)
+            .orElseThrow(() -> new ResourceNotFoundException("User", userId));
+    }
+
+    public User getUserByEmail(String email) {
+        return userRepository.findByEmail(email)
+            .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+    }
+
+    public boolean isAdmin(String email) {
+        return "admin".equals(getUserByEmail(email).getRole());
+    }
+
+    public List<User> getAllUsers() {
+        return userRepository.findAll();
+    }
+
+    public User suspendUser(String userId) {
+        User user = getUserById(userId);
+
+        if ("admin".equals(user.getRole())) {
+            throw new AccessDeniedException("Cannot suspend another admin.");
+        }
+
+        user.setRole("suspended");
+
+        return userRepository.save(user);
+    }
+
+    public User unsuspendUser(String userId) {
+        User user = getUserById(userId);
+        user.setRole("user");
+
+        return userRepository.save(user);
+    }
+
     private UserProfile toUserProfile(User user) {
         return new UserProfile(user.getEmail(), user.getFirstName(), user.getLastName(), user.getMajor(),
-            user.getCampus(), clean(user.getBio()), user.getVerificationStatus(),getProfileServices(user.getId()));
+            user.getCampus(), clean(user.getBio()), user.getVerificationStatus(), user.getRole(),
+            getProfileServices(user.getId()));
     }
 
     private List<ServiceDto> getProfileServices(String userId) {

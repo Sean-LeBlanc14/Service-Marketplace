@@ -1,4 +1,5 @@
-import { BrowserRouter, Navigate, Routes, Route, useLocation } from "react-router-dom";
+import { useEffect } from "react";
+import { BrowserRouter, Navigate, Routes, Route, useLocation, useNavigate } from "react-router-dom";
 import Layout from "./components/Layout";
 import HomePage from "./pages/HomePage";
 import SignupPage from "./pages/SignupPage";
@@ -12,14 +13,57 @@ import LandingPage from "./pages/LandingPage";
 import ServiceDashboard from "./pages/ServiceDashboard";
 import AdminDashboard from "./pages/AdminDashboard";
 import SuspendedPage from "./pages/SuspendedPage";
+import { API_ENDPOINTS } from "./utils/api";
+
+const TOKEN_STORAGE_KEY = "jwt_token";
 
 function AppRoutes() {
   const location = useLocation();
+  const navigate = useNavigate();
   const isSuspended = localStorage.getItem("user_role") === "suspended";
   const canAccessWhileSuspended =
     location.pathname === "/login" ||
     location.pathname === "/signup" ||
     location.pathname === "/suspended";
+
+  useEffect(() => {
+    const token = localStorage.getItem(TOKEN_STORAGE_KEY);
+
+    if (!token) {
+      return;
+    }
+
+    let cancelled = false;
+
+    async function checkSuspension() {
+      try {
+        const response = await fetch(API_ENDPOINTS.user.profile, {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        });
+
+        if (!response.ok) {
+          return;
+        }
+
+        const user = await response.json();
+
+        if (!cancelled && user.role === "suspended") {
+          localStorage.clear();
+          navigate("/suspended", { replace: true });
+        }
+      } catch {
+        // Keep routing unchanged when the profile check cannot complete.
+      }
+    }
+
+    void checkSuspension();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [location.pathname, location.search, navigate]);
 
   if (isSuspended && !canAccessWhileSuspended) {
     return <Navigate to="/suspended" replace />;

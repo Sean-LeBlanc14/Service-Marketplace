@@ -6,7 +6,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -18,25 +17,25 @@ import org.springframework.web.bind.annotation.RestController;
 import com.ServiceMarketplace.service_marketplace.model.Report;
 import com.ServiceMarketplace.service_marketplace.model.User;
 import com.ServiceMarketplace.service_marketplace.repository.ReportRepository;
-import com.ServiceMarketplace.service_marketplace.repository.UserRepository;
+import com.ServiceMarketplace.service_marketplace.service.UserService;
 
 @RestController
 @RequestMapping("/api/reports")
 public class ReportController {
 
     private final ReportRepository reportRepository;
-    private final UserRepository userRepository;
+    private final UserService userService;
 
-    public ReportController(ReportRepository reportRepository, UserRepository userRepository) {
+    public ReportController(ReportRepository reportRepository, UserService userService) {
         this.reportRepository = reportRepository;
-        this.userRepository = userRepository;
+        this.userService = userService;
     }
 
     @PostMapping
     public ResponseEntity<Report> createReport(
             @AuthenticationPrincipal UserDetails userDetails,
             @RequestBody CreateReportRequest request) {
-        User reporter = getCurrentUser(userDetails);
+        User reporter = userService.getUserByEmail(userDetails.getUsername());
 
         Report report = new Report();
         report.setReporterId(reporter.getId());
@@ -49,9 +48,7 @@ public class ReportController {
 
     @GetMapping
     public ResponseEntity<List<Report>> getReports(@AuthenticationPrincipal UserDetails userDetails) {
-        User requester = getCurrentUser(userDetails);
-
-        if (!isAdmin(requester)) {
+        if (!userService.isAdmin(userDetails.getUsername())) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
 
@@ -62,9 +59,7 @@ public class ReportController {
     public ResponseEntity<Report> resolveReport(
             @PathVariable String reportId,
             @AuthenticationPrincipal UserDetails userDetails) {
-        User requester = getCurrentUser(userDetails);
-
-        if (!isAdmin(requester)) {
+        if (!userService.isAdmin(userDetails.getUsername())) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
 
@@ -78,15 +73,6 @@ public class ReportController {
         report.setStatus("resolved");
 
         return ResponseEntity.status(HttpStatus.OK).body(reportRepository.save(report));
-    }
-
-    private User getCurrentUser(UserDetails userDetails) {
-        return userRepository.findByEmail(userDetails.getUsername())
-            .orElseThrow(() -> new UsernameNotFoundException("User not found"));
-    }
-
-    private boolean isAdmin(User user) {
-        return "admin".equals(user.getRole());
     }
 
     public static record CreateReportRequest(String listingId, String providerId, String reason) {

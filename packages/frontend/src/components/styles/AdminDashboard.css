@@ -27,6 +27,24 @@
   font-weight: 700;
 }
 
+.admin-dashboard-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.admin-dashboard-toggle {
+  border: 1px solid #cfd6df;
+  border-radius: 8px;
+  padding: 8px 12px;
+  background: #ffffff;
+  color: #071b2d;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
 .admin-dashboard-table-wrap {
   overflow-x: auto;
   border: 1px solid #cfd6df;
@@ -142,6 +160,11 @@
   }
 
   .admin-dashboard-header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .admin-dashboard-header-actions {
     align-items: flex-start;
     flex-direction: column;
   }

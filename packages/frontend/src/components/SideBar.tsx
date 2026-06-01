@@ -17,7 +17,6 @@ import { API_ENDPOINTS } from "../utils/api";
 export default function SideBar() {
   const navigate = useNavigate();
   const isAdmin = localStorage.getItem("user_role") === "admin";
-  
 
   const handleLogout = async () => {
     const confirmed = window.confirm(
@@ -28,15 +27,12 @@ export default function SideBar() {
 
     try {
       const token = localStorage.getItem("jwt_token");
-      const response = await fetch(
-       API_ENDPOINTS.auth.logout ,
-        {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${token}`
-          }
+      const response = await fetch(API_ENDPOINTS.auth.logout, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`
         }
-      );
+      });
 
       if (response.ok) {
         localStorage.removeItem("jwt_token");
@@ -44,16 +40,15 @@ export default function SideBar() {
         localStorage.removeItem("user_id");
         toast.success("Successfully logged out");
         navigate("/login");
-      } else if (response.status === 401){
+      } else if (response.status === 401) {
         // Backend sends a 401 if the user is not logged in to begin with
         localStorage.removeItem("jwt_token");
         localStorage.removeItem("user_role");
         localStorage.removeItem("user_id");
         navigate("/login");
-      }else {
+      } else {
         toast.error("Could not logout, please try again.");
       }
-
     } catch (e) {
       console.error("Logout error: ", e);
       toast.warning("A network error occurred.");

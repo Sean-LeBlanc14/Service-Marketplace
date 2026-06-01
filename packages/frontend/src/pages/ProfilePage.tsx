@@ -8,7 +8,10 @@ import {
   PRICE_UNIT_OPTIONS
 } from "../utils/pricing";
 import { toast } from "react-toastify";
-import type { ApiUserProfile, ApiService } from "../utils/types";
+import type {
+  ApiUserProfile,
+  ApiService
+} from "../utils/types";
 import { useNavigate } from "react-router-dom";
 
 const TOKEN_STORAGE_KEY = "jwt_token";
@@ -50,7 +53,6 @@ interface UserProfile {
   bio: string;
   services: ServiceListing[];
 }
-
 
 interface ConnectStatus {
   accountId: string | null;
@@ -127,7 +129,9 @@ function formatPrice(service: ServiceListing) {
       : formatCurrency(minPrice || maxPrice);
   const priceUnit = normalizePriceUnit(service.priceUnit);
 
-  return priceUnit ? `${displayPrice}/${priceUnit}` : displayPrice;
+  return priceUnit
+    ? `${displayPrice}/${priceUnit}`
+    : displayPrice;
 }
 
 function formatCategory(category: string) {
@@ -208,7 +212,8 @@ function ProfilePage() {
   const [serviceLocation, setServiceLocation] = useState("");
   const [serviceTags, setServiceTags] = useState("");
   const navigate = useNavigate();
-  const [connectStatus, setConnectStatus] = useState<ConnectStatus | null>(null);
+  const [connectStatus, setConnectStatus] =
+    useState<ConnectStatus | null>(null);
   const [isConnecting, setIsConnecting] = useState(false);
   const [editingServiceId, setEditingServiceId] = useState<
     string | null
@@ -251,22 +256,29 @@ function ProfilePage() {
 
         const data = (await response.json()) as ApiUserProfile;
 
-        if (!data.verified){
-          toast.warning("Please verify your account before proceeding.");
+        if (!data.verified) {
+          toast.warning(
+            "Please verify your account before proceeding."
+          );
           navigate("/verify");
         }
         const nextProfile = normalizeProfile(data);
 
-        const connectResponse = await fetch(API_ENDPOINTS.payments.connectStatus, {
-          headers: { Authorization: `Bearer ${authToken}` }
-        });
+        const connectResponse = await fetch(
+          API_ENDPOINTS.payments.connectStatus,
+          {
+            headers: { Authorization: `Bearer ${authToken}` }
+          }
+        );
 
         if (isMounted) {
           setProfile(nextProfile);
           setBioDraft(nextProfile.bio);
           setIsEditingBio(false);
           if (connectResponse.ok) {
-            setConnectStatus((await connectResponse.json()) as ConnectStatus);
+            setConnectStatus(
+              (await connectResponse.json()) as ConnectStatus
+            );
           }
         }
       } catch {
@@ -383,7 +395,9 @@ function ProfilePage() {
       }
 
       if (titleText.length > SERVICE_TITLE_MAX_LENGTH) {
-        toast.error("Keep the title to 80 characters or fewer.");
+        toast.error(
+          "Keep the title to 80 characters or fewer."
+        );
         return;
       }
 
@@ -393,9 +407,7 @@ function ProfilePage() {
       }
 
       if (
-        tags.some(
-          (tag) => tag.length > SERVICE_TAG_MAX_LENGTH
-        )
+        tags.some((tag) => tag.length > SERVICE_TAG_MAX_LENGTH)
       ) {
         toast.error("Keep each tag to 50 characters or fewer.");
         return;
@@ -457,8 +469,7 @@ function ProfilePage() {
       }
 
       if (
-        descriptionText.length >
-        SERVICE_DESCRIPTION_MAX_LENGTH
+        descriptionText.length > SERVICE_DESCRIPTION_MAX_LENGTH
       ) {
         toast.error(
           "Keep the description to 1000 characters or fewer."
@@ -570,15 +581,20 @@ function ProfilePage() {
     if (!authToken) return;
     setIsConnecting(true);
     try {
-      const response = await fetch(API_ENDPOINTS.payments.connect, {
-        method: "POST",
-        headers: { Authorization: `Bearer ${authToken}` }
-      });
+      const response = await fetch(
+        API_ENDPOINTS.payments.connect,
+        {
+          method: "POST",
+          headers: { Authorization: `Bearer ${authToken}` }
+        }
+      );
       if (!response.ok) {
         toast.error("Could not start Stripe onboarding.");
         return;
       }
-      const data = (await response.json()) as { onboardingUrl: string };
+      const data = (await response.json()) as {
+        onboardingUrl: string;
+      };
       window.location.href = data.onboardingUrl;
     } catch {
       toast.error("Could not start Stripe onboarding.");
@@ -781,7 +797,10 @@ function ProfilePage() {
           <div className="section-heading">
             <div>
               <h2>Payments</h2>
-              <p>Connect Stripe to receive payments for your services.</p>
+              <p>
+                Connect Stripe to receive payments for your
+                services.
+              </p>
             </div>
             {connectStatus && !connectStatus.chargesEnabled && (
               <button
@@ -792,8 +811,8 @@ function ProfilePage() {
                 {isConnecting
                   ? "Redirecting..."
                   : connectStatus.accountId
-                  ? "Continue Setup"
-                  : "Connect Stripe"}
+                    ? "Continue Setup"
+                    : "Connect Stripe"}
               </button>
             )}
           </div>
@@ -803,11 +822,13 @@ function ProfilePage() {
             </p>
           ) : connectStatus?.detailsSubmitted ? (
             <p className="connect-status">
-              Stripe setup in progress. Payments will be enabled once verification is complete.
+              Stripe setup in progress. Payments will be enabled
+              once verification is complete.
             </p>
           ) : (
             <p className="empty-state">
-              Connect a Stripe account to receive payments from customers.
+              Connect a Stripe account to receive payments from
+              customers.
             </p>
           )}
         </section>
@@ -972,7 +993,8 @@ function ProfilePage() {
                         <input
                           value={serviceMinPrice}
                           onChange={(event) => {
-                            const nextPrice = event.target.value;
+                            const nextPrice =
+                              event.target.value;
 
                             if (!isPriceInputValue(nextPrice)) {
                               return;
@@ -994,7 +1016,8 @@ function ProfilePage() {
                         <input
                           value={serviceMaxPrice}
                           onChange={(event) => {
-                            const nextPrice = event.target.value;
+                            const nextPrice =
+                              event.target.value;
 
                             if (!isPriceInputValue(nextPrice)) {
                               return;
@@ -1024,14 +1047,18 @@ function ProfilePage() {
                       <option value="" disabled hidden>
                         Select a price unit
                       </option>
-                      <option value={NO_PRICE_UNIT_VALUE}>N/A</option>
+                      <option value={NO_PRICE_UNIT_VALUE}>
+                        N/A
+                      </option>
                       {hasCustomPriceUnit && (
                         <option value={servicePriceUnit}>
                           {formatPriceUnit(servicePriceUnit)}
                         </option>
                       )}
                       {PRICE_UNIT_OPTIONS.map((unit) => (
-                        <option key={unit.value} value={unit.value}>
+                        <option
+                          key={unit.value}
+                          value={unit.value}>
                           {unit.label}
                         </option>
                       ))}

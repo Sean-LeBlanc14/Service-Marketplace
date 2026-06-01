@@ -13,9 +13,13 @@ const backendDir = path.join(
   "service-marketplace"
 );
 const command =
-  process.platform === "win32" ? "mvnw.cmd" : "./mvnw";
+  process.platform === "win32" ? "mvnw.cmd" : "sh";
+const args =
+  process.platform === "win32"
+    ? ["clean", "test"]
+    : ["./mvnw", "clean", "test"];
 
-const child = spawn(command, ["clean", "test"], {
+const child = spawn(command, args, {
   cwd: backendDir,
   stdio: "inherit",
   shell: process.platform === "win32"

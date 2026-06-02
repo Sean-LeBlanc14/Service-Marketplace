@@ -3,10 +3,6 @@
   /* --cp-green: #1e4d2b; old green*/
   --cp-green: #154734;
   --cp-gold: #bd8b13;
-  /* Cal Poly green to be used for buttons and possible headings*/
-  /* --cp-green: #1e4d2b; old green*/
-  --cp-green: #154734;
-  --cp-gold: #bd8b13;
 
   --cp-stadium-gold: #f8e08e;
   --cp-mission-beige: #e4e3d3;
@@ -14,7 +10,7 @@
   /* Primary text color for crisp accessibility */
   --text-primary: #333333;
 
-  --background-light: #ffff;
+  --background-light: #f4f4f4;
   --background-dark: ;
   --background-light-hover: ;
   --background-dark-hover: ;

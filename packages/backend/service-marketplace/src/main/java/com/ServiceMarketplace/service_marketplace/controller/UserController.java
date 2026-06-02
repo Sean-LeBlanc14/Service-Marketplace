@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.ServiceMarketplace.service_marketplace.dto.ChangePasswordRequest;
 import com.ServiceMarketplace.service_marketplace.dto.DeleteAccountRequest;
 import com.ServiceMarketplace.service_marketplace.dto.UpdateUserProfileRequest;
 import com.ServiceMarketplace.service_marketplace.dto.UserProfile;
@@ -69,6 +70,16 @@ public class UserController {
         
         return ResponseEntity.status(HttpStatus.NO_CONTENT).body(response);
     }   
+
+    @PatchMapping("/password")
+    public ResponseEntity<String> changeUserPassword(@AuthenticationPrincipal UserDetails userDetails, ChangePasswordRequest request){
+
+        System.out.println("DEBUG: I HAVE RECIEVED THE REQUEST");
+        
+        var response = userService.changeUserPassword(userDetails, request);
+
+        return ResponseEntity.status(HttpStatus.OK).body(response);
+    }
     
 
     @GetMapping

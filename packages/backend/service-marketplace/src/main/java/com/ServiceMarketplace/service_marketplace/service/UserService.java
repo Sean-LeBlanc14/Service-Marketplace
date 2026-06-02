@@ -12,6 +12,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import com.ServiceMarketplace.service_marketplace.dto.AuthResponse;
+import com.ServiceMarketplace.service_marketplace.dto.ChangePasswordRequest;
 import com.ServiceMarketplace.service_marketplace.dto.DeleteAccountRequest;
 import com.ServiceMarketplace.service_marketplace.dto.LoginRequest;
 import com.ServiceMarketplace.service_marketplace.dto.RegisterRequest;
@@ -39,10 +40,9 @@ public class UserService {
 
     private final ServiceService serviceService;
 
-
-    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder, EmailService emailService, 
-        VerificationService verificationService, AuthenticationManager authenticationManager, JwtService jwtService,
-        ServiceService serviceService) {
+    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder, EmailService emailService,
+            VerificationService verificationService, AuthenticationManager authenticationManager, JwtService jwtService,
+            ServiceService serviceService) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.emailService = emailService;
@@ -78,14 +78,14 @@ public class UserService {
         return new AuthResponse(saved.getId(), saved.getEmail(), jwtToken, saved.getRole());
     }
 
-    public AuthResponse loginUser(LoginRequest request){
-        
+    public AuthResponse loginUser(LoginRequest request) {
+
         try {
             authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(
-                    request.getEmail(), 
-                    request.getPassword()
-                )
+                    new UsernamePasswordAuthenticationToken(
+                            request.getEmail(),
+                            request.getPassword()
+                    )
             );
         } catch (BadCredentialsException | InternalAuthenticationServiceException e) {
             throw new BadCredentialsException("Invalid email or password.");
@@ -99,33 +99,49 @@ public class UserService {
 
     }
 
-    public UserProfile getUserProfile(UserDetails userDetails){
+    public String changeUserPassword(UserDetails userDetails, ChangePasswordRequest request) {
+
 
         var user = userRepository.findByEmail(userDetails.getUsername())
-            .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+
+        System.out.println("DEBUG: " + user.getPassword() + "\n New: " + passwordEncoder.encode(request.getPassword()));
+
+        if (!user.getPassword().equals(passwordEncoder.encode(request.getPassword()))) throw new BadCredentialsException("Invalid Password");
+
+        user.setPassword(passwordEncoder.encode(request.getNewPassword()));
+
+        return "Success";
+
+    }
+
+    public UserProfile getUserProfile(UserDetails userDetails) {
+
+        var user = userRepository.findByEmail(userDetails.getUsername())
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
 
         return toUserProfile(user);
-        
+
     }
 
-    public UserProfile deleteUserProfile(UserDetails userDetails, DeleteAccountRequest request){
+    public UserProfile deleteUserProfile(UserDetails userDetails, DeleteAccountRequest request) {
         var user = userRepository.deleteByEmail(userDetails.getUsername())
-            .orElseThrow(() -> new FailedToDeleteUser("Could not delete the user: " +userDetails.getUsername()));
+                .orElseThrow(() -> new FailedToDeleteUser("Could not delete the user: " + userDetails.getUsername()));
 
-        return toUserProfile(user); 
+        return toUserProfile(user);
     }
-    
+
     //Temp function -> Need it for booking first name + last name -> we can add these fields to the booking response in the future if needed
-    public UserProfile getUserById(String id){
+    public UserProfile getUserById(String id) {
         var user = userRepository.findById(id).orElseThrow(() -> new UsernameNotFoundException("User not found"));
 
         return toUserProfile(user);
     }
 
-    public UserProfile updateUserProfile(UserDetails userDetails, UpdateUserProfileRequest request){
+    public UserProfile updateUserProfile(UserDetails userDetails, UpdateUserProfileRequest request) {
 
         var user = userRepository.findByEmail(userDetails.getUsername())
-            .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
 
         if (request.getBio() != null) {
             user.setBio(clean(request.getBio()));
@@ -134,12 +150,12 @@ public class UserService {
         User saved = userRepository.save(user);
 
         return toUserProfile(saved);
-        
+
     }
 
     private UserProfile toUserProfile(User user) {
         return new UserProfile(user.getEmail(), user.getFirstName(), user.getLastName(), user.getMajor(),
-            user.getCampus(), clean(user.getBio()), user.getVerificationStatus(),getProfileServices(user.getId()));
+                user.getCampus(), clean(user.getBio()), user.getVerificationStatus(), getProfileServices(user.getId()));
     }
 
     private List<ServiceDto> getProfileServices(String userId) {

@@ -5,10 +5,6 @@ import {
   PaymentElement,
   useStripe,
   useElements
-  Elements,
-  PaymentElement,
-  useStripe,
-  useElements
 } from "@stripe/react-stripe-js";
 import SubmitButton from "./SubmitButton";
 

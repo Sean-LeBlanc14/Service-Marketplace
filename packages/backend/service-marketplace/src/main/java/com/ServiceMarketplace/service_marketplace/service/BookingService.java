@@ -82,6 +82,16 @@ public class BookingService {
 
         Booking saved = bookingRepository.save(booking);
 
+        emailService.sendBookingRequestedCustomerEmail(
+            customer.getEmail(),
+            customer.getFirstName(),
+            service.getTitle(),
+            request.getProposedPrice(),
+            service.getPriceUnit(),
+            request.getScheduledAt(),
+            saved.getId()
+        );
+
         TokenPair tokenPair = bookingTokenService.generateTokenPair(saved.getId());
 
         emailService.sendProviderBookingNotificationEmail(

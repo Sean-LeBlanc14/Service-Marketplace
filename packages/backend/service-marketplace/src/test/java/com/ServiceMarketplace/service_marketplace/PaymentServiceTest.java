@@ -76,7 +76,7 @@ class PaymentServiceTest {
     }
 
     @Test
-    void handleWebhook_paymentSucceeded_updatesBookingToConfirmedAndSendsEmails() {
+    void handleWebhook_paymentSucceeded_updatesBookingToConfirmedAndSendsEmails() throws Exception {
         Event mockEvent = buildMockEvent("payment_intent.succeeded", "pi_test_123");
         try (MockedStatic<Webhook> webhookMock = Mockito.mockStatic(Webhook.class)) {
             webhookMock.when(() -> Webhook.constructEvent(any(), any(), any()))
@@ -103,7 +103,7 @@ class PaymentServiceTest {
     }
 
     @Test
-    void handleWebhook_paymentFailed_updatesBookingToCancelledAndCleansUpStripeCustomer() {
+    void handleWebhook_paymentFailed_updatesBookingToCancelledAndCleansUpStripeCustomer() throws Exception {
         Event mockEvent = buildMockEvent("payment_intent.payment_failed", "pi_test_123");
         try (MockedStatic<Webhook> webhookMock = Mockito.mockStatic(Webhook.class);
              MockedStatic<Customer> customerMock = Mockito.mockStatic(Customer.class)) {
@@ -138,7 +138,7 @@ class PaymentServiceTest {
     }
 
     @Test
-    void handleWebhook_unknownEventType_noBookingUpdate() {
+    void handleWebhook_unknownEventType_noBookingUpdate() throws Exception {
         Event mockEvent = buildMockEvent("customer.created", null);
         try (MockedStatic<Webhook> webhookMock = Mockito.mockStatic(Webhook.class)) {
             webhookMock.when(() -> Webhook.constructEvent(any(), any(), any()))
@@ -151,7 +151,7 @@ class PaymentServiceTest {
         }
     }
 
-    private Event buildMockEvent(String eventType, String paymentIntentId) {
+    private Event buildMockEvent(String eventType, String paymentIntentId) throws Exception {
         Event event = mock(Event.class);
         when(event.getType()).thenReturn(eventType);
 
@@ -160,10 +160,9 @@ class PaymentServiceTest {
         if (paymentIntentId != null) {
             PaymentIntent paymentIntent = mock(PaymentIntent.class);
             when(paymentIntent.getId()).thenReturn(paymentIntentId);
-            when(deserializer.getObject()).thenReturn(Optional.of(paymentIntent));
+            when(deserializer.deserializeUnsafe()).thenReturn(paymentIntent);
         } else {
-            StripeObject stripeObject = mock(StripeObject.class);
-            when(deserializer.getObject()).thenReturn(Optional.of(stripeObject));
+            when(deserializer.deserializeUnsafe()).thenReturn(mock(StripeObject.class));
         }
 
         when(event.getDataObjectDeserializer()).thenReturn(deserializer);

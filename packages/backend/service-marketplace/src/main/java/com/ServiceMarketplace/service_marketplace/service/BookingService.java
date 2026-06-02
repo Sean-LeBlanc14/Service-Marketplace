@@ -2,7 +2,11 @@ package com.ServiceMarketplace.service_marketplace.service;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import org.springframework.security.access.AccessDeniedException;
@@ -196,10 +200,11 @@ public class BookingService {
 
     public List<BookingResponse> getCustomerBookings(UserDetails userDetails) {
         var customer = getCurrentUser(userDetails);
+        var bookings = bookingRepository.findByCustomerIdOrderByCreatedAtDesc(customer.getId());
+        var usersById = getUsersById(bookings);
 
-        return bookingRepository.findByCustomerIdOrderByCreatedAtDesc(customer.getId())
-            .stream()
-            .map(this::toBookingResponse)
+        return bookings.stream()
+            .map(booking -> toBookingResponse(booking, usersById))
             .collect(Collectors.toList());
     }
 
@@ -214,6 +219,10 @@ public class BookingService {
 
         if (booking.getStatus() != BookingStatus.COMPLETED) {
             throw new InvalidBookingReviewException("You can only review completed bookings.");
+        }
+
+        if (booking.getRating() != null) {
+            throw new InvalidBookingReviewException("This booking has already been reviewed.");
         }
 
         booking.setRating(request.getRating());
@@ -250,6 +259,52 @@ public class BookingService {
         );
     }
 
+    private BookingResponse toBookingResponse(Booking booking, Map<String, User> usersById) {
+        return new BookingResponse(
+            booking.getId(),
+            booking.getServiceId(),
+            booking.getServiceTitle(),
+            booking.getCustomerId(),
+            booking.getProviderId(),
+            getUserDisplayName(booking.getCustomerId(), usersById),
+            getUserDisplayName(booking.getProviderId(), usersById),
+            getReviewerName(booking, usersById),
+            booking.getAgreedPrice(),
+            booking.getPriceUnit(),
+            booking.getScheduledAt(),
+            booking.getStatus(),
+            booking.getRating(),
+            booking.getReview(),
+            booking.getReviewedAt(),
+            booking.getCreatedAt()
+        );
+    }
+
+    private Map<String, User> getUsersById(List<Booking> bookings) {
+        Set<String> userIds = new HashSet<>();
+
+        for (Booking booking : bookings) {
+            addUserId(userIds, booking.getCustomerId());
+            addUserId(userIds, booking.getProviderId());
+        }
+
+        if (userIds.isEmpty()) {
+            return Map.of();
+        }
+
+        return userRepository.findAllById(userIds)
+            .stream()
+            .collect(Collectors.toMap(User::getId, Function.identity()));
+    }
+
+    private void addUserId(Set<String> userIds, String userId) {
+        String cleanUserId = clean(userId);
+
+        if (!cleanUserId.isBlank()) {
+            userIds.add(cleanUserId);
+        }
+    }
+
     private String clean(String value) {
         return value == null ? "" : value.trim();
     }
@@ -263,12 +318,23 @@ public class BookingService {
 
         var user = userRepository.findById(cleanUserId);
 
-        if (user == null || user.isEmpty()) {
+        if (user.isEmpty()) {
             return cleanUserId;
         }
 
         User foundUser = user.get();
         return getUserDisplayName(foundUser);
+    }
+
+    private String getUserDisplayName(String userId, Map<String, User> usersById) {
+        String cleanUserId = clean(userId);
+
+        if (cleanUserId.isBlank()) {
+            return "";
+        }
+
+        User user = usersById.get(cleanUserId);
+        return user == null ? cleanUserId : getUserDisplayName(user);
     }
 
     private String getUserDisplayName(User user) {
@@ -285,5 +351,10 @@ public class BookingService {
     private String getReviewerName(Booking booking) {
         String reviewerName = clean(booking.getReviewerName());
         return reviewerName.isBlank() ? getUserDisplayName(booking.getCustomerId()) : reviewerName;
+    }
+
+    private String getReviewerName(Booking booking, Map<String, User> usersById) {
+        String reviewerName = clean(booking.getReviewerName());
+        return reviewerName.isBlank() ? getUserDisplayName(booking.getCustomerId(), usersById) : reviewerName;
     }
 }

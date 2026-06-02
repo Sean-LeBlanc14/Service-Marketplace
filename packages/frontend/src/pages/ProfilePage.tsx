@@ -197,6 +197,10 @@ function formatBookingStatus(status: string) {
     .join(" ");
 }
 
+function formatBookingStatusClass(status: string) {
+  return status.toLocaleLowerCase().replace(/_/g, "-");
+}
+
 function formatCategory(category: string) {
   return (
     SERVICE_CATEGORY_OPTIONS.find(
@@ -828,17 +832,17 @@ function ProfilePage() {
   async function handleReviewSubmit(
     event: FormEvent<HTMLFormElement>,
     booking: CustomerBooking
-  ) {
+  ): Promise<boolean> {
     event.preventDefault();
 
     if (!authToken) {
       toast.error("Log in to leave a review.");
-      return;
+      return false;
     }
 
     if (booking.status !== REVIEWABLE_BOOKING_STATUS) {
       toast.error("You can only review completed bookings.");
-      return;
+      return false;
     }
 
     const draft = reviewDrafts[booking.id] ?? {
@@ -850,19 +854,19 @@ function ProfilePage() {
 
     if (!Number.isInteger(rating) || rating < 1 || rating > 5) {
       toast.error("Choose a rating from 1 to 5.");
-      return;
+      return false;
     }
 
     if (!review) {
       toast.error("Write a review before submitting.");
-      return;
+      return false;
     }
 
     if (review.length > REVIEW_MAX_LENGTH) {
       toast.error(
         "Keep the review to 1000 characters or fewer."
       );
-      return;
+      return false;
     }
 
     setSubmittingReviewId(booking.id);
@@ -905,12 +909,14 @@ function ProfilePage() {
         return nextDrafts;
       });
       toast.success("Review submitted.");
+      return true;
     } catch (reviewError) {
       toast.error(
         reviewError instanceof Error
           ? reviewError.message
           : "Could not submit review."
       );
+      return false;
     } finally {
       setSubmittingReviewId(null);
     }
@@ -1106,7 +1112,7 @@ function ProfilePage() {
                       <div>
                         <h3>{booking.serviceTitle}</h3>
                         <p
-                          className={`booking-status booking-status--${booking.status.toLocaleLowerCase()}`}>
+                          className={`booking-status booking-status--${formatBookingStatusClass(booking.status)}`}>
                           {formatBookingStatus(booking.status)}
                         </p>
                       </div>
@@ -1615,7 +1621,11 @@ function ProfilePage() {
                     void handleReviewSubmit(
                       event,
                       booking
-                    ).then(() => setReviewingBookingId(null));
+                    ).then((wasSubmitted) => {
+                      if (wasSubmitted) {
+                        setReviewingBookingId(null);
+                      }
+                    });
                   }
                 }}>
                 <label>

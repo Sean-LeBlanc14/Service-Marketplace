@@ -15,6 +15,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -164,12 +165,18 @@ class BookingServiceTest {
         when(userRepository.findByEmail("student@calpoly.edu")).thenReturn(Optional.of(mockCustomer));
         when(bookingRepository.findByCustomerIdOrderByCreatedAtDesc("customer-789"))
             .thenReturn(List.of(booking));
+        when(userRepository.findAllById(any())).thenReturn(List.of(mockCustomer, mockProvider));
 
         var result = bookingService.getCustomerBookings(userDetails);
 
         assertThat(result).hasSize(1);
         assertThat(result.get(0).getId()).isEqualTo("booking-123");
+        assertThat(result.get(0).getCustomerName()).isEqualTo("Alice Student");
+        assertThat(result.get(0).getProviderName()).isEqualTo("Bob");
+        assertThat(result.get(0).getReviewerName()).isEqualTo("Alice Student");
         assertThat(result.get(0).getStatus()).isEqualTo(BookingStatus.CONFIRMED);
+        verify(userRepository).findAllById(any());
+        verify(userRepository, never()).findById(any());
     }
 
     @Test
@@ -205,6 +212,24 @@ class BookingServiceTest {
         assertThatThrownBy(() -> bookingService.submitReview("booking-123", request, userDetails))
             .isInstanceOf(InvalidBookingReviewException.class)
             .hasMessageContaining("completed");
+    }
+
+    @Test
+    void submitReview_existingReview_throwsException() {
+        Booking booking = createBookingWithStatus(BookingStatus.COMPLETED);
+        booking.setRating(5);
+        booking.setReview("Already reviewed.");
+        SubmitReviewRequest request = new SubmitReviewRequest();
+        request.setRating(4);
+        request.setReview("Trying again.");
+
+        when(userRepository.findByEmail("student@calpoly.edu")).thenReturn(Optional.of(mockCustomer));
+        when(bookingRepository.findById("booking-123")).thenReturn(Optional.of(booking));
+
+        assertThatThrownBy(() -> bookingService.submitReview("booking-123", request, userDetails))
+            .isInstanceOf(InvalidBookingReviewException.class)
+            .hasMessageContaining("already been reviewed");
+        verify(bookingRepository, never()).save(any());
     }
 
     @Test

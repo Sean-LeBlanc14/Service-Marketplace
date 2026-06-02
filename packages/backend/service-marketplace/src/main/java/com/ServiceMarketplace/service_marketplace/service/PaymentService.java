@@ -219,9 +219,12 @@ public class PaymentService {
             throw new InvalidWebhookSignatureException("Invalid webhook signature: " + e.getMessage());
         }
 
-        StripeObject stripeObject = event.getDataObjectDeserializer()
-            .getObject()
-            .orElseThrow(() -> new WebhookProcessingException("Failed to deserialize webhook event"));
+        StripeObject stripeObject;
+        try {
+            stripeObject = event.getDataObjectDeserializer().deserializeUnsafe();
+        } catch (Exception e) {
+            throw new WebhookProcessingException("Failed to deserialize webhook event");
+        }
 
         switch (event.getType()) {
             case "payment_intent.succeeded" -> {

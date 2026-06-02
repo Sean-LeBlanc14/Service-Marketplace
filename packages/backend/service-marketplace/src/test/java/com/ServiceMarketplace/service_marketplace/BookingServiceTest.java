@@ -16,6 +16,7 @@ import org.mockito.Mock;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -113,6 +114,11 @@ class BookingServiceTest {
         assertThat(result.getBooking().getStatus()).isEqualTo(BookingStatus.AWAITING_PROVIDER_CONFIRMATION);
         assertThat(result.getSetupClientSecret()).isEqualTo("seti_secret_test");
 
+        verify(emailService).sendBookingRequestedCustomerEmail(
+            eq("student@calpoly.edu"), eq("Alice"), eq("Math Tutoring"),
+            eq(new BigDecimal("50.00")), eq("per hour"), any(Instant.class),
+            Mockito.isNull()
+        );
         verify(bookingTokenService).generateTokenPair(any());
         verify(emailService).sendProviderBookingNotificationEmail(
             eq("tutor@calpoly.edu"), eq("Bob"), eq("Alice Student"), eq("Math Tutoring"),

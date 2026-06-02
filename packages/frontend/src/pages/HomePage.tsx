@@ -16,7 +16,10 @@ import type { Service } from "../components/ServiceCard";
 import "../styles/HomePage.css";
 import { API_ENDPOINTS } from "../utils/api";
 import { toast } from "react-toastify";
-import type { ApiUserProfile, ApiService } from "../utils/types";
+import type {
+  ApiUserProfile,
+  ApiService
+} from "../utils/types";
 import { normalizePriceUnit } from "../utils/pricing";
 
 const CATEGORIES = [
@@ -25,7 +28,11 @@ const CATEGORIES = [
   { value: "tech", label: "Tech Help", icon: Monitor },
   { value: "housing", label: "Housing", icon: Home },
   { value: "finance", label: "Finance", icon: DollarSign },
-  { value: "food and catering", label: "Food & Catering", icon: Utensils },
+  {
+    value: "food and catering",
+    label: "Food & Catering",
+    icon: Utensils
+  },
   { value: "photography", label: "Photography", icon: Camera }
 ];
 
@@ -62,20 +69,25 @@ function formatPrice(service: ApiService) {
       : formatCurrency(minPrice || maxPrice);
   const priceUnit = normalizePriceUnit(service.priceUnit);
 
-  return priceUnit ? `${displayPrice}/${priceUnit}` : displayPrice;
+  return priceUnit
+    ? `${displayPrice}/${priceUnit}`
+    : displayPrice;
 }
-
 
 function normalizeService(
   service: ApiService,
-  index: number,
+  index: number
 ): Service {
   const tags = Array.isArray(service.tags)
     ? service.tags.map(cleanText).filter(Boolean)
     : [];
   const id = cleanText(service.id) || `service-${index}`;
-  const priceMin = Number(cleanPriceValue(service.priceMin) || 0);
-  const priceMax = Number(cleanPriceValue(service.priceMax) || priceMin);
+  const priceMin = Number(
+    cleanPriceValue(service.priceMin) || 0
+  );
+  const priceMax = Number(
+    cleanPriceValue(service.priceMax) || priceMin
+  );
   const priceUnit = cleanText(service.priceUnit) || null;
 
   const normalizedService = {
@@ -99,7 +111,8 @@ function HomePage() {
   const [services, setServices] = useState<Service[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState("All");
+  const [selectedCategory, setSelectedCategory] =
+    useState("All");
   const [searchQuery, setSearchQuery] = useState("");
   const navigate = useNavigate();
 
@@ -123,30 +136,41 @@ function HomePage() {
       };
 
       try {
-        const response = await fetch(API_ENDPOINTS.services.services, {
-          headers: authHeaders
-        });
+        const response = await fetch(
+          API_ENDPOINTS.services.services,
+          {
+            headers: authHeaders
+          }
+        );
 
         if (response.ok) {
           const data = (await response.json()) as ApiService[];
 
           try {
-            const profileResponse = await fetch(API_ENDPOINTS.user.profile, {
-              headers: authHeaders
-            });
+            const profileResponse = await fetch(
+              API_ENDPOINTS.user.profile,
+              {
+                headers: authHeaders
+              }
+            );
 
-          if (profileResponse.ok) {
-            const profile = (await profileResponse.json()) as ApiUserProfile;
+            if (profileResponse.ok) {
+              const profile =
+                (await profileResponse.json()) as ApiUserProfile;
 
-            if (!profile.verified){
-              toast.warning("Please verify your account before proceeding.");
-              navigate("/verify");
+              if (!profile.verified) {
+                toast.warning(
+                  "Please verify your account before proceeding."
+                );
+                navigate("/verify");
+              }
             }
-          }
-        } catch (e){
+          } catch (e) {
             console.error(e);
-            toast.warning("A network error occured, please try again");
-        }
+            toast.warning(
+              "A network error occured, please try again"
+            );
+          }
 
           const nextServices = Array.isArray(data)
             ? data.map((service, index) =>
@@ -158,12 +182,17 @@ function HomePage() {
             setServices(nextServices);
             setError("");
           }
-        } else if (response.status === 401 || response.status === 403) {
+        } else if (
+          response.status === 401 ||
+          response.status === 403
+        ) {
           if (isMounted) {
             setError("Session expired. Please log in again.");
           }
         } else if (isMounted) {
-          setError("Failed to load services. Please try again.");
+          setError(
+            "Failed to load services. Please try again."
+          );
         }
       } catch {
         if (isMounted) {
@@ -185,14 +214,17 @@ function HomePage() {
 
   const filteredServices = services.filter((service) => {
     const matchesCategory =
-      selectedCategory === "All" || service.category === selectedCategory;
+      selectedCategory === "All" ||
+      service.category === selectedCategory;
 
     const query = searchQuery.toLowerCase();
     const matchesSearch =
       query === "" ||
       service.title.toLowerCase().includes(query) ||
       service.description.toLowerCase().includes(query) ||
-      service.tags.some((tag) => tag.toLowerCase().includes(query));
+      service.tags.some((tag) =>
+        tag.toLowerCase().includes(query)
+      );
 
     return matchesCategory && matchesSearch;
   });
@@ -210,15 +242,14 @@ function HomePage() {
 
         {/* ST-07: Search bar */}
         <div className="homepage-search">
-          <Search
-            size={16}
-            className="homepage-search-icon"
-          />
+          <Search size={16} className="homepage-search-icon" />
           <input
             type="text"
             placeholder="Search services..."
             value={searchQuery}
-            onChange={(event) => setSearchQuery(event.target.value)}
+            onChange={(event) =>
+              setSearchQuery(event.target.value)
+            }
             className="homepage-search-input"
           />
         </div>
@@ -232,7 +263,9 @@ function HomePage() {
                 key={value}
                 onClick={() => setSelectedCategory(value)}
                 className={`homepage-category-button${
-                  isSelected ? " homepage-category-button-selected" : ""
+                  isSelected
+                    ? " homepage-category-button-selected"
+                    : ""
                 }`}>
                 <Icon size={14} />
                 {label}
@@ -247,8 +280,14 @@ function HomePage() {
           </p>
         )}
 
-        {loading && <p className="status-message">Loading services...</p>}
-        {error && <p className="status-message status-message-error">{error}</p>}
+        {loading && (
+          <p className="status-message">Loading services...</p>
+        )}
+        {error && (
+          <p className="status-message status-message-error">
+            {error}
+          </p>
+        )}
 
         <Row>
           {filteredServices.map((service) => (

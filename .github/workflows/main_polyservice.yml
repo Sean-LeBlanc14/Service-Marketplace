@@ -16,8 +16,8 @@ jobs:
       - name: Set up Java version
         uses: actions/setup-java@v4
         with:
-          java-version: '17'
-          distribution: 'microsoft'
+          java-version: "17"
+          distribution: "microsoft"
 
       - name: Build with Maven
         working-directory: packages/backend/service-marketplace
@@ -42,6 +42,7 @@ jobs:
       - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v3
         with:
-          app-name: 'polyservice'
-          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE }}
-          package: '*.jar'
+          app-name: "polyservice"
+          publish-profile:
+            ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE }}
+          package: "*.jar"

@@ -80,7 +80,10 @@ const MAJORS = [
   "Wine and Viticulture"
 ];
 
-export default function MajorComboBox({ value, onChange }: MajorComboBoxProps) {
+export default function MajorComboBox({
+  value,
+  onChange
+}: MajorComboBoxProps) {
   const [isFocused, setIsFocused] = useState(false);
   const [inputText, setInputText] = useState(value);
   const [selectedMajor, setSelectedMajor] = useState(value);
@@ -105,7 +108,9 @@ export default function MajorComboBox({ value, onChange }: MajorComboBoxProps) {
       return MAJORS;
     }
 
-    return MAJORS.filter((major) => major.toLowerCase().includes(query));
+    return MAJORS.filter((major) =>
+      major.toLowerCase().includes(query)
+    );
   }, [inputText]);
 
   const showDropdown = isFocused && filteredMajors.length > 0;

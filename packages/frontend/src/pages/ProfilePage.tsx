@@ -8,7 +8,11 @@ import {
   PRICE_UNIT_OPTIONS
 } from "../utils/pricing";
 import { toast } from "react-toastify";
-import type { ApiBooking, ApiUserProfile, ApiService } from "../utils/types";
+import type {
+  ApiBooking,
+  ApiUserProfile,
+  ApiService
+} from "../utils/types";
 import { useNavigate } from "react-router-dom";
 
 const TOKEN_STORAGE_KEY = "jwt_token";
@@ -150,14 +154,18 @@ function formatPrice(service: ServiceListing) {
       : formatCurrency(minPrice || maxPrice);
   const priceUnit = normalizePriceUnit(service.priceUnit);
 
-  return priceUnit ? `${displayPrice}/${priceUnit}` : displayPrice;
+  return priceUnit
+    ? `${displayPrice}/${priceUnit}`
+    : displayPrice;
 }
 
 function formatBookingPrice(booking: CustomerBooking) {
   const displayPrice = formatCurrency(booking.agreedPrice);
   const priceUnit = normalizePriceUnit(booking.priceUnit);
 
-  return priceUnit ? `${displayPrice}/${priceUnit}` : displayPrice;
+  return priceUnit
+    ? `${displayPrice}/${priceUnit}`
+    : displayPrice;
 }
 
 function formatDateTime(value: string) {
@@ -229,7 +237,8 @@ function normalizeBookings(
   return bookings.map((booking, index) => ({
     id: cleanText(booking.id) || `booking-${index}`,
     serviceId: cleanText(booking.serviceId),
-    serviceTitle: cleanText(booking.serviceTitle) || "Booked service",
+    serviceTitle:
+      cleanText(booking.serviceTitle) || "Booked service",
     customerName: cleanText(booking.customerName) || "You",
     providerName: cleanText(booking.providerName),
     reviewerName:
@@ -283,11 +292,21 @@ function ProfilePage() {
   const [serviceDescription, setServiceDescription] =
     useState("");
   const [serviceMessage, setServiceMessage] = useState("");
-  const [customerBookings, setCustomerBookings] = useState<CustomerBooking[]>([]);
-  const [isLoadingBookings, setIsLoadingBookings] = useState(Boolean(authToken));
-  const [reviewDrafts, setReviewDrafts] = useState<Record<string, ReviewDraft>>({});
-  const [submittingReviewId, setSubmittingReviewId] = useState<string | null>(null);
-  const [reviewingBookingId, setReviewingBookingId] = useState<string | null>(null);
+  const [customerBookings, setCustomerBookings] = useState<
+    CustomerBooking[]
+  >([]);
+  const [isLoadingBookings, setIsLoadingBookings] = useState(
+    Boolean(authToken)
+  );
+  const [reviewDrafts, setReviewDrafts] = useState<
+    Record<string, ReviewDraft>
+  >({});
+  const [submittingReviewId, setSubmittingReviewId] = useState<
+    string | null
+  >(null);
+  const [reviewingBookingId, setReviewingBookingId] = useState<
+    string | null
+  >(null);
   const [serviceTitle, setServiceTitle] = useState("");
   const [serviceCategory, setServiceCategory] = useState("");
   const [servicePricingType, setServicePricingType] =
@@ -303,7 +322,8 @@ function ProfilePage() {
   const [serviceLocation, setServiceLocation] = useState("");
   const [serviceTags, setServiceTags] = useState("");
   const navigate = useNavigate();
-  const [connectStatus, setConnectStatus] = useState<ConnectStatus | null>(null);
+  const [connectStatus, setConnectStatus] =
+    useState<ConnectStatus | null>(null);
   const [isConnecting, setIsConnecting] = useState(false);
   const [editingServiceId, setEditingServiceId] = useState<
     string | null
@@ -346,22 +366,32 @@ function ProfilePage() {
 
         const data = (await response.json()) as ApiUserProfile;
 
-        if (!data.verified){
-          toast.warning("Please verify your account before proceeding.");
+        if (!data.verified) {
+          toast.warning(
+            "Please verify your account before proceeding."
+          );
           navigate("/verify");
         }
         const nextProfile = normalizeProfile(data);
 
-        const connectResponse = await fetch(API_ENDPOINTS.payments.connectStatus, {
-          headers: { Authorization: `Bearer ${authToken}` }
-        });
+        const connectResponse = await fetch(
+          API_ENDPOINTS.payments.connectStatus,
+          {
+            headers: { Authorization: `Bearer ${authToken}` }
+          }
+        );
 
-        const bookingsResponse = await fetch(API_ENDPOINTS.bookings.mine, {
-          headers: { Authorization: `Bearer ${authToken}` }
-        });
+        const bookingsResponse = await fetch(
+          API_ENDPOINTS.bookings.mine,
+          {
+            headers: { Authorization: `Bearer ${authToken}` }
+          }
+        );
 
         const nextBookings = bookingsResponse.ok
-          ? normalizeBookings((await bookingsResponse.json()) as ApiBooking[])
+          ? normalizeBookings(
+              (await bookingsResponse.json()) as ApiBooking[]
+            )
           : [];
 
         if (!bookingsResponse.ok) {
@@ -374,7 +404,9 @@ function ProfilePage() {
           setBioDraft(nextProfile.bio);
           setIsEditingBio(false);
           if (connectResponse.ok) {
-            setConnectStatus((await connectResponse.json()) as ConnectStatus);
+            setConnectStatus(
+              (await connectResponse.json()) as ConnectStatus
+            );
           }
         }
       } catch {
@@ -492,7 +524,9 @@ function ProfilePage() {
       }
 
       if (titleText.length > SERVICE_TITLE_MAX_LENGTH) {
-        toast.error("Keep the title to 80 characters or fewer.");
+        toast.error(
+          "Keep the title to 80 characters or fewer."
+        );
         return;
       }
 
@@ -502,9 +536,7 @@ function ProfilePage() {
       }
 
       if (
-        tags.some(
-          (tag) => tag.length > SERVICE_TAG_MAX_LENGTH
-        )
+        tags.some((tag) => tag.length > SERVICE_TAG_MAX_LENGTH)
       ) {
         toast.error("Keep each tag to 50 characters or fewer.");
         return;
@@ -566,8 +598,7 @@ function ProfilePage() {
       }
 
       if (
-        descriptionText.length >
-        SERVICE_DESCRIPTION_MAX_LENGTH
+        descriptionText.length > SERVICE_DESCRIPTION_MAX_LENGTH
       ) {
         toast.error(
           "Keep the description to 1000 characters or fewer."
@@ -679,15 +710,20 @@ function ProfilePage() {
     if (!authToken) return;
     setIsConnecting(true);
     try {
-      const response = await fetch(API_ENDPOINTS.payments.connect, {
-        method: "POST",
-        headers: { Authorization: `Bearer ${authToken}` }
-      });
+      const response = await fetch(
+        API_ENDPOINTS.payments.connect,
+        {
+          method: "POST",
+          headers: { Authorization: `Bearer ${authToken}` }
+        }
+      );
       if (!response.ok) {
         toast.error("Could not start Stripe onboarding.");
         return;
       }
-      const data = (await response.json()) as { onboardingUrl: string };
+      const data = (await response.json()) as {
+        onboardingUrl: string;
+      };
       window.location.href = data.onboardingUrl;
     } catch {
       toast.error("Could not start Stripe onboarding.");
@@ -823,21 +859,26 @@ function ProfilePage() {
     }
 
     if (review.length > REVIEW_MAX_LENGTH) {
-      toast.error("Keep the review to 1000 characters or fewer.");
+      toast.error(
+        "Keep the review to 1000 characters or fewer."
+      );
       return;
     }
 
     setSubmittingReviewId(booking.id);
 
     try {
-      const response = await fetch(API_ENDPOINTS.bookings.review(booking.id), {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${authToken}`,
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({ rating, review })
-      });
+      const response = await fetch(
+        API_ENDPOINTS.bookings.review(booking.id),
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${authToken}`,
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({ rating, review })
+        }
+      );
 
       if (!response.ok) {
         const message = (await response.text()).trim();
@@ -996,7 +1037,10 @@ function ProfilePage() {
           <div className="section-heading">
             <div>
               <h2>Payments</h2>
-              <p>Connect Stripe to receive payments for your services.</p>
+              <p>
+                Connect Stripe to receive payments for your
+                services.
+              </p>
             </div>
             {connectStatus && !connectStatus.chargesEnabled && (
               <button
@@ -1007,8 +1051,8 @@ function ProfilePage() {
                 {isConnecting
                   ? "Redirecting..."
                   : connectStatus.accountId
-                  ? "Continue Setup"
-                  : "Connect Stripe"}
+                    ? "Continue Setup"
+                    : "Connect Stripe"}
               </button>
             )}
           </div>
@@ -1018,11 +1062,13 @@ function ProfilePage() {
             </p>
           ) : connectStatus?.detailsSubmitted ? (
             <p className="connect-status">
-              Stripe setup in progress. Payments will be enabled once verification is complete.
+              Stripe setup in progress. Payments will be enabled
+              once verification is complete.
             </p>
           ) : (
             <p className="empty-state">
-              Connect a Stripe account to receive payments from customers.
+              Connect a Stripe account to receive payments from
+              customers.
             </p>
           )}
         </section>
@@ -1049,10 +1095,13 @@ function ProfilePage() {
                 const canReview =
                   booking.status === REVIEWABLE_BOOKING_STATUS;
                 const hasReview =
-                  booking.rating !== null && booking.review.length > 0;
+                  booking.rating !== null &&
+                  booking.review.length > 0;
 
                 return (
-                  <article className="booking-card" key={booking.id}>
+                  <article
+                    className="booking-card"
+                    key={booking.id}>
                     <div className="booking-card-heading">
                       <div>
                         <h3>{booking.serviceTitle}</h3>
@@ -1061,11 +1110,14 @@ function ProfilePage() {
                           {formatBookingStatus(booking.status)}
                         </p>
                       </div>
-                      <strong>{formatBookingPrice(booking)}</strong>
+                      <strong>
+                        {formatBookingPrice(booking)}
+                      </strong>
                     </div>
 
                     <p className="booking-scheduled">
-                      Scheduled {formatDateTime(booking.scheduledAt)}
+                      Scheduled{" "}
+                      {formatDateTime(booking.scheduledAt)}
                     </p>
                     {booking.providerName && (
                       <p className="booking-user">
@@ -1086,13 +1138,16 @@ function ProfilePage() {
                     {hasReview && (
                       <div className="submitted-review">
                         <p>
-                          <strong>Rating by {booking.reviewerName}:</strong>{" "}
+                          <strong>
+                            Rating by {booking.reviewerName}:
+                          </strong>{" "}
                           {booking.rating}/5
                         </p>
                         <p>{booking.review}</p>
                         {booking.reviewedAt && (
                           <p className="reviewed-at">
-                            Reviewed {formatDateTime(booking.reviewedAt)}
+                            Reviewed{" "}
+                            {formatDateTime(booking.reviewedAt)}
                           </p>
                         )}
                       </div>
@@ -1264,7 +1319,8 @@ function ProfilePage() {
                         <input
                           value={serviceMinPrice}
                           onChange={(event) => {
-                            const nextPrice = event.target.value;
+                            const nextPrice =
+                              event.target.value;
 
                             if (!isPriceInputValue(nextPrice)) {
                               return;
@@ -1286,7 +1342,8 @@ function ProfilePage() {
                         <input
                           value={serviceMaxPrice}
                           onChange={(event) => {
-                            const nextPrice = event.target.value;
+                            const nextPrice =
+                              event.target.value;
 
                             if (!isPriceInputValue(nextPrice)) {
                               return;
@@ -1316,14 +1373,18 @@ function ProfilePage() {
                       <option value="" disabled hidden>
                         Select a price unit
                       </option>
-                      <option value={NO_PRICE_UNIT_VALUE}>N/A</option>
+                      <option value={NO_PRICE_UNIT_VALUE}>
+                        N/A
+                      </option>
                       {hasCustomPriceUnit && (
                         <option value={servicePriceUnit}>
                           {formatPriceUnit(servicePriceUnit)}
                         </option>
                       )}
                       {PRICE_UNIT_OPTIONS.map((unit) => (
-                        <option key={unit.value} value={unit.value}>
+                        <option
+                          key={unit.value}
+                          value={unit.value}>
                           {unit.label}
                         </option>
                       ))}
@@ -1541,7 +1602,9 @@ function ProfilePage() {
             aria-modal="true"
             aria-labelledby="review-title">
             <h2 id="review-title">Leave a Review</h2>
-            {customerBookings.find((b) => b.id === reviewingBookingId) && (
+            {customerBookings.find(
+              (b) => b.id === reviewingBookingId
+            ) && (
               <form
                 className="review-form"
                 onSubmit={(event) => {
@@ -1549,16 +1612,18 @@ function ProfilePage() {
                     (b) => b.id === reviewingBookingId
                   );
                   if (booking) {
-                    void handleReviewSubmit(event, booking).then(() =>
-                      setReviewingBookingId(null)
-                    );
+                    void handleReviewSubmit(
+                      event,
+                      booking
+                    ).then(() => setReviewingBookingId(null));
                   }
                 }}>
                 <label>
                   <span>Rating</span>
                   <select
                     value={
-                      reviewDrafts[reviewingBookingId]?.rating ?? "5"
+                      reviewDrafts[reviewingBookingId]
+                        ?.rating ?? "5"
                     }
                     onChange={(event) =>
                       updateReviewDraft(reviewingBookingId, {
@@ -1577,7 +1642,8 @@ function ProfilePage() {
                   <span>Written review</span>
                   <textarea
                     value={
-                      reviewDrafts[reviewingBookingId]?.review ?? ""
+                      reviewDrafts[reviewingBookingId]
+                        ?.review ?? ""
                     }
                     onChange={(event) =>
                       updateReviewDraft(reviewingBookingId, {
@@ -1593,7 +1659,9 @@ function ProfilePage() {
                 <div className="profile-confirm-actions">
                   <button
                     type="submit"
-                    disabled={submittingReviewId === reviewingBookingId}>
+                    disabled={
+                      submittingReviewId === reviewingBookingId
+                    }>
                     {submittingReviewId === reviewingBookingId
                       ? "Submitting..."
                       : "Submit Review"}

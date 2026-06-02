@@ -38,8 +38,10 @@ export const API_ENDPOINTS = {
     mine: `${API_ROUTE}/bookings/me`,
     review: (bookingId: string) =>
       `${API_ROUTE}/bookings/${encodeURIComponent(bookingId)}/review`,
-    confirm: (bookingId: string) => `${API_ROUTE}/bookings/${encodeURIComponent(bookingId)}/confirm`,
-    cancel: (bookingId: string) => `${API_ROUTE}/bookings/${encodeURIComponent(bookingId)}/cancel`
+    confirm: (bookingId: string) =>
+      `${API_ROUTE}/bookings/${encodeURIComponent(bookingId)}/confirm`,
+    cancel: (bookingId: string) =>
+      `${API_ROUTE}/bookings/${encodeURIComponent(bookingId)}/cancel`
   },
   reports: {
     create: `${API_ROUTE}/reports`,

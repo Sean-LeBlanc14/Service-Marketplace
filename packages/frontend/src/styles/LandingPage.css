@@ -1,135 +1,132 @@
-
 .landing-container {
-    position: relative;
-    width: 100%;
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    background: url('https://www.calpoly.edu/sites/default/files/2020-01/about-calpoly-aerial.jpg') no-repeat center center/cover;
-    background-attachment: fixed; 
-    font-family: 'Public Sans', sans-serif;
-    color: var(--text-primary);
-    overflow-x: hidden;
+  position: relative;
+  width: 100%;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  background: url("https://www.calpoly.edu/sites/default/files/2020-01/about-calpoly-aerial.jpg")
+    no-repeat center center/cover;
+  background-attachment: fixed;
+  font-family: "Public Sans", sans-serif;
+  color: var(--text-primary);
+  overflow-x: hidden;
 }
 
 .hero-overlay {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(
-        100deg, 
-        rgba(255, 255, 255, 0.92) 0%, 
-        rgba(255, 255, 255, 0.92) 30%, 
-        rgba(255, 255, 255, 0.75) 50%,
-        rgba(21, 71, 52, 0.10) 70%, 
-        rgba(21, 71, 52, 0.25) 100%
-    );
-    z-index: 1;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    100deg,
+    rgba(255, 255, 255, 0.92) 0%,
+    rgba(255, 255, 255, 0.92) 30%,
+    rgba(255, 255, 255, 0.75) 50%,
+    rgba(21, 71, 52, 0.1) 70%,
+    rgba(21, 71, 52, 0.25) 100%
+  );
+  z-index: 1;
 }
 
 .content {
-    position: relative;
-    z-index: 2;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    min-height: 100vh;
-    padding: 2.5rem 5%;
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-height: 100vh;
+  padding: 2.5rem 5%;
 }
 
 .main-hero {
-    max-width: 800px;
-    margin: auto 0;
+  max-width: 800px;
+  margin: auto 0;
 }
 
 .main-title {
-    padding-top: 10px;
-    font-family: "Utopia", "Georgia", serif;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    color: var(--cp-green);
-    font-size: clamp(2.5rem, 6vw, 4.5rem);
-    line-height: 1.1;
-    margin: 0 0 1.5rem 0;
+  padding-top: 10px;
+  font-family: "Utopia", "Georgia", serif;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--cp-green);
+  font-size: clamp(2.5rem, 6vw, 4.5rem);
+  line-height: 1.1;
+  margin: 0 0 1.5rem 0;
 }
 
 .highlight-text {
-    color: var(--cp-gold);
+  color: var(--cp-gold);
 }
 
 .subtitle {
-    font-size: clamp(1rem, 2vw, 1.15rem);
-    line-height: 1.6;
-    color: var(--text-primary);
-    max-width: 650px;
-    margin-bottom: 3.5rem;
+  font-size: clamp(1rem, 2vw, 1.15rem);
+  line-height: 1.6;
+  color: var(--text-primary);
+  max-width: 650px;
+  margin-bottom: 3.5rem;
 }
 
 .feature-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 2.5rem;
-    margin-bottom: 3.5rem;
-    border-left: 4px solid var(--cp-green);
-    padding-left: 1.5rem;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 2.5rem;
+  margin-bottom: 3.5rem;
+  border-left: 4px solid var(--cp-green);
+  padding-left: 1.5rem;
 }
 
 .feature-item {
-    display: flex;
-    flex-direction: column;
+  display: flex;
+  flex-direction: column;
 }
 
 .feature-title {
-    font-family: "Utopia", "Georgia", serif;
-    font-size: 1.3rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.03em;
-    margin: 0 0 0.5rem 0;
-    color: var(--cp-green);
+  font-family: "Utopia", "Georgia", serif;
+  font-size: 1.3rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  margin: 0 0 0.5rem 0;
+  color: var(--cp-green);
 }
 
 .feature-desc {
-    font-size: 0.95rem;
-    line-height: 1.5;
-    color: var(--text-primary);
-    margin: 0;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  color: var(--text-primary);
+  margin: 0;
 }
 
 .landing-action-buttons {
-    display: flex;
-    gap: 10px;
-    
+  display: flex;
+  gap: 10px;
 }
 
 .landing-action-buttons button:last-child {
-    background-color: var(--cp-gold) !important;
+  background-color: var(--cp-gold) !important;
 }
 
-
-
 .landing-footer {
-    font-size: 0.85rem;
-    color: #666666;
-    margin-top: 2rem;
+  font-size: 0.85rem;
+  color: #666666;
+  margin-top: 2rem;
 }
 
 @media (max-width: 768px) {
-    .feature-grid {
-        grid-template-columns: 1fr;
-        gap: 1.5rem;
-    }
-    
-    .action-buttons {
-        flex-direction: column;
-        width: 100%;
-    }
-    
-    .action-buttons button {
-        width: 100%;
-    }
+  .feature-grid {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+
+  .action-buttons {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .action-buttons button {
+    width: 100%;
+  }
 }

@@ -14,7 +14,7 @@ public class CreateBookingRequest {
     private String serviceId;
 
     @NotNull
-    private BigDecimal agreedPrice;
+    private BigDecimal proposedPrice;
 
     @NotNull
     private Instant scheduledAt;

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import InputField from "../components/InputField";
+import MajorComboBox from "../components/MajorComboBox";
 import NavLink from "../components/NavLink";
 import InformationSection from "../components/InformationSection";
 import FormContainer from "../components/FormContainer";
@@ -31,28 +32,34 @@ function SignupPage() {
       campus: campus,
       major: major
     };
+    if (!major) {
+      toast.error("Please select a major from the list.");
+      return;
+    }
+
     if (!email.endsWith("@calpoly.edu")) {
       toast.error("Please use a valid Cal Poly email");
       return;
     }
     try {
-      const response = await fetch(
-        API_ENDPOINTS.auth.signup,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(user)
-        }
-      );
+      const response = await fetch(API_ENDPOINTS.auth.signup, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(user)
+      });
 
       if (response.ok) {
         const data = await response.json();
         localStorage.setItem("jwt_token", data.token);
+        localStorage.setItem("user_role", data.role);
+        localStorage.setItem("user_id", data.id);
         navigate("/verify", {
           state: { email: data.email, token: data.token }
         });
       } else if (response.status === 409) {
-        toast.error("An account with this email already exists.");
+        toast.error(
+          "An account with this email already exists."
+        );
       } else if (response.status === 400) {
         toast.error(
           "Please enter a valid email and a password of at least 8 characters."
@@ -60,7 +67,6 @@ function SignupPage() {
       } else {
         toast.error("Something went wrong. Please try again.");
       }
-
     } catch {
       toast.warning(
         "Unable to connect to the server. Please try again."
@@ -98,12 +104,9 @@ function SignupPage() {
 
             <div className="field-container">
               <div className="user-field">
-                <InputField
+                <MajorComboBox
                   value={major}
-                  label="Major"
-                  type="text"
-                  placeHolder="Your Major"
-                  onChange={(e) => setMajor(e.target.value)}
+                  onChange={setMajor}
                 />
               </div>
 
@@ -123,7 +126,9 @@ function SignupPage() {
                       </option>
                     </>
                   }
-                  onChange={(e) => setCampus(e.target.value as CampusType)}
+                  onChange={(e) =>
+                    setCampus(e.target.value as CampusType)
+                  }
                 />
               </div>
             </div>

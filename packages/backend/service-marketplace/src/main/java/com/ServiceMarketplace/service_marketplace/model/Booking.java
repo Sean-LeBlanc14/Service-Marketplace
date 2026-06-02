@@ -37,6 +37,10 @@ public class Booking {
 
     private String stripePaymentIntentId;
 
+    private String stripeSetupIntentId;
+
+    private String stripeCustomerId;
+
     @CreatedDate
     private Instant createdAt;
 }

@@ -25,6 +25,11 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
     }
 
+    @ExceptionHandler(InvalidEmailDomainException.class)
+    public ResponseEntity<String> handleInvalidEmailDomain(InvalidEmailDomainException e) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+    }
+
     @ExceptionHandler(VerificationCodeExpired.class)
     public ResponseEntity<String> handleExpiredVerificationCode(VerificationCodeExpired e){
         return ResponseEntity.status(HttpStatus.UNPROCESSABLE_CONTENT).body(e.getMessage());

@@ -95,6 +95,30 @@ public class EmailService {
             ));
     }
 
+    public void sendBookingCancelledProviderEmail(String toEmail, String providerName, String customerName,
+            String serviceTitle, Instant scheduledAt, String bookingId) {
+        sendTemplatedEmail(toEmail, "Booking Cancelled - " + serviceTitle, "bookingCancelledProvider",
+            Map.of(
+                "providerName", providerName,
+                "customerName", customerName,
+                "serviceTitle", serviceTitle,
+                "scheduledAt", DATE_FORMATTER.format(scheduledAt),
+                "bookingId", bookingId
+            ));
+    }
+
+    public void sendBookingCancelledCustomerEmail(String toEmail, String customerName, String providerName,
+            String serviceTitle, Instant scheduledAt, String bookingId) {
+        sendTemplatedEmail(toEmail, "Booking Cancelled - " + serviceTitle, "bookingCancelledCustomer",
+            Map.of(
+                "customerName", customerName,
+                "providerName", providerName,
+                "serviceTitle", serviceTitle,
+                "scheduledAt", DATE_FORMATTER.format(scheduledAt),
+                "bookingId", bookingId
+            ));
+    }
+
     private void sendTemplatedEmail(String toEmail, String subject, String templateName, Map<String, Object> variables) {
         Context context = new Context();
         variables.forEach(context::setVariable);

@@ -363,7 +363,11 @@ function AdminDashboard() {
                             <button
                               type="button"
                               className="admin-dashboard-action admin-dashboard-action-warning"
-                              disabled={isSelfSuspension}
+                              disabled={
+                                isSelfSuspension ||
+                                (activeReportAction?.reportId === report.id &&
+                                  activeReportAction.action === "suspend")
+                              }
                               onClick={() => void suspendUser(report)}>
                               Suspend User
                             </button>

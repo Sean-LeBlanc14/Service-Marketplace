@@ -153,9 +153,17 @@ public class UserService {
 
     public User unsuspendUser(String userId) {
         User user = getUserById(userId);
-        user.setRole("user");
 
-        return userRepository.save(user);
+        if ("admin".equals(user.getRole())) {
+            throw new AccessDeniedException("Cannot unsuspend another admin.");
+        }
+
+        if ("suspended".equals(user.getRole())) {
+            user.setRole("user");
+            return userRepository.save(user);
+        }
+
+        return user;
     }
 
     private UserProfile toUserProfile(User user) {

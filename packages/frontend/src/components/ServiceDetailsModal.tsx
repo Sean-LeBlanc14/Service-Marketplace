@@ -260,6 +260,7 @@ function ServiceDetailsModal({
                         type="text"
                         value={otherReportReason}
                         onChange={e => setOtherReportReason(e.target.value)}
+                        maxLength={500}
                         placeholder="Add details"
                       />
                     )}

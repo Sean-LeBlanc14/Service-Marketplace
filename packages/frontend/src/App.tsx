@@ -1,5 +1,5 @@
-import { useEffect } from "react";
-import { BrowserRouter, Navigate, Routes, Route, useLocation, useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { BrowserRouter, Navigate, Routes, Route, useLocation } from "react-router-dom";
 import Layout from "./components/Layout";
 import HomePage from "./pages/HomePage";
 import SignupPage from "./pages/SignupPage";
@@ -19,7 +19,7 @@ const TOKEN_STORAGE_KEY = "jwt_token";
 
 function AppRoutes() {
   const location = useLocation();
-  const navigate = useNavigate();
+  const [serverSuspended, setServerSuspended] = useState(false);
   const isSuspended = localStorage.getItem("user_role") === "suspended";
   const canAccessWhileSuspended =
     location.pathname === "/login" ||
@@ -47,11 +47,11 @@ function AppRoutes() {
           return;
         }
 
-        const user = await response.json();
+        const user = await response.json() as { role?: string };
 
         if (!cancelled && user.role === "suspended") {
           localStorage.clear();
-          navigate("/suspended", { replace: true });
+          setServerSuspended(true);
         }
       } catch {
         // Keep routing unchanged when the profile check cannot complete.
@@ -63,7 +63,11 @@ function AppRoutes() {
     return () => {
       cancelled = true;
     };
-  }, [location.pathname, location.search, navigate]);
+  }, []);
+
+  if (serverSuspended) {
+    return <Navigate to="/suspended" replace />;
+  }
 
   if (isSuspended && !canAccessWhileSuspended) {
     return <Navigate to="/suspended" replace />;

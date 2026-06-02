@@ -32,7 +32,9 @@ function SuspendedPage() {
             fontWeight: 800,
             lineHeight: 1.45
           }}>
-          Your account has been suspended for violating our guidelines. Contact support if you believe this is a mistake.
+          Your account has been suspended for violating our
+          guidelines. Contact support if you believe this is a
+          mistake.
         </p>
         <button
           type="button"

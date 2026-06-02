@@ -17,7 +17,6 @@ import { API_ENDPOINTS } from "../utils/api";
 export default function SideBar() {
   const navigate = useNavigate();
   const isAdmin = localStorage.getItem("user_role") === "admin";
-  
 
   const handleLogout = async () => {
     const confirmed = window.confirm(

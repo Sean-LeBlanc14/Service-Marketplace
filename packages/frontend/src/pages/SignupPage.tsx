@@ -104,7 +104,10 @@ function SignupPage() {
 
             <div className="field-container">
               <div className="user-field">
-                <MajorComboBox value={major} onChange={setMajor} />
+                <MajorComboBox
+                  value={major}
+                  onChange={setMajor}
+                />
               </div>
 
               <div className="user-field">

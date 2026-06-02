@@ -64,10 +64,14 @@ function ServiceDetailsModal({
 }: ServiceDetailsModalProps) {
   const [view, setView] = useState<ModalView>("details");
   const currentUserId = localStorage.getItem("user_id");
-  const [showReportDialog, setShowReportDialog] = useState(false);
-  const [reportReason, setReportReason] = useState("Inappropriate content");
+  const [showReportDialog, setShowReportDialog] =
+    useState(false);
+  const [reportReason, setReportReason] = useState(
+    "Inappropriate content"
+  );
   const [isReporting, setIsReporting] = useState(false);
-  const [setupClientSecret, setSetupClientSecret] = useState("");
+  const [setupClientSecret, setSetupClientSecret] =
+    useState("");
   const [form, setForm] = useState<BookingFormState>({
     agreedPrice: String(service.priceMin),
     scheduledAt: "",
@@ -102,18 +106,23 @@ function ServiceDetailsModal({
 
     try {
       const authToken = localStorage.getItem(TOKEN_STORAGE_KEY);
-      const response = await fetch(API_ENDPOINTS.bookings.create, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${authToken}`
-        },
-        body: JSON.stringify({
-          serviceId: service.id,
-          proposedPrice: price,
-          scheduledAt: new Date(form.scheduledAt).toISOString()
-        })
-      });
+      const response = await fetch(
+        API_ENDPOINTS.bookings.create,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${authToken}`
+          },
+          body: JSON.stringify({
+            serviceId: service.id,
+            proposedPrice: price,
+            scheduledAt: new Date(
+              form.scheduledAt
+            ).toISOString()
+          })
+        }
+      );
 
       if (!response.ok) {
         throw new Error("Failed to create booking.");
@@ -139,18 +148,21 @@ function ServiceDetailsModal({
     setIsReporting(true);
     try {
       const token = localStorage.getItem("jwt_token");
-      const response = await fetch(API_ENDPOINTS.reports.create, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          listingId: service.id,
-          providerId: service.userId,
-          reason: reportReason
-        })
-      });
+      const response = await fetch(
+        API_ENDPOINTS.reports.create,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`
+          },
+          body: JSON.stringify({
+            listingId: service.id,
+            providerId: service.userId,
+            reason: reportReason
+          })
+        }
+      );
 
       if (response.ok) {
         toast.success("Report submitted successfully");
@@ -184,10 +196,10 @@ function ServiceDetailsModal({
             {view === "details"
               ? service.title
               : view === "booking"
-              ? "Book Service"
-              : view === "payment"
-              ? "Card Details"
-              : "Request Submitted"}
+                ? "Book Service"
+                : view === "payment"
+                  ? "Card Details"
+                  : "Request Submitted"}
           </h2>
           <button
             type="button"
@@ -254,7 +266,9 @@ function ServiceDetailsModal({
                     <h4>Report this listing</h4>
                     <select
                       value={reportReason}
-                      onChange={e => setReportReason(e.target.value)}>
+                      onChange={(e) =>
+                        setReportReason(e.target.value)
+                      }>
                       <option>Inappropriate content</option>
                       <option>Spam or misleading</option>
                       <option>Fraudulent service</option>
@@ -266,11 +280,15 @@ function ServiceDetailsModal({
                         type="button"
                         onClick={handleReportSubmit}
                         disabled={isReporting}>
-                        {isReporting ? "Submitting..." : "Submit Report"}
+                        {isReporting
+                          ? "Submitting..."
+                          : "Submit Report"}
                       </button>
                       <button
                         type="button"
-                        onClick={() => setShowReportDialog(false)}>
+                        onClick={() =>
+                          setShowReportDialog(false)
+                        }>
                         Cancel
                       </button>
                     </div>
@@ -339,7 +357,8 @@ function ServiceDetailsModal({
         {view === "payment" && (
           <div className="service-details-payment">
             <p className="service-details-payment-note">
-              Your card will not be charged until the provider confirms the price.
+              Your card will not be charged until the provider
+              confirms the price.
             </p>
             <PaymentForm
               clientSecret={setupClientSecret}
@@ -353,7 +372,11 @@ function ServiceDetailsModal({
 
         {view === "success" && (
           <div className="service-details-payment">
-            <p>Your booking request has been submitted. The provider will review and confirm the price shortly — you'll receive an email once it's confirmed.</p>
+            <p>
+              Your booking request has been submitted. The
+              provider will review and confirm the price shortly
+              — you'll receive an email once it's confirmed.
+            </p>
             <button
               type="button"
               className="service-details-book"

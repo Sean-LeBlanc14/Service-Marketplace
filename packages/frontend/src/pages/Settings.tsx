@@ -10,6 +10,8 @@ import { FaBug, FaSignOutAlt, FaTrash, FaLock, FaSchool, FaBook } from "react-ic
 import { BsBoxArrowUpRight } from "react-icons/bs";
 import Modal from "../components/Modal";
 import Footer from "../components/Footer";
+import MajorComboBox from "../components/MajorComboBox";
+import DropDown from "../components/DropDown";
 
 export default function Settings() {
 
@@ -35,6 +37,13 @@ export default function Settings() {
   //Variables for contacting support
   const [ isContactingSupport, setIsContactingSupport ] = useState(false);
   const [ contactInquiry, setContactInquiry ] = useState("");
+
+  //Variable for changing major / campus
+  const [ isChangingMajor, setIsChangingMajor ] = useState(false);
+  const [ major, setMajor ] = useState("");
+
+  const [ isChangingCampus , setIsChangingCampus ] = useState(false);
+  const [ campus, setCampus ] = useState("");
 
   
 
@@ -83,11 +92,18 @@ export default function Settings() {
     try{
       
       const response = await fetch(API_ENDPOINTS.user.delete, {
-        headers: {Authorization: `Bearer ${authToken}`,}});
+        headers: {Authorization: `Bearer ${authToken}`}});
 
       if (response.ok){
+        localStorage.removeItem("jwt_token");
+          localStorage.removeItem("user_role");
+          localStorage.removeItem("user_id");
         toast.success("Account successfully deleted");
         navigate("/");
+      }else if (response.status === 401){
+        toast.error("Invalid credentials");
+      }else{
+        toast.error("Something went wrong");
       }
 
     }catch(e){
@@ -98,10 +114,56 @@ export default function Settings() {
 
   async function handleReportBug(){
 
+    const authToken = getToken();
+
+    try{
+      const response  = await fetch(API_ENDPOINTS.support.bug, {
+        method: "POST",
+        headers: {Authorization: `Bearer ${authToken}`,
+            "Content-Type": "application/json"},
+        body: JSON.stringify({"context": bug})
+      });
+
+      if (response.ok){
+        const data = await response.json();
+
+        toast.success(data.message);
+        setIsReportingBug(false);
+      }else{
+        toast.error("Could not report this bug");
+      }
+
+
+    }catch{
+      toast.warning("A network error occurred");
+    }
   }
 
   async function handleContactSupport(){
 
+    const authToken = getToken();
+
+    try{
+      const response  = await fetch(API_ENDPOINTS.support.contact, {
+        method: "POST",
+        headers: {Authorization: `Bearer ${authToken}`,
+            "Content-Type": "application/json"},
+        body: JSON.stringify({"context": contactInquiry})
+      });
+
+      if (response.ok){
+        const data = await response.json();
+
+        toast.success(data.message);
+        setIsContactingSupport(false);
+      }else{
+        toast.error("Could not contact support");
+      }
+
+
+    }catch{
+      toast.warning("A network error occurred");
+    }
   }
 
   async function handleChangePassword(){
@@ -110,6 +172,9 @@ export default function Settings() {
 
     if (newPassword !== confirmNewPassword){
       toast.error("Passwords do not match!");
+      return;
+    }else if( newPassword.length < 8){
+      toast.error("Your password must be at least 8 characters");
       return;
     }
 
@@ -128,15 +193,72 @@ export default function Settings() {
 
       if (response.ok){
         toast.success("Password changed successfully");
+        setIsChangingPassword(false);
       }
-      else{
-        toast.error("Could not change your password.");
+      else if (response.status === 401){
+        toast.error("Invalid password");
+      }else if(response.status === 409){
+        toast.error("Your old password and new password cannot match");
       }
 
     }catch{
       toast.warning("A network error occurred, please try again.");
     }
     
+  }
+
+  async function handleChangeMajor() {
+    const authToken = getToken();
+
+    try{
+      const response  = await fetch(API_ENDPOINTS.user.changeMajor, {
+        method: "PATCH",
+        headers: {Authorization: `Bearer ${authToken}`,
+            "Content-Type": "application/json"},
+        body: JSON.stringify({"major": major})
+      });
+
+      if (response.ok){
+
+        toast.success("Successfully changed your major");
+        setIsChangingMajor(false);
+      }
+      else if(response.status === 409){
+        toast.error("Your old major and new major cannot match");
+      }
+      else{
+        toast.error("Could not change your major");
+      }
+  }catch {
+    toast.warning("A network error occurred");
+  }
+}
+
+  async function handleChangeCampus(){
+    const authToken = getToken();
+
+    try{
+      const response  = await fetch(API_ENDPOINTS.user.changeCampus, {
+        method: "PATCH",
+        headers: {Authorization: `Bearer ${authToken}`,
+            "Content-Type": "application/json"},
+        body: JSON.stringify({"campus": campus})
+      });
+
+      if (response.ok){
+
+        toast.success("Successfully changed your campus");
+        setIsChangingCampus(false);
+      }
+      else if(response.status === 409){
+        toast.error("Your old campus and new campus cannot match");
+      }
+      else{
+        toast.error("Could not change your campus");
+      }
+  }catch {
+    toast.warning("A network error occurred");
+  }
   }
 
   function deleteModal(){
@@ -248,6 +370,53 @@ export default function Settings() {
     );
   }
 
+  function changeMajorModal() {
+    return (
+      <div className="modal-style">
+        <h4 className="modal-title">Change your major</h4>
+          <MajorComboBox
+            value={major}
+            onChange={setMajor}
+          />
+          <SubmitButton
+            label="Change Major"
+            onClick={handleChangeMajor}
+          />
+      </div>
+    );
+  }
+
+  function changeCampusModal(){
+    return (
+      <div className="modal-style">
+        <h4>Change your campus</h4>
+        <DropDown
+                          label="Campus"
+                          value={campus}
+                          placeHolder={"Select a Campus"}
+                          options={
+                            <>
+                              <option value="San Luis Obispo">
+                                San Luis Obispo
+                              </option>
+        
+                              <option value="Maritime Academy">
+                                Maritime Academy
+                              </option>
+                            </>
+                          }
+                          onChange={(e) =>
+                            setCampus(e.target.value)
+                          }
+                        />
+      <SubmitButton
+        label="Change Campus"
+        onClick={handleChangeCampus}
+      />
+      </div>
+    );
+  }
+
 
   return (
     <div className="settings-wrapper">
@@ -286,22 +455,34 @@ export default function Settings() {
         children={contactSupportModal()}
       />
 
+      <Modal
+        isOpen={isChangingMajor}
+        onClose={() => setIsChangingMajor(false)}
+        children={changeMajorModal()}
+      />
+
+      <Modal
+        isOpen={isChangingCampus}
+        onClose={() => setIsChangingCampus(false)}
+        children={changeCampusModal()}
+      />
+
 
       <div className="setting-section">
         <h3>Account Settings</h3>
       <div className="setting-container">
         
-        <button className="change-password-button" onClick={() => setIsChangingPassword(true)}>
+        <button onClick={() => setIsChangingPassword(true)}>
           <span>Change Password</span>
           <FaLock/>
         </button>
 
-        <button>
+        <button onClick={() => setIsChangingMajor(true)}>
           <span>Change Major</span>
           <FaBook/>
         </button>
 
-        <button>
+        <button onClick={() => setIsChangingCampus(true)}>
           <span>Change Campus</span>
           <FaSchool/>
         </button>

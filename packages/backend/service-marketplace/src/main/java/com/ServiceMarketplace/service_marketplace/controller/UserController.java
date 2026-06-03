@@ -17,7 +17,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.ServiceMarketplace.service_marketplace.dto.ChangePasswordRequest;
-import com.ServiceMarketplace.service_marketplace.dto.DeleteAccountRequest;
 import com.ServiceMarketplace.service_marketplace.dto.UpdateUserProfileRequest;
 import com.ServiceMarketplace.service_marketplace.dto.UserProfile;
 import com.ServiceMarketplace.service_marketplace.model.User;
@@ -64,17 +63,17 @@ public class UserController {
     }
 
     @DeleteMapping("/delete")
-    public ResponseEntity<UserProfile> deleteUser(@AuthenticationPrincipal UserDetails userDetails, DeleteAccountRequest request){
+    public ResponseEntity<UserProfile> deleteUser(@AuthenticationPrincipal UserDetails userDetails){
 
-        var response = userService.deleteUserProfile(userDetails, request);
+        UserProfile response = userService.deleteUserProfile(userDetails);
         
         return ResponseEntity.status(HttpStatus.NO_CONTENT).body(response);
     }   
 
     @PatchMapping("/password")
-    public ResponseEntity<String> changeUserPassword(@AuthenticationPrincipal UserDetails userDetails, ChangePasswordRequest request){
+    public ResponseEntity<String> changeUserPassword(@AuthenticationPrincipal UserDetails userDetails, @RequestBody ChangePasswordRequest request){
 
-        System.out.println("DEBUG: I HAVE RECIEVED THE REQUEST");
+        System.out.println("DEBUG: I HAVE RECIEVED THE REQUEST: " + request);
         
         var response = userService.changeUserPassword(userDetails, request);
 
@@ -154,6 +153,22 @@ public class UserController {
         user.setRole("user");
 
         return ResponseEntity.status(HttpStatus.OK).body(userRepository.save(user));
+    }
+
+    @PatchMapping("/major")
+    public ResponseEntity<UserProfile> changeMajor(@AuthenticationPrincipal UserDetails userDetails, @RequestBody String major){
+
+        UserProfile user = userService.changeUserMajor(userDetails, major);
+
+        return ResponseEntity.status(HttpStatus.OK).body(user);
+    }
+
+    @PatchMapping("/campus")
+    public ResponseEntity<UserProfile> changeCampus(@AuthenticationPrincipal UserDetails userDetails, @RequestBody String campus){
+
+        UserProfile user = userService.changeUserCampus(userDetails, campus);
+
+        return ResponseEntity.status(HttpStatus.OK).body(user);
     }
 
     private User getCurrentUser(UserDetails userDetails) {

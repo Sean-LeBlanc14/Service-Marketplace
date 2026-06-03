@@ -1,5 +1,6 @@
 package com.ServiceMarketplace.service_marketplace.exception;
 
+import org.springframework.dao.IncorrectResultSizeDataAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
@@ -11,7 +12,6 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import com.stripe.exception.StripeException;
 
 import io.jsonwebtoken.JwtException;
-import org.springframework.dao.IncorrectResultSizeDataAccessException;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -111,6 +111,11 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(StripeConnectException.class)
     public ResponseEntity<String> handleStripeConnect(StripeConnectException e) {
         return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(e.getMessage());
+    }
+
+    @ExceptionHandler(RedundantChangeException.class)
+    public ResponseEntity<String> handleSamePassword(RedundantChangeException e){
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
     }
 
 }

@@ -6,6 +6,7 @@ import com.ServiceMarketplace.service_marketplace.dto.RegisterRequest;
 import com.ServiceMarketplace.service_marketplace.dto.UserProfile;
 import com.ServiceMarketplace.service_marketplace.exception.EmailAlreadyExistsException;
 import com.ServiceMarketplace.service_marketplace.exception.RedundantChangeException;
+import com.ServiceMarketplace.service_marketplace.exception.InvalidEmailDomainException;
 import com.ServiceMarketplace.service_marketplace.model.User;
 import com.ServiceMarketplace.service_marketplace.repository.UserRepository;
 import com.ServiceMarketplace.service_marketplace.service.EmailService;
@@ -79,7 +80,7 @@ public class UserServiceTest {
     @Test
     void registerUser_success() {
         RegisterRequest request = new RegisterRequest();
-        request.setEmail("test@university.edu");
+        request.setEmail("test@calpoly.edu");
         request.setPassword("password123");
 
         when(userRepository.existsByEmail(request.getEmail())).thenReturn(false);
@@ -94,7 +95,7 @@ public class UserServiceTest {
 
         AuthResponse response = userService.registerUser(request);
 
-        assertEquals("test@university.edu", response.getEmail());
+        assertEquals("test@calpoly.edu", response.getEmail());
         assertEquals("abc123", response.getId());
         assertEquals("jwt-token", response.getToken());
         verify(verificationService).createVerification(request.getEmail(), "123456");
@@ -105,7 +106,7 @@ public class UserServiceTest {
     @Test
     void registerUser_duplicateEmail_throwsException() {
         RegisterRequest request = new RegisterRequest();
-        request.setEmail("test@university.edu");
+        request.setEmail("test@calpoly.edu");
         request.setPassword("password123");
 
         when(userRepository.existsByEmail(request.getEmail())).thenReturn(true);
@@ -243,5 +244,16 @@ public class UserServiceTest {
 
         assertThrows(UsernameNotFoundException.class, () -> userService.changeUserCampus(userDetails, "San Luis Obispo"));
         verify(userRepository, never()).save(any(User.class));
+    }
+
+    @Test
+    void registerUser_nonCalPolyEmail_throwsInvalidEmailDomainException() {
+        RegisterRequest request = new RegisterRequest();
+        request.setEmail("test@gmail.com");
+        request.setPassword("password123");
+
+        assertThrows(InvalidEmailDomainException.class, () -> userService.registerUser(request));
+        verify(userRepository, never()).save(any(User.class));
+        verify(userRepository, never()).existsByEmail(any());
     }
 }

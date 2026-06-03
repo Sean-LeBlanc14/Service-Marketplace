@@ -41,7 +41,8 @@ function formatDate(value?: string) {
 }
 
 function getUserName(user: AdminUser) {
-  const name = `${user.firstName ?? ""} ${user.lastName ?? ""}`.trim();
+  const name =
+    `${user.firstName ?? ""} ${user.lastName ?? ""}`.trim();
   return name || "Unknown";
 }
 
@@ -57,7 +58,9 @@ function AdminDashboard() {
   const authToken = localStorage.getItem(TOKEN_STORAGE_KEY);
   const [reports, setReports] = useState<Report[]>([]);
   const [users, setUsers] = useState<AdminUser[]>([]);
-  const [reportUsers, setReportUsers] = useState<Record<string, AdminUser>>({});
+  const [reportUsers, setReportUsers] = useState<
+    Record<string, AdminUser>
+  >({});
   const [isLoading, setIsLoading] = useState(true);
   const [accessDenied, setAccessDenied] = useState(false);
   const [showResolved, setShowResolved] = useState(false);
@@ -65,10 +68,14 @@ function AdminDashboard() {
     reportId: string;
     action: ReportAction;
   } | null>(null);
-  const [activeUserAction, setActiveUserAction] = useState<string | null>(null);
+  const [activeUserAction, setActiveUserAction] = useState<
+    string | null
+  >(null);
   const [reloadVersion, setReloadVersion] = useState(0);
   const currentUserId = localStorage.getItem("user_id");
-  const suspendedUsers = users.filter((user) => user.role === "suspended");
+  const suspendedUsers = users.filter(
+    (user) => user.role === "suspended"
+  );
   const visibleReports = showResolved
     ? reports
     : reports.filter((report) => report.status !== "resolved");
@@ -85,9 +92,12 @@ function AdminDashboard() {
 
       try {
         const headers = getAuthHeaders();
-        const reportsResponse = await fetch(API_ENDPOINTS.reports.all, {
-          headers
-        });
+        const reportsResponse = await fetch(
+          API_ENDPOINTS.reports.all,
+          {
+            headers
+          }
+        );
 
         if (reportsResponse.status === 403) {
           if (!cancelled) {
@@ -103,26 +113,36 @@ function AdminDashboard() {
           throw new Error("Failed to load reports");
         }
 
-        const reportsData = (await reportsResponse.json()) as Report[];
-        const nextReports = Array.isArray(reportsData) ? reportsData : [];
+        const reportsData =
+          (await reportsResponse.json()) as Report[];
+        const nextReports = Array.isArray(reportsData)
+          ? reportsData
+          : [];
         const reportUserIds = Array.from(
           new Set(
             nextReports
-              .flatMap((report) => [report.reporterId, report.providerId])
+              .flatMap((report) => [
+                report.reporterId,
+                report.providerId
+              ])
               .filter(Boolean)
           )
         );
         const reportUserEntries = await Promise.all(
           reportUserIds.map(async (userId) => {
-            const userResponse = await fetch(API_ENDPOINTS.users.getById(userId), {
-              headers
-            });
+            const userResponse = await fetch(
+              API_ENDPOINTS.users.getById(userId),
+              {
+                headers
+              }
+            );
 
             if (!userResponse.ok) {
               return null;
             }
 
-            const user = (await userResponse.json()) as AdminUser;
+            const user =
+              (await userResponse.json()) as AdminUser;
             return [userId, user] as const;
           })
         );
@@ -134,9 +154,12 @@ function AdminDashboard() {
           }
         });
 
-        const usersResponse = await fetch(API_ENDPOINTS.users.all, {
-          headers
-        });
+        const usersResponse = await fetch(
+          API_ENDPOINTS.users.all,
+          {
+            headers
+          }
+        );
 
         if (usersResponse.status === 403) {
           if (!cancelled) {
@@ -152,7 +175,8 @@ function AdminDashboard() {
           throw new Error("Failed to load users");
         }
 
-        const usersData = (await usersResponse.json()) as AdminUser[];
+        const usersData =
+          (await usersResponse.json()) as AdminUser[];
 
         if (!cancelled) {
           setReports(nextReports);
@@ -179,10 +203,13 @@ function AdminDashboard() {
   }, [authToken, reloadVersion]);
 
   async function resolveReport(reportId: string) {
-    const response = await fetch(API_ENDPOINTS.reports.resolve(reportId), {
-      method: "PUT",
-      headers: getAuthHeaders()
-    });
+    const response = await fetch(
+      API_ENDPOINTS.reports.resolve(reportId),
+      {
+        method: "PUT",
+        headers: getAuthHeaders()
+      }
+    );
 
     if (!response.ok) {
       throw new Error("Failed to resolve report");
@@ -190,13 +217,19 @@ function AdminDashboard() {
   }
 
   async function removeListing(report: Report) {
-    setActiveReportAction({ reportId: report.id, action: "remove" });
+    setActiveReportAction({
+      reportId: report.id,
+      action: "remove"
+    });
 
     try {
-      const response = await fetch(API_ENDPOINTS.services.delete(report.listingId), {
-        method: "DELETE",
-        headers: getAuthHeaders()
-      });
+      const response = await fetch(
+        API_ENDPOINTS.services.delete(report.listingId),
+        {
+          method: "DELETE",
+          headers: getAuthHeaders()
+        }
+      );
 
       if (!response.ok) {
         throw new Error("Failed to remove listing");
@@ -213,13 +246,19 @@ function AdminDashboard() {
   }
 
   async function suspendUser(report: Report) {
-    setActiveReportAction({ reportId: report.id, action: "suspend" });
+    setActiveReportAction({
+      reportId: report.id,
+      action: "suspend"
+    });
 
     try {
-      const response = await fetch(API_ENDPOINTS.users.suspend(report.providerId), {
-        method: "PUT",
-        headers: getAuthHeaders()
-      });
+      const response = await fetch(
+        API_ENDPOINTS.users.suspend(report.providerId),
+        {
+          method: "PUT",
+          headers: getAuthHeaders()
+        }
+      );
 
       if (!response.ok) {
         if (response.status === 403) {
@@ -270,10 +309,13 @@ function AdminDashboard() {
     setActiveUserAction(user.id);
 
     try {
-      const response = await fetch(API_ENDPOINTS.users.unsuspend(user.id), {
-        method: "PUT",
-        headers: getAuthHeaders()
-      });
+      const response = await fetch(
+        API_ENDPOINTS.users.unsuspend(user.id),
+        {
+          method: "PUT",
+          headers: getAuthHeaders()
+        }
+      );
 
       if (!response.ok) {
         throw new Error("Failed to unsuspend user");
@@ -305,7 +347,9 @@ function AdminDashboard() {
   if (accessDenied) {
     return (
       <main className="admin-dashboard">
-        <p className="admin-dashboard-message">Access denied &mdash; admins only</p>
+        <p className="admin-dashboard-message">
+          Access denied &mdash; admins only
+        </p>
       </main>
     );
   }
@@ -328,7 +372,9 @@ function AdminDashboard() {
       </div>
 
       {isLoading ? (
-        <p className="admin-dashboard-message">Loading reports...</p>
+        <p className="admin-dashboard-message">
+          Loading reports...
+        </p>
       ) : (
         <>
           <div className="admin-dashboard-table-wrap">
@@ -347,19 +393,26 @@ function AdminDashboard() {
               <tbody>
                 {visibleReports.length === 0 ? (
                   <tr>
-                    <td colSpan={7} className="admin-dashboard-empty">
+                    <td
+                      colSpan={7}
+                      className="admin-dashboard-empty">
                       {showResolved ? "No reports found." : "No open reports found."}
                     </td>
                   </tr>
                 ) : (
                   visibleReports.map((report) => {
-                    const isSelfSuspension = report.providerId === currentUserId;
+                    const isSelfSuspension =
+                      report.providerId === currentUserId;
 
                     return (
                       <tr key={report.id}>
-                        <td>{getReportUserName(report.reporterId)}</td>
+                        <td>
+                          {getReportUserName(report.reporterId)}
+                        </td>
                         <td>{report.listingId}</td>
-                        <td>{getReportUserName(report.providerId)}</td>
+                        <td>
+                          {getReportUserName(report.providerId)}
+                        </td>
                         <td>{report.reason}</td>
                         <td>{report.status}</td>
                         <td>{formatDate(report.createdAt)}</td>
@@ -369,10 +422,14 @@ function AdminDashboard() {
                               type="button"
                               className="admin-dashboard-action admin-dashboard-action-danger"
                               disabled={
-                                activeReportAction?.reportId === report.id &&
-                                activeReportAction.action === "remove"
+                                activeReportAction?.reportId ===
+                                  report.id &&
+                                activeReportAction.action ===
+                                  "remove"
                               }
-                              onClick={() => void removeListing(report)}>
+                              onClick={() =>
+                                void removeListing(report)
+                              }>
                               Remove Listing
                             </button>
                             <button
@@ -380,10 +437,14 @@ function AdminDashboard() {
                               className="admin-dashboard-action admin-dashboard-action-warning"
                               disabled={
                                 isSelfSuspension ||
-                                (activeReportAction?.reportId === report.id &&
-                                  activeReportAction.action === "suspend")
+                                (activeReportAction?.reportId ===
+                                  report.id &&
+                                  activeReportAction.action ===
+                                    "suspend")
                               }
-                              onClick={() => void suspendUser(report)}>
+                              onClick={() =>
+                                void suspendUser(report)
+                              }>
                               Suspend User
                             </button>
                             <button
@@ -421,7 +482,9 @@ function AdminDashboard() {
                 <tbody>
                   {suspendedUsers.length === 0 ? (
                     <tr>
-                      <td colSpan={3} className="admin-dashboard-empty">
+                      <td
+                        colSpan={3}
+                        className="admin-dashboard-empty">
                         No suspended users.
                       </td>
                     </tr>
@@ -434,8 +497,12 @@ function AdminDashboard() {
                           <button
                             type="button"
                             className="admin-dashboard-action admin-dashboard-action-success"
-                            disabled={activeUserAction === user.id}
-                            onClick={() => void unsuspendUser(user)}>
+                            disabled={
+                              activeUserAction === user.id
+                            }
+                            onClick={() =>
+                              void unsuspendUser(user)
+                            }>
                             Unsuspend
                           </button>
                         </td>

@@ -8,7 +8,11 @@ import {
   PRICE_UNIT_OPTIONS
 } from "../utils/pricing";
 import { toast } from "react-toastify";
-import type { ApiUserProfile, ApiService } from "../utils/types";
+import type {
+  ApiBooking,
+  ApiUserProfile,
+  ApiService
+} from "../utils/types";
 import { useNavigate } from "react-router-dom";
 
 const TOKEN_STORAGE_KEY = "jwt_token";
@@ -28,6 +32,8 @@ const SERVICE_TITLE_MAX_LENGTH = 80;
 const SERVICE_DESCRIPTION_MAX_LENGTH = 1000;
 const SERVICE_TAG_MAX_COUNT = 5;
 const SERVICE_TAG_MAX_LENGTH = 50;
+const REVIEW_MAX_LENGTH = 1000;
+const REVIEWABLE_BOOKING_STATUS = "COMPLETED";
 
 interface ServiceListing {
   id: string;
@@ -51,6 +57,27 @@ interface UserProfile {
   services: ServiceListing[];
 }
 
+interface CustomerBooking {
+  id: string;
+  serviceId: string;
+  serviceTitle: string;
+  customerName: string;
+  providerName: string;
+  reviewerName: string;
+  agreedPrice: string;
+  priceUnit: string;
+  scheduledAt: string;
+  status: string;
+  rating: number | null;
+  review: string;
+  reviewedAt: string;
+  createdAt: string;
+}
+
+interface ReviewDraft {
+  rating: string;
+  review: string;
+}
 
 interface ConnectStatus {
   accountId: string | null;
@@ -127,7 +154,51 @@ function formatPrice(service: ServiceListing) {
       : formatCurrency(minPrice || maxPrice);
   const priceUnit = normalizePriceUnit(service.priceUnit);
 
-  return priceUnit ? `${displayPrice}/${priceUnit}` : displayPrice;
+  return priceUnit
+    ? `${displayPrice}/${priceUnit}`
+    : displayPrice;
+}
+
+function formatBookingPrice(booking: CustomerBooking) {
+  const displayPrice = formatCurrency(booking.agreedPrice);
+  const priceUnit = normalizePriceUnit(booking.priceUnit);
+
+  return priceUnit
+    ? `${displayPrice}/${priceUnit}`
+    : displayPrice;
+}
+
+function formatDateTime(value: string) {
+  if (!value) {
+    return "Not scheduled";
+  }
+
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return "Not scheduled";
+  }
+
+  return new Intl.DateTimeFormat("en-US", {
+    dateStyle: "medium",
+    timeStyle: "short"
+  }).format(date);
+}
+
+function formatBookingStatus(status: string) {
+  return status
+    .toLocaleLowerCase()
+    .split("_")
+    .map((word) =>
+      word
+        ? `${word.charAt(0).toLocaleUpperCase()}${word.slice(1)}`
+        : word
+    )
+    .join(" ");
+}
+
+function formatBookingStatusClass(status: string) {
+  return status.toLocaleLowerCase().replace(/_/g, "-");
 }
 
 function formatCategory(category: string) {
@@ -157,6 +228,38 @@ function normalizeServices(
     tags: Array.isArray(service.tags)
       ? service.tags.map(cleanText).filter(Boolean)
       : []
+  }));
+}
+
+function normalizeBookings(
+  bookings: ApiBooking[] | undefined
+): CustomerBooking[] {
+  if (!Array.isArray(bookings)) {
+    return [];
+  }
+
+  return bookings.map((booking, index) => ({
+    id: cleanText(booking.id) || `booking-${index}`,
+    serviceId: cleanText(booking.serviceId),
+    serviceTitle:
+      cleanText(booking.serviceTitle) || "Booked service",
+    customerName: cleanText(booking.customerName) || "You",
+    providerName: cleanText(booking.providerName),
+    reviewerName:
+      cleanText(booking.reviewerName) ||
+      cleanText(booking.customerName) ||
+      "You",
+    agreedPrice: cleanPriceValue(booking.agreedPrice),
+    priceUnit: cleanText(booking.priceUnit ?? undefined),
+    scheduledAt: cleanText(booking.scheduledAt ?? undefined),
+    status: cleanText(booking.status ?? undefined),
+    rating:
+      typeof booking.rating === "number"
+        ? booking.rating
+        : null,
+    review: cleanText(booking.review ?? undefined),
+    reviewedAt: cleanText(booking.reviewedAt ?? undefined),
+    createdAt: cleanText(booking.createdAt ?? undefined)
   }));
 }
 
@@ -193,6 +296,21 @@ function ProfilePage() {
   const [serviceDescription, setServiceDescription] =
     useState("");
   const [serviceMessage, setServiceMessage] = useState("");
+  const [customerBookings, setCustomerBookings] = useState<
+    CustomerBooking[]
+  >([]);
+  const [isLoadingBookings, setIsLoadingBookings] = useState(
+    Boolean(authToken)
+  );
+  const [reviewDrafts, setReviewDrafts] = useState<
+    Record<string, ReviewDraft>
+  >({});
+  const [submittingReviewId, setSubmittingReviewId] = useState<
+    string | null
+  >(null);
+  const [reviewingBookingId, setReviewingBookingId] = useState<
+    string | null
+  >(null);
   const [serviceTitle, setServiceTitle] = useState("");
   const [serviceCategory, setServiceCategory] = useState("");
   const [servicePricingType, setServicePricingType] =
@@ -208,7 +326,8 @@ function ProfilePage() {
   const [serviceLocation, setServiceLocation] = useState("");
   const [serviceTags, setServiceTags] = useState("");
   const navigate = useNavigate();
-  const [connectStatus, setConnectStatus] = useState<ConnectStatus | null>(null);
+  const [connectStatus, setConnectStatus] =
+    useState<ConnectStatus | null>(null);
   const [isConnecting, setIsConnecting] = useState(false);
   const [editingServiceId, setEditingServiceId] = useState<
     string | null
@@ -251,22 +370,47 @@ function ProfilePage() {
 
         const data = (await response.json()) as ApiUserProfile;
 
-        if (!data.verified){
-          toast.warning("Please verify your account before proceeding.");
+        if (!data.verified) {
+          toast.warning(
+            "Please verify your account before proceeding."
+          );
           navigate("/verify");
         }
         const nextProfile = normalizeProfile(data);
 
-        const connectResponse = await fetch(API_ENDPOINTS.payments.connectStatus, {
-          headers: { Authorization: `Bearer ${authToken}` }
-        });
+        const connectResponse = await fetch(
+          API_ENDPOINTS.payments.connectStatus,
+          {
+            headers: { Authorization: `Bearer ${authToken}` }
+          }
+        );
+
+        const bookingsResponse = await fetch(
+          API_ENDPOINTS.bookings.mine,
+          {
+            headers: { Authorization: `Bearer ${authToken}` }
+          }
+        );
+
+        const nextBookings = bookingsResponse.ok
+          ? normalizeBookings(
+              (await bookingsResponse.json()) as ApiBooking[]
+            )
+          : [];
+
+        if (!bookingsResponse.ok) {
+          toast.error("Could not load your bookings.");
+        }
 
         if (isMounted) {
           setProfile(nextProfile);
+          setCustomerBookings(nextBookings);
           setBioDraft(nextProfile.bio);
           setIsEditingBio(false);
           if (connectResponse.ok) {
-            setConnectStatus((await connectResponse.json()) as ConnectStatus);
+            setConnectStatus(
+              (await connectResponse.json()) as ConnectStatus
+            );
           }
         }
       } catch {
@@ -276,6 +420,7 @@ function ProfilePage() {
       } finally {
         if (isMounted) {
           setIsLoading(false);
+          setIsLoadingBookings(false);
         }
       }
     }
@@ -383,7 +528,9 @@ function ProfilePage() {
       }
 
       if (titleText.length > SERVICE_TITLE_MAX_LENGTH) {
-        toast.error("Keep the title to 80 characters or fewer.");
+        toast.error(
+          "Keep the title to 80 characters or fewer."
+        );
         return;
       }
 
@@ -393,9 +540,7 @@ function ProfilePage() {
       }
 
       if (
-        tags.some(
-          (tag) => tag.length > SERVICE_TAG_MAX_LENGTH
-        )
+        tags.some((tag) => tag.length > SERVICE_TAG_MAX_LENGTH)
       ) {
         toast.error("Keep each tag to 50 characters or fewer.");
         return;
@@ -457,8 +602,7 @@ function ProfilePage() {
       }
 
       if (
-        descriptionText.length >
-        SERVICE_DESCRIPTION_MAX_LENGTH
+        descriptionText.length > SERVICE_DESCRIPTION_MAX_LENGTH
       ) {
         toast.error(
           "Keep the description to 1000 characters or fewer."
@@ -570,15 +714,20 @@ function ProfilePage() {
     if (!authToken) return;
     setIsConnecting(true);
     try {
-      const response = await fetch(API_ENDPOINTS.payments.connect, {
-        method: "POST",
-        headers: { Authorization: `Bearer ${authToken}` }
-      });
+      const response = await fetch(
+        API_ENDPOINTS.payments.connect,
+        {
+          method: "POST",
+          headers: { Authorization: `Bearer ${authToken}` }
+        }
+      );
       if (!response.ok) {
         toast.error("Could not start Stripe onboarding.");
         return;
       }
-      const data = (await response.json()) as { onboardingUrl: string };
+      const data = (await response.json()) as {
+        onboardingUrl: string;
+      };
       window.location.href = data.onboardingUrl;
     } catch {
       toast.error("Could not start Stripe onboarding.");
@@ -657,6 +806,119 @@ function ProfilePage() {
       );
     } finally {
       setDeletingServiceId(null);
+    }
+  }
+
+  function updateReviewDraft(
+    bookingId: string,
+    nextDraft: Partial<ReviewDraft>
+  ) {
+    setReviewDrafts((currentDrafts) => {
+      const currentDraft = currentDrafts[bookingId] ?? {
+        rating: "5",
+        review: ""
+      };
+
+      return {
+        ...currentDrafts,
+        [bookingId]: {
+          ...currentDraft,
+          ...nextDraft
+        }
+      };
+    });
+  }
+
+  async function handleReviewSubmit(
+    event: FormEvent<HTMLFormElement>,
+    booking: CustomerBooking
+  ): Promise<boolean> {
+    event.preventDefault();
+
+    if (!authToken) {
+      toast.error("Log in to leave a review.");
+      return false;
+    }
+
+    if (booking.status !== REVIEWABLE_BOOKING_STATUS) {
+      toast.error("You can only review completed bookings.");
+      return false;
+    }
+
+    const draft = reviewDrafts[booking.id] ?? {
+      rating: "5",
+      review: ""
+    };
+    const rating = Number(draft.rating);
+    const review = draft.review.trim();
+
+    if (!Number.isInteger(rating) || rating < 1 || rating > 5) {
+      toast.error("Choose a rating from 1 to 5.");
+      return false;
+    }
+
+    if (!review) {
+      toast.error("Write a review before submitting.");
+      return false;
+    }
+
+    if (review.length > REVIEW_MAX_LENGTH) {
+      toast.error(
+        "Keep the review to 1000 characters or fewer."
+      );
+      return false;
+    }
+
+    setSubmittingReviewId(booking.id);
+
+    try {
+      const response = await fetch(
+        API_ENDPOINTS.bookings.review(booking.id),
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${authToken}`,
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({ rating, review })
+        }
+      );
+
+      if (!response.ok) {
+        const message = (await response.text()).trim();
+        throw new Error(message || "Could not submit review.");
+      }
+
+      const [updatedBooking] = normalizeBookings([
+        (await response.json()) as ApiBooking
+      ]);
+
+      if (updatedBooking) {
+        setCustomerBookings((currentBookings) =>
+          currentBookings.map((currentBooking) =>
+            currentBooking.id === updatedBooking.id
+              ? updatedBooking
+              : currentBooking
+          )
+        );
+      }
+
+      setReviewDrafts((currentDrafts) => {
+        const nextDrafts = { ...currentDrafts };
+        delete nextDrafts[booking.id];
+        return nextDrafts;
+      });
+      toast.success("Review submitted.");
+      return true;
+    } catch (reviewError) {
+      toast.error(
+        reviewError instanceof Error
+          ? reviewError.message
+          : "Could not submit review."
+      );
+      return false;
+    } finally {
+      setSubmittingReviewId(null);
     }
   }
 
@@ -781,7 +1043,10 @@ function ProfilePage() {
           <div className="section-heading">
             <div>
               <h2>Payments</h2>
-              <p>Connect Stripe to receive payments for your services.</p>
+              <p>
+                Connect Stripe to receive payments for your
+                services.
+              </p>
             </div>
             {connectStatus && !connectStatus.chargesEnabled && (
               <button
@@ -792,8 +1057,8 @@ function ProfilePage() {
                 {isConnecting
                   ? "Redirecting..."
                   : connectStatus.accountId
-                  ? "Continue Setup"
-                  : "Connect Stripe"}
+                    ? "Continue Setup"
+                    : "Connect Stripe"}
               </button>
             )}
           </div>
@@ -803,12 +1068,100 @@ function ProfilePage() {
             </p>
           ) : connectStatus?.detailsSubmitted ? (
             <p className="connect-status">
-              Stripe setup in progress. Payments will be enabled once verification is complete.
+              Stripe setup in progress. Payments will be enabled
+              once verification is complete.
             </p>
           ) : (
             <p className="empty-state">
-              Connect a Stripe account to receive payments from customers.
+              Connect a Stripe account to receive payments from
+              customers.
             </p>
+          )}
+        </section>
+
+        <section
+          className="profile-section bookings-section"
+          aria-label="Bookings">
+          <div className="section-heading">
+            <div>
+              <h2>Bookings</h2>
+              <p>Services you booked as a customer.</p>
+            </div>
+          </div>
+
+          {isLoadingBookings ? (
+            <p className="empty-state">Loading bookings...</p>
+          ) : customerBookings.length === 0 ? (
+            <p className="empty-state">
+              You have not booked any services yet.
+            </p>
+          ) : (
+            <div className="booking-grid">
+              {customerBookings.map((booking) => {
+                const canReview =
+                  booking.status === REVIEWABLE_BOOKING_STATUS;
+                const hasReview =
+                  booking.rating !== null &&
+                  booking.review.length > 0;
+
+                return (
+                  <article
+                    className="booking-card"
+                    key={booking.id}>
+                    <div className="booking-card-heading">
+                      <div>
+                        <h3>{booking.serviceTitle}</h3>
+                        <p
+                          className={`booking-status booking-status--${formatBookingStatusClass(booking.status)}`}>
+                          {formatBookingStatus(booking.status)}
+                        </p>
+                      </div>
+                      <strong>
+                        {formatBookingPrice(booking)}
+                      </strong>
+                    </div>
+
+                    <p className="booking-scheduled">
+                      Scheduled{" "}
+                      {formatDateTime(booking.scheduledAt)}
+                    </p>
+                    {booking.providerName && (
+                      <p className="booking-user">
+                        Provider {booking.providerName}
+                      </p>
+                    )}
+
+                    {canReview && !hasReview && (
+                      <button
+                        type="button"
+                        className="add-review-button"
+                        onClick={() =>
+                          setReviewingBookingId(booking.id)
+                        }>
+                        Add Review
+                      </button>
+                    )}
+                    {hasReview && (
+                      <div className="submitted-review">
+                        <p>
+                          <strong>
+                            Rating by {booking.reviewerName}:
+                          </strong>{" "}
+                          {booking.rating}/5
+                        </p>
+                        <p>{booking.review}</p>
+                        {booking.reviewedAt && (
+                          <p className="reviewed-at">
+                            Reviewed{" "}
+                            {formatDateTime(booking.reviewedAt)}
+                          </p>
+                        )}
+                      </div>
+                    )}
+                  </article>
+                );
+              })}
+            </div>
           )}
         </section>
 
@@ -972,7 +1325,8 @@ function ProfilePage() {
                         <input
                           value={serviceMinPrice}
                           onChange={(event) => {
-                            const nextPrice = event.target.value;
+                            const nextPrice =
+                              event.target.value;
 
                             if (!isPriceInputValue(nextPrice)) {
                               return;
@@ -994,7 +1348,8 @@ function ProfilePage() {
                         <input
                           value={serviceMaxPrice}
                           onChange={(event) => {
-                            const nextPrice = event.target.value;
+                            const nextPrice =
+                              event.target.value;
 
                             if (!isPriceInputValue(nextPrice)) {
                               return;
@@ -1024,14 +1379,18 @@ function ProfilePage() {
                       <option value="" disabled hidden>
                         Select a price unit
                       </option>
-                      <option value={NO_PRICE_UNIT_VALUE}>N/A</option>
+                      <option value={NO_PRICE_UNIT_VALUE}>
+                        N/A
+                      </option>
                       {hasCustomPriceUnit && (
                         <option value={servicePriceUnit}>
                           {formatPriceUnit(servicePriceUnit)}
                         </option>
                       )}
                       {PRICE_UNIT_OPTIONS.map((unit) => (
-                        <option key={unit.value} value={unit.value}>
+                        <option
+                          key={unit.value}
+                          value={unit.value}>
                           {unit.label}
                         </option>
                       ))}
@@ -1230,6 +1589,102 @@ function ProfilePage() {
                 Cancel
               </button>
             </div>
+          </section>
+        </div>
+      )}
+
+      {reviewingBookingId && (
+        <div
+          className="profile-modal-backdrop"
+          role="presentation"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget) {
+              setReviewingBookingId(null);
+            }
+          }}>
+          <section
+            className="profile-confirm-modal review-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="review-title">
+            <h2 id="review-title">Leave a Review</h2>
+            {customerBookings.find(
+              (b) => b.id === reviewingBookingId
+            ) && (
+              <form
+                className="review-form"
+                onSubmit={(event) => {
+                  const booking = customerBookings.find(
+                    (b) => b.id === reviewingBookingId
+                  );
+                  if (booking) {
+                    void handleReviewSubmit(
+                      event,
+                      booking
+                    ).then((wasSubmitted) => {
+                      if (wasSubmitted) {
+                        setReviewingBookingId(null);
+                      }
+                    });
+                  }
+                }}>
+                <label>
+                  <span>Rating</span>
+                  <select
+                    value={
+                      reviewDrafts[reviewingBookingId]
+                        ?.rating ?? "5"
+                    }
+                    onChange={(event) =>
+                      updateReviewDraft(reviewingBookingId, {
+                        rating: event.target.value
+                      })
+                    }>
+                    <option value="5">5</option>
+                    <option value="4">4</option>
+                    <option value="3">3</option>
+                    <option value="2">2</option>
+                    <option value="1">1</option>
+                  </select>
+                </label>
+
+                <label className="review-textarea-label">
+                  <span>Written review</span>
+                  <textarea
+                    value={
+                      reviewDrafts[reviewingBookingId]
+                        ?.review ?? ""
+                    }
+                    onChange={(event) =>
+                      updateReviewDraft(reviewingBookingId, {
+                        review: event.target.value
+                      })
+                    }
+                    maxLength={REVIEW_MAX_LENGTH}
+                    rows={4}
+                    required
+                  />
+                </label>
+
+                <div className="profile-confirm-actions">
+                  <button
+                    type="submit"
+                    disabled={
+                      submittingReviewId === reviewingBookingId
+                    }>
+                    {submittingReviewId === reviewingBookingId
+                      ? "Submitting..."
+                      : "Submit Review"}
+                  </button>
+                  <button
+                    type="button"
+                    className="profile-confirm-cancel"
+                    onClick={() => setReviewingBookingId(null)}>
+                    Cancel
+                  </button>
+                </div>
+              </form>
+            )}
           </section>
         </div>
       )}

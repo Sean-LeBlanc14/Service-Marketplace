@@ -1,5 +1,11 @@
 import { useEffect, useState } from "react";
-import { BrowserRouter, Navigate, Routes, Route, useLocation } from "react-router-dom";
+import {
+  BrowserRouter,
+  Navigate,
+  Routes,
+  Route,
+  useLocation
+} from "react-router-dom";
 import Layout from "./components/Layout";
 import HomePage from "./pages/HomePage";
 import SignupPage from "./pages/SignupPage";
@@ -20,7 +26,8 @@ const TOKEN_STORAGE_KEY = "jwt_token";
 function AppRoutes() {
   const location = useLocation();
   const [serverSuspended, setServerSuspended] = useState(false);
-  const isSuspended = localStorage.getItem("user_role") === "suspended";
+  const isSuspended =
+    localStorage.getItem("user_role") === "suspended";
   const canAccessWhileSuspended =
     location.pathname === "/login" ||
     location.pathname === "/signup" ||
@@ -81,14 +88,11 @@ function AppRoutes() {
         <Route path="homepage" element={<HomePage />} />
         <Route path="profile" element={<ProfilePage />} />
         <Route path="settings" element={<Settings />} />
-        <Route
-          path="requests"
-          element={<ServiceDashboard />}
-        />
+        <Route path="requests" element={<ServiceDashboard />} />
         <Route path="inbox" element={<Inbox />} />
         <Route path="admin" element={<AdminDashboard />} />
       </Route>
-      <Route index element={<LandingPage/>}/>
+      <Route index element={<LandingPage />} />
       <Route path="verify" element={<VerifyAccount />} />
       <Route path="signup" element={<SignupPage />} />
       <Route path="login" element={<LoginPage />} />

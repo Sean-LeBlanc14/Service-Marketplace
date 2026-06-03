@@ -1,5 +1,7 @@
 package com.ServiceMarketplace.service_marketplace.exception;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
@@ -15,6 +17,8 @@ import org.springframework.dao.IncorrectResultSizeDataAccessException;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
+    private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
     
     @ExceptionHandler(EmailAlreadyExistsException.class)
     public ResponseEntity<String> handleEmailAlreadyExists(EmailAlreadyExistsException e) {
@@ -65,6 +69,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(EmailSendException.class)
     public ResponseEntity<String> handleEmailSendException(EmailSendException e) {
+        log.error("EmailSendException: {}", e.getMessage(), e);
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
     }
 
@@ -75,6 +80,11 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(InvalidPriceException.class)
     public ResponseEntity<String> handleInvalidPrice(InvalidPriceException e) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+    }
+
+    @ExceptionHandler(InvalidBookingReviewException.class)
+    public ResponseEntity<String> handleInvalidBookingReview(InvalidBookingReviewException e) {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
     }
 
@@ -95,6 +105,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(PaymentProcessingException.class)
     public ResponseEntity<String> handlePaymentProcessingException(PaymentProcessingException e) {
+        log.error("PaymentProcessingException: {}", e.getMessage(), e);
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
     }
 
@@ -105,6 +116,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(WebhookProcessingException.class)
     public ResponseEntity<String> handleWebhookProcessing(WebhookProcessingException e) {
+        log.error("WebhookProcessingException: {}", e.getMessage(), e);
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
     }
 

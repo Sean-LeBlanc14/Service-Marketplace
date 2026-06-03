@@ -56,6 +56,19 @@ public class EmailService {
             ));
     }
 
+    public void sendBookingRequestedCustomerEmail(String toEmail, String customerName, String serviceTitle,
+            BigDecimal proposedPrice, String priceUnit, Instant scheduledAt, String bookingId) {
+        sendTemplatedEmail(toEmail, "Booking Request Received - " + serviceTitle, "bookingRequestedCustomer",
+            Map.of(
+                "customerName", customerName,
+                "serviceTitle", serviceTitle,
+                "proposedPrice", formatPrice(proposedPrice),
+                "priceUnit", priceUnit != null ? priceUnit : "",
+                "scheduledAt", DATE_FORMATTER.format(scheduledAt),
+                "bookingId", bookingId
+            ));
+    }
+
     public void sendBookingConfirmedCustomerEmail(String toEmail, String customerName, String serviceTitle,
             BigDecimal agreedPrice, String priceUnit, Instant scheduledAt, String bookingId) {
         sendTemplatedEmail(toEmail, "Booking Confirmed - " + serviceTitle, "bookingConfirmedCustomer",

@@ -6,7 +6,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -61,8 +60,6 @@ public class UserController {
     @PatchMapping("/password")
     public ResponseEntity<String> changeUserPassword(@AuthenticationPrincipal UserDetails userDetails, @RequestBody ChangePasswordRequest request){
 
-        System.out.println("DEBUG: I HAVE RECIEVED THE REQUEST: " + request);
-        
         var response = userService.changeUserPassword(userDetails, request);
 
         return ResponseEntity.status(HttpStatus.OK).body(response);

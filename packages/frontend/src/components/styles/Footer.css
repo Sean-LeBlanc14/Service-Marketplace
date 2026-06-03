@@ -1,9 +1,9 @@
-.app-footer{
-    position: fixed;
-    bottom: 0;
+.app-footer {
+  position: fixed;
+  bottom: 0;
 }
 
-.app-footer-text{
-    color: #B3B3B3;
-    font-size: x-small;
+.app-footer-text {
+  color: #b3b3b3;
+  font-size: x-small;
 }

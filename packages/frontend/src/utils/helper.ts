@@ -1,6 +1,5 @@
+export function getToken() {
+  const authToken = window.localStorage.getItem("jwt_token");
 
-export function getToken(){
-    const authToken = window.localStorage.getItem("jwt_token");
-    
-    return authToken;
+  return authToken;
 }

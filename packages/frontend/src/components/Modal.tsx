@@ -1,21 +1,21 @@
-
-import './styles/Modal.css'; 
+import "./styles/Modal.css";
 
 interface ModalProps {
-    isOpen: boolean;
-    onClose: () => void;
-    children: React.ReactNode;
+  isOpen: boolean;
+  onClose: () => void;
+  children: React.ReactNode;
 }
 
-export default function Modal({ isOpen, onClose, children }: ModalProps) {
-
+export default function Modal({
+  isOpen,
+  onClose,
+  children
+}: ModalProps) {
   if (!isOpen) return null;
 
   // Close the modal if the user clicks on the darkened backdrop
-  const handleOverlayClick = (e) => {
-    if (e.target.classList.contains('modal-overlay')) {
-      onClose();
-    }
+  const handleOverlayClick = () => {
+    onClose();
   };
 
   return (
@@ -24,9 +24,7 @@ export default function Modal({ isOpen, onClose, children }: ModalProps) {
         <button className="close-btn" onClick={onClose}>
           &times;
         </button>
-        <div>
-          {children}
-        </div>
+        <div>{children}</div>
       </div>
     </div>
   );

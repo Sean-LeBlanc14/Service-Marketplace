@@ -2,7 +2,7 @@ import {
   FaBell,
   FaHome,
   FaMoneyBill,
-  FaUserShield,
+  FaUserShield
 } from "react-icons/fa";
 import { HiUser } from "react-icons/hi2";
 import { FaGear } from "react-icons/fa6";
@@ -13,8 +13,6 @@ import NavigationButton from "./NavigationButton";
 
 export default function SideBar() {
   const isAdmin = localStorage.getItem("user_role") === "admin";
-
-  
 
   return (
     <aside className="sidebar-container">
@@ -65,10 +63,9 @@ export default function SideBar() {
 
         <NavigationButton
           to="/notifications"
-          icon={<FaBell/>}
+          label=""
+          icon={<FaBell />}
         />
-
-        
       </div>
     </aside>
   );

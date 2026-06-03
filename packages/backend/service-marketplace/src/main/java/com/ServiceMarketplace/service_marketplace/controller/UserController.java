@@ -53,15 +53,6 @@ public class UserController {
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 
-    /*This can be temp, I need the user's name for the booking card, we can possibly add the names to the booking model
-    then add them to the booking response*/
-    @GetMapping("/profile/{id}")
-    public ResponseEntity<UserProfile> getUser(@PathVariable String id) {
-        UserProfile user = userService.getUserById(id);
-
-        return ResponseEntity.status(HttpStatus.OK).body(user);
-    }
-
     @DeleteMapping("/delete")
     public ResponseEntity<UserProfile> deleteUser(@AuthenticationPrincipal UserDetails userDetails){
 

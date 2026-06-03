@@ -179,7 +179,7 @@ class BookingServiceTest {
         assertThat(result).hasSize(1);
         assertThat(result.get(0).getId()).isEqualTo("booking-123");
         assertThat(result.get(0).getCustomerName()).isEqualTo("Alice Student");
-        assertThat(result.get(0).getProviderName()).isEqualTo("Bob");
+        assertThat(result.get(0).getProviderName()).isEqualTo("Bob Smith");
         assertThat(result.get(0).getReviewerName()).isEqualTo("Alice Student");
         assertThat(result.get(0).getStatus()).isEqualTo(BookingStatus.CONFIRMED);
         verify(userRepository).findAllById(any());

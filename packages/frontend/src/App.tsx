@@ -59,9 +59,11 @@ function AppRoutes() {
     }
 
     void checkSuspension();
+    const interval = setInterval(() => void checkSuspension(), 300000);
 
     return () => {
       cancelled = true;
+      clearInterval(interval);
     };
   }, []);
 

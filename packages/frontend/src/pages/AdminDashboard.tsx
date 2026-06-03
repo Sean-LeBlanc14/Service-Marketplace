@@ -24,7 +24,7 @@ interface AdminUser {
   role: string;
 }
 
-type ReportAction = "remove" | "suspend";
+type ReportAction = "remove" | "suspend" | "resolve";
 
 function formatDate(value?: string) {
   if (!value) {
@@ -247,6 +247,21 @@ function AdminDashboard() {
     } catch {
       toast.error("Failed to suspend user. Please try again.");
     } finally {
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      setActiveReportAction(null);
+    }
+  }
+
+  async function resolveOnly(report: Report) {
+    setActiveReportAction({ reportId: report.id, action: "resolve" });
+
+    try {
+      await resolveReport(report.id);
+      toast.success("Report resolved");
+      setReloadVersion((version) => version + 1);
+    } catch {
+      toast.error("Failed to resolve report");
+    } finally {
       setActiveReportAction(null);
     }
   }
@@ -370,6 +385,13 @@ function AdminDashboard() {
                               }
                               onClick={() => void suspendUser(report)}>
                               Suspend User
+                            </button>
+                            <button
+                              type="button"
+                              className="admin-dashboard-action admin-dashboard-action-neutral"
+                              disabled={activeReportAction?.reportId === report.id}
+                              onClick={() => void resolveOnly(report)}>
+                              Resolve Only
                             </button>
                           </div>
                         </td>

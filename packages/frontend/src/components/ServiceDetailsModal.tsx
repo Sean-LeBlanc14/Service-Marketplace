@@ -256,11 +256,12 @@ function ServiceDetailsModal({
                       <option>Other</option>
                     </select>
                     {reportReason === "Other" && (
-                      <input
-                        type="text"
+                      <textarea
+                        className="report-other-input"
                         value={otherReportReason}
                         onChange={e => setOtherReportReason(e.target.value)}
-                        maxLength={500}
+                        rows={3}
+                        maxLength={250}
                         placeholder="Add details"
                       />
                     )}

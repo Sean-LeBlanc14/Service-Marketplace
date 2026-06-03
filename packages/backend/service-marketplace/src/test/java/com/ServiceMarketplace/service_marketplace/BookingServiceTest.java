@@ -88,6 +88,7 @@ class BookingServiceTest {
         mockProvider.setId("provider-456");
         mockProvider.setEmail("tutor@calpoly.edu");
         mockProvider.setFirstName("Bob");
+        mockProvider.setLastName("Smith");
         mockProvider.setStripeAccountId("acct_test_provider");
 
         lenient().when(userDetails.getUsername()).thenReturn("student@calpoly.edu");
@@ -178,7 +179,7 @@ class BookingServiceTest {
         assertThat(result).hasSize(1);
         assertThat(result.get(0).getId()).isEqualTo("booking-123");
         assertThat(result.get(0).getCustomerName()).isEqualTo("Alice Student");
-        assertThat(result.get(0).getProviderName()).isEqualTo("Bob");
+        assertThat(result.get(0).getProviderName()).isEqualTo("Bob Smith");
         assertThat(result.get(0).getReviewerName()).isEqualTo("Alice Student");
         assertThat(result.get(0).getStatus()).isEqualTo(BookingStatus.CONFIRMED);
         verify(userRepository).findAllById(any());
@@ -332,32 +333,45 @@ class BookingServiceTest {
     }
 
     @Test
-    void cancelBooking_byCustomer_cancelsAndCleansUpStripeCustomer() {
+    void cancelBooking_byCustomer_cancelsAndNotifiesProvider() {
         Booking pending = buildAwaitingBooking();
 
         when(userRepository.findByEmail("student@calpoly.edu")).thenReturn(Optional.of(mockCustomer));
         when(bookingRepository.findById("booking-001")).thenReturn(Optional.of(pending));
         when(bookingRepository.save(any(Booking.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(userRepository.findById("provider-456")).thenReturn(Optional.of(mockProvider));
+        when(userRepository.findById("customer-789")).thenReturn(Optional.of(mockCustomer));
 
         BookingResponse result = bookingService.cancelBooking("booking-001", userDetails);
 
         assertThat(result.getStatus()).isEqualTo(BookingStatus.CANCELLED);
         verify(paymentService).cleanupStripeCustomer("cus_test_123");
+        verify(emailService).sendBookingCancelledProviderEmail(
+            eq("tutor@calpoly.edu"), eq("Bob"), eq("Alice Student"),
+            eq("Math Tutoring"), any(Instant.class), any()
+        );
     }
 
     @Test
-    void cancelBooking_byProvider_cancelsAndCleansUpStripeCustomer() {
+    void cancelBooking_byProvider_cancelsAndNotifiesCustomer() {
         Booking pending = buildAwaitingBooking();
 
         when(userDetails.getUsername()).thenReturn("tutor@calpoly.edu");
         when(userRepository.findByEmail("tutor@calpoly.edu")).thenReturn(Optional.of(mockProvider));
         when(bookingRepository.findById("booking-001")).thenReturn(Optional.of(pending));
         when(bookingRepository.save(any(Booking.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(userRepository.findById("customer-789")).thenReturn(Optional.of(mockCustomer));
+        when(userRepository.findById("provider-456")).thenReturn(Optional.of(mockProvider));
 
         BookingResponse result = bookingService.cancelBooking("booking-001", userDetails);
 
         assertThat(result.getStatus()).isEqualTo(BookingStatus.CANCELLED);
         verify(paymentService).cleanupStripeCustomer("cus_test_123");
+        verify(emailService, never()).sendBookingCancelledProviderEmail(any(), any(), any(), any(), any(), any());
+        verify(emailService).sendBookingCancelledCustomerEmail(
+            eq("student@calpoly.edu"), eq("Alice"), eq("Bob Smith"),
+            eq("Math Tutoring"), any(Instant.class), any()
+        );
     }
 
     @Test
@@ -374,9 +388,9 @@ class BookingServiceTest {
     }
 
     @Test
-    void cancelBooking_notAwaitingConfirmation_throwsBookingStateException() {
+    void cancelBooking_alreadyCancelled_throwsBookingStateException() {
         Booking booking = buildAwaitingBooking();
-        booking.setStatus(BookingStatus.CONFIRMED);
+        booking.setStatus(BookingStatus.CANCELLED);
 
         when(userRepository.findByEmail("student@calpoly.edu")).thenReturn(Optional.of(mockCustomer));
         when(bookingRepository.findById("booking-001")).thenReturn(Optional.of(booking));
@@ -407,18 +421,25 @@ class BookingServiceTest {
     }
 
     @Test
-    void processTokenAction_cancelToken_cancelsAndCleansUp() {
+    void processTokenAction_cancelToken_cancelsAndNotifiesCustomer() {
         Booking pending = buildAwaitingBooking();
 
         when(bookingTokenService.validateAndConsume("valid-cancel-token"))
             .thenReturn(new TokenResult("booking-001", BookingTokenAction.CANCEL));
         when(bookingRepository.findById("booking-001")).thenReturn(Optional.of(pending));
         when(bookingRepository.save(any(Booking.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(userRepository.findById("customer-789")).thenReturn(Optional.of(mockCustomer));
+        when(userRepository.findById("provider-456")).thenReturn(Optional.of(mockProvider));
 
         BookingTokenAction result = bookingService.processTokenAction("valid-cancel-token");
 
         assertThat(result).isEqualTo(BookingTokenAction.CANCEL);
         verify(paymentService).cleanupStripeCustomer("cus_test_123");
+        verify(emailService, never()).sendBookingCancelledProviderEmail(any(), any(), any(), any(), any(), any());
+        verify(emailService).sendBookingCancelledCustomerEmail(
+            eq("student@calpoly.edu"), eq("Alice"), eq("Bob Smith"),
+            eq("Math Tutoring"), any(Instant.class), any()
+        );
     }
 
     @Test

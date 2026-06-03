@@ -13,12 +13,14 @@ export default function Modal({
 }: ModalProps) {
   if (!isOpen) return null;
 
- const handleOverlayClick = (e: React.MouseEvent<HTMLDivElement>) => {
-  const target = e.target as HTMLElement;
-  if (target.classList.contains('modal-overlay')) {
-    onClose();
-  }
-};
+  const handleOverlayClick = (
+    e: React.MouseEvent<HTMLDivElement>
+  ) => {
+    const target = e.target as HTMLElement;
+    if (target.classList.contains("modal-overlay")) {
+      onClose();
+    }
+  };
 
   return (
     <div className="modal-overlay" onClick={handleOverlayClick}>

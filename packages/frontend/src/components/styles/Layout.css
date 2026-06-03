@@ -8,12 +8,12 @@
 .content-area {
   display: flex;
   flex-direction: column; /* NavBar top, Main content bottom */
-  flex-grow: 1;
+  flex: 1 1 auto;
   min-width: 0;
 }
 
 .main-content {
-  flex-grow: 1;
+  flex: 1 1 auto;
   min-width: 0;
   background-color: #ffffff;
   overflow-x: hidden;

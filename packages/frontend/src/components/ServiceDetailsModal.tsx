@@ -69,6 +69,8 @@ function ServiceDetailsModal({
   const [reportReason, setReportReason] = useState(
     "Inappropriate content"
   );
+  const [otherReportReason, setOtherReportReason] =
+    useState("");
   const [isReporting, setIsReporting] = useState(false);
   const [setupClientSecret, setSetupClientSecret] =
     useState("");
@@ -145,6 +147,17 @@ function ServiceDetailsModal({
   }
 
   async function handleReportSubmit() {
+    const trimmedOtherReason = otherReportReason.trim();
+    const submittedReason =
+      reportReason === "Other"
+        ? `Other: ${trimmedOtherReason}`
+        : reportReason;
+
+    if (reportReason === "Other" && !trimmedOtherReason) {
+      toast.error("Please add details for Other.");
+      return;
+    }
+
     setIsReporting(true);
     try {
       const token = localStorage.getItem("jwt_token");
@@ -159,7 +172,7 @@ function ServiceDetailsModal({
           body: JSON.stringify({
             listingId: service.id,
             providerId: service.userId,
-            reason: reportReason
+            reason: submittedReason
           })
         }
       );
@@ -167,6 +180,8 @@ function ServiceDetailsModal({
       if (response.ok) {
         toast.success("Report submitted successfully");
         setShowReportDialog(false);
+        setReportReason("Inappropriate content");
+        setOtherReportReason("");
       } else {
         toast.error("Failed to submit report");
       }
@@ -275,6 +290,18 @@ function ServiceDetailsModal({
                       <option>Harassment</option>
                       <option>Other</option>
                     </select>
+                    {reportReason === "Other" && (
+                      <textarea
+                        className="report-other-input"
+                        value={otherReportReason}
+                        onChange={(e) =>
+                          setOtherReportReason(e.target.value)
+                        }
+                        rows={3}
+                        maxLength={250}
+                        placeholder="Add details"
+                      />
+                    )}
                     <div className="report-dialog-actions">
                       <button
                         type="button"

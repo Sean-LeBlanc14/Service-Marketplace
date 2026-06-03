@@ -21,5 +21,7 @@ public class UserProfile {
 
     private boolean isVerified;
 
+    private String role;
+
     private List<ServiceDto> services;
 }

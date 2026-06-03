@@ -2,6 +2,7 @@ package com.ServiceMarketplace.service_marketplace;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -14,8 +15,10 @@ import static org.mockito.ArgumentMatchers.eq;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -26,8 +29,10 @@ import com.ServiceMarketplace.service_marketplace.dto.CreateBookingRequest;
 import com.ServiceMarketplace.service_marketplace.dto.CreateBookingResponse;
 import com.ServiceMarketplace.service_marketplace.dto.PaymentIntentResult;
 import com.ServiceMarketplace.service_marketplace.dto.SetupIntentResult;
+import com.ServiceMarketplace.service_marketplace.dto.SubmitReviewRequest;
 import com.ServiceMarketplace.service_marketplace.exception.BookingStateException;
 import com.ServiceMarketplace.service_marketplace.exception.BookingTokenException;
+import com.ServiceMarketplace.service_marketplace.exception.InvalidBookingReviewException;
 import com.ServiceMarketplace.service_marketplace.exception.InvalidPriceException;
 import com.ServiceMarketplace.service_marketplace.exception.ResourceNotFoundException;
 import com.ServiceMarketplace.service_marketplace.model.Booking;
@@ -88,8 +93,6 @@ class BookingServiceTest {
         lenient().when(userDetails.getUsername()).thenReturn("student@calpoly.edu");
     }
 
-    // --- createBooking ---
-
     @Test
     void createBooking_validPrice_createsSetupIntentAndNotifiesProvider() {
         CreateBookingRequest request = new CreateBookingRequest("service-123", new BigDecimal("50.00"), Instant.now());
@@ -113,6 +116,11 @@ class BookingServiceTest {
         assertThat(result.getBooking().getStatus()).isEqualTo(BookingStatus.AWAITING_PROVIDER_CONFIRMATION);
         assertThat(result.getSetupClientSecret()).isEqualTo("seti_secret_test");
 
+        verify(emailService).sendBookingRequestedCustomerEmail(
+            eq("student@calpoly.edu"), eq("Alice"), eq("Math Tutoring"),
+            eq(new BigDecimal("50.00")), eq("per hour"), any(Instant.class),
+            Mockito.isNull()
+        );
         verify(bookingTokenService).generateTokenPair(any());
         verify(emailService).sendProviderBookingNotificationEmail(
             eq("tutor@calpoly.edu"), eq("Bob"), eq("Alice Student"), eq("Math Tutoring"),
@@ -156,7 +164,109 @@ class BookingServiceTest {
             .isInstanceOf(ResourceNotFoundException.class);
     }
 
-    // --- confirmBooking (JWT path) ---
+    @Test
+    void getCustomerBookings_returnsCurrentCustomerBookings() {
+        Booking booking = createBookingWithStatus(BookingStatus.CONFIRMED);
+
+        when(userRepository.findByEmail("student@calpoly.edu")).thenReturn(Optional.of(mockCustomer));
+        when(bookingRepository.findByCustomerIdOrderByCreatedAtDesc("customer-789"))
+            .thenReturn(List.of(booking));
+        when(userRepository.findAllById(any())).thenReturn(List.of(mockCustomer, mockProvider));
+
+        var result = bookingService.getCustomerBookings(userDetails);
+
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).getId()).isEqualTo("booking-123");
+        assertThat(result.get(0).getCustomerName()).isEqualTo("Alice Student");
+        assertThat(result.get(0).getProviderName()).isEqualTo("Bob");
+        assertThat(result.get(0).getReviewerName()).isEqualTo("Alice Student");
+        assertThat(result.get(0).getStatus()).isEqualTo(BookingStatus.CONFIRMED);
+        verify(userRepository).findAllById(any());
+        verify(userRepository, never()).findById(any());
+    }
+
+    @Test
+    void submitReview_completedCustomerBooking_savesReview() {
+        Booking booking = createBookingWithStatus(BookingStatus.COMPLETED);
+        SubmitReviewRequest request = new SubmitReviewRequest();
+        request.setRating(5);
+        request.setReview(" Great help with the final project. ");
+
+        when(userRepository.findByEmail("student@calpoly.edu")).thenReturn(Optional.of(mockCustomer));
+        when(bookingRepository.findById("booking-123")).thenReturn(Optional.of(booking));
+        when(bookingRepository.save(any(Booking.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        var result = bookingService.submitReview("booking-123", request, userDetails);
+
+        assertThat(result.getRating()).isEqualTo(5);
+        assertThat(result.getReview()).isEqualTo("Great help with the final project.");
+        assertThat(result.getReviewerName()).isEqualTo("Alice Student");
+        assertThat(result.getReviewedAt()).isNotNull();
+        verify(bookingRepository).save(booking);
+    }
+
+    @Test
+    void submitReview_uncompletedBooking_throwsException() {
+        Booking booking = createBookingWithStatus(BookingStatus.PENDING_PAYMENT);
+        SubmitReviewRequest request = new SubmitReviewRequest();
+        request.setRating(4);
+        request.setReview("Helpful.");
+
+        when(userRepository.findByEmail("student@calpoly.edu")).thenReturn(Optional.of(mockCustomer));
+        when(bookingRepository.findById("booking-123")).thenReturn(Optional.of(booking));
+
+        assertThatThrownBy(() -> bookingService.submitReview("booking-123", request, userDetails))
+            .isInstanceOf(InvalidBookingReviewException.class)
+            .hasMessageContaining("completed");
+    }
+
+    @Test
+    void submitReview_existingReview_throwsException() {
+        Booking booking = createBookingWithStatus(BookingStatus.COMPLETED);
+        booking.setRating(5);
+        booking.setReview("Already reviewed.");
+        SubmitReviewRequest request = new SubmitReviewRequest();
+        request.setRating(4);
+        request.setReview("Trying again.");
+
+        when(userRepository.findByEmail("student@calpoly.edu")).thenReturn(Optional.of(mockCustomer));
+        when(bookingRepository.findById("booking-123")).thenReturn(Optional.of(booking));
+
+        assertThatThrownBy(() -> bookingService.submitReview("booking-123", request, userDetails))
+            .isInstanceOf(InvalidBookingReviewException.class)
+            .hasMessageContaining("already been reviewed");
+        verify(bookingRepository, never()).save(any());
+    }
+
+    @Test
+    void submitReview_confirmedBooking_throwsException() {
+        Booking booking = createBookingWithStatus(BookingStatus.CONFIRMED);
+        SubmitReviewRequest request = new SubmitReviewRequest();
+        request.setRating(4);
+        request.setReview("Helpful.");
+
+        when(userRepository.findByEmail("student@calpoly.edu")).thenReturn(Optional.of(mockCustomer));
+        when(bookingRepository.findById("booking-123")).thenReturn(Optional.of(booking));
+
+        assertThatThrownBy(() -> bookingService.submitReview("booking-123", request, userDetails))
+            .isInstanceOf(InvalidBookingReviewException.class)
+            .hasMessageContaining("completed");
+    }
+
+    @Test
+    void submitReview_otherCustomerBooking_throwsException() {
+        Booking booking = createBookingWithStatus(BookingStatus.CONFIRMED);
+        booking.setCustomerId("another-customer");
+        SubmitReviewRequest request = new SubmitReviewRequest();
+        request.setRating(4);
+        request.setReview("Helpful.");
+
+        when(userRepository.findByEmail("student@calpoly.edu")).thenReturn(Optional.of(mockCustomer));
+        when(bookingRepository.findById("booking-123")).thenReturn(Optional.of(booking));
+
+        assertThatThrownBy(() -> bookingService.submitReview("booking-123", request, userDetails))
+            .isInstanceOf(AccessDeniedException.class);
+    }
 
     @Test
     void confirmBooking_validPrice_chargesCustomerAndSetsPendingPayment() {
@@ -221,8 +331,6 @@ class BookingServiceTest {
             .isInstanceOf(BookingStateException.class);
     }
 
-    // --- cancelBooking (JWT path) ---
-
     @Test
     void cancelBooking_byCustomer_cancelsAndCleansUpStripeCustomer() {
         Booking pending = buildAwaitingBooking();
@@ -276,8 +384,6 @@ class BookingServiceTest {
         assertThatThrownBy(() -> bookingService.cancelBooking("booking-001", userDetails))
             .isInstanceOf(BookingStateException.class);
     }
-
-    // --- processTokenAction (email link path) ---
 
     @Test
     void processTokenAction_confirmToken_confirmsBookingAtExistingPrice() {
@@ -334,11 +440,9 @@ class BookingServiceTest {
             .hasMessageContaining("expired");
     }
 
-    // --- helpers ---
-
-    private Booking buildAwaitingBooking() {
+    private Booking createBookingWithStatus(BookingStatus status) {
         Booking booking = new Booking();
-        booking.setId("booking-001");
+        booking.setId("booking-123");
         booking.setServiceId("service-123");
         booking.setCustomerId("customer-789");
         booking.setProviderId("provider-456");
@@ -346,9 +450,16 @@ class BookingServiceTest {
         booking.setAgreedPrice(new BigDecimal("50.00"));
         booking.setPriceUnit("per hour");
         booking.setScheduledAt(Instant.now());
-        booking.setStatus(BookingStatus.AWAITING_PROVIDER_CONFIRMATION);
+        booking.setStatus(status);
+        booking.setCreatedAt(Instant.now());
         booking.setStripeCustomerId("cus_test_123");
         booking.setStripeSetupIntentId("seti_test_id");
+        return booking;
+    }
+
+    private Booking buildAwaitingBooking() {
+        Booking booking = createBookingWithStatus(BookingStatus.AWAITING_PROVIDER_CONFIRMATION);
+        booking.setId("booking-001");
         return booking;
     }
 

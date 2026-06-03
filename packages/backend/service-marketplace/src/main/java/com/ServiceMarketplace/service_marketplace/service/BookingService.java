@@ -1,7 +1,13 @@
 package com.ServiceMarketplace.service_marketplace.service;
 
 import java.math.BigDecimal;
+import java.time.Instant;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -14,7 +20,9 @@ import com.ServiceMarketplace.service_marketplace.dto.CreateBookingRequest;
 import com.ServiceMarketplace.service_marketplace.dto.CreateBookingResponse;
 import com.ServiceMarketplace.service_marketplace.dto.PaymentIntentResult;
 import com.ServiceMarketplace.service_marketplace.dto.SetupIntentResult;
+import com.ServiceMarketplace.service_marketplace.dto.SubmitReviewRequest;
 import com.ServiceMarketplace.service_marketplace.exception.BookingStateException;
+import com.ServiceMarketplace.service_marketplace.exception.InvalidBookingReviewException;
 import com.ServiceMarketplace.service_marketplace.exception.InvalidPriceException;
 import com.ServiceMarketplace.service_marketplace.exception.ResourceNotFoundException;
 import com.ServiceMarketplace.service_marketplace.model.Booking;
@@ -82,6 +90,16 @@ public class BookingService {
         booking.setStripeCustomerId(setupResult.getStripeCustomerId());
 
         Booking saved = bookingRepository.save(booking);
+
+        emailService.sendBookingRequestedCustomerEmail(
+            customer.getEmail(),
+            customer.getFirstName(),
+            service.getTitle(),
+            request.getProposedPrice(),
+            service.getPriceUnit(),
+            request.getScheduledAt(),
+            saved.getId()
+        );
 
         TokenPair tokenPair = bookingTokenService.generateTokenPair(saved.getId());
 
@@ -191,42 +209,44 @@ public class BookingService {
         return toBookingResponse(booking);
     }
 
-    //Gets all pending bookings for a provider
-    public List<BookingResponse> getUserBookingRequests(UserDetails userDetails){
+    public List<BookingResponse> getCustomerBookings(UserDetails userDetails) {
+        var customer = getCurrentUser(userDetails);
+        var bookings = bookingRepository.findByCustomerIdOrderByCreatedAtDesc(customer.getId());
+        var usersById = getUsersById(bookings);
 
-        var user = userRepository.findByEmail(userDetails.getUsername()).orElseThrow(() -> new UsernameNotFoundException("user not found"));
-
-        List<Booking> bookingRequests = bookingRepository.findByProviderIdAndStatus(user.getId(), BookingStatus.AWAITING_PROVIDER_CONFIRMATION);
-
-        List<BookingResponse> response = bookingRequests.stream()
-            .map(this::toBookingResponse)
-            .toList();
-        
-        return response;
-        
-    }   
-
-    //Gets all completed services/bookings for a provider
-    public List<BookingResponse> getUserCompletedBookings(UserDetails userDetails){
-        
-        var user = userRepository.findByEmail(userDetails.getUsername()).orElseThrow(() -> new UsernameNotFoundException("user not found"));
-        
-        List<Booking> bookings = bookingRepository.findByProviderIdAndStatus(user.getId(), BookingStatus.COMPLETED);
-
-        List<BookingResponse> response = bookings.stream().map(this::toBookingResponse).toList();
-
-        return response;
+        return bookings.stream()
+            .map(booking -> toBookingResponse(booking, usersById))
+            .collect(Collectors.toList());
     }
 
-    //Gets all upcoming bookings for a provider
-    public List<BookingResponse> getUserScheduledBookings(UserDetails userDetails){
-        var user = userRepository.findByEmail(userDetails.getUsername()).orElseThrow(() -> new UsernameNotFoundException("User not found"));
+    public BookingResponse submitReview(String bookingId, SubmitReviewRequest request, UserDetails userDetails) {
+        var customer = getCurrentUser(userDetails);
+        var booking = bookingRepository.findById(bookingId)
+            .orElseThrow(() -> new ResourceNotFoundException("Booking", bookingId));
 
-        List<Booking> bookings = bookingRepository.findByProviderIdAndStatus(user.getId(), BookingStatus.CONFIRMED);
+        if (!customer.getId().equals(booking.getCustomerId())) {
+            throw new AccessDeniedException("You can only review your own bookings.");
+        }
 
-        List<BookingResponse> response = bookings.stream().map(this::toBookingResponse).toList();
+        if (booking.getStatus() != BookingStatus.COMPLETED) {
+            throw new InvalidBookingReviewException("You can only review completed bookings.");
+        }
 
-        return response;
+        if (booking.getRating() != null) {
+            throw new InvalidBookingReviewException("This booking has already been reviewed.");
+        }
+
+        booking.setRating(request.getRating());
+        booking.setReview(clean(request.getReview()));
+        booking.setReviewerName(getUserDisplayName(customer));
+        booking.setReviewedAt(Instant.now());
+
+        return toBookingResponse(bookingRepository.save(booking));
+    }
+
+    private User getCurrentUser(UserDetails userDetails) {
+        return userRepository.findByEmail(userDetails.getUsername())
+            .orElseThrow(() -> new UsernameNotFoundException("User not found"));
     }
 
     private BookingResponse toBookingResponse(Booking booking) {
@@ -236,11 +256,116 @@ public class BookingService {
             booking.getServiceTitle(),
             booking.getCustomerId(),
             booking.getProviderId(),
+            getUserDisplayName(booking.getCustomerId()),
+            getUserDisplayName(booking.getProviderId()),
+            getReviewerName(booking),
             booking.getAgreedPrice(),
             booking.getPriceUnit(),
             booking.getScheduledAt(),
             booking.getStatus(),
+            booking.getRating(),
+            booking.getReview(),
+            booking.getReviewedAt(),
             booking.getCreatedAt()
         );
+    }
+
+    private BookingResponse toBookingResponse(Booking booking, Map<String, User> usersById) {
+        return new BookingResponse(
+            booking.getId(),
+            booking.getServiceId(),
+            booking.getServiceTitle(),
+            booking.getCustomerId(),
+            booking.getProviderId(),
+            getUserDisplayName(booking.getCustomerId(), usersById),
+            getUserDisplayName(booking.getProviderId(), usersById),
+            getReviewerName(booking, usersById),
+            booking.getAgreedPrice(),
+            booking.getPriceUnit(),
+            booking.getScheduledAt(),
+            booking.getStatus(),
+            booking.getRating(),
+            booking.getReview(),
+            booking.getReviewedAt(),
+            booking.getCreatedAt()
+        );
+    }
+
+    private Map<String, User> getUsersById(List<Booking> bookings) {
+        Set<String> userIds = new HashSet<>();
+
+        for (Booking booking : bookings) {
+            addUserId(userIds, booking.getCustomerId());
+            addUserId(userIds, booking.getProviderId());
+        }
+
+        if (userIds.isEmpty()) {
+            return Map.of();
+        }
+
+        return userRepository.findAllById(userIds)
+            .stream()
+            .collect(Collectors.toMap(User::getId, Function.identity()));
+    }
+
+    private void addUserId(Set<String> userIds, String userId) {
+        String cleanUserId = clean(userId);
+
+        if (!cleanUserId.isBlank()) {
+            userIds.add(cleanUserId);
+        }
+    }
+
+    private String clean(String value) {
+        return value == null ? "" : value.trim();
+    }
+
+    private String getUserDisplayName(String userId) {
+        String cleanUserId = clean(userId);
+
+        if (cleanUserId.isBlank()) {
+            return "";
+        }
+
+        var user = userRepository.findById(cleanUserId);
+
+        if (user.isEmpty()) {
+            return cleanUserId;
+        }
+
+        User foundUser = user.get();
+        return getUserDisplayName(foundUser);
+    }
+
+    private String getUserDisplayName(String userId, Map<String, User> usersById) {
+        String cleanUserId = clean(userId);
+
+        if (cleanUserId.isBlank()) {
+            return "";
+        }
+
+        User user = usersById.get(cleanUserId);
+        return user == null ? cleanUserId : getUserDisplayName(user);
+    }
+
+    private String getUserDisplayName(User user) {
+        String fullName = (clean(user.getFirstName()) + " " + clean(user.getLastName())).trim();
+
+        if (!fullName.isBlank()) {
+            return fullName;
+        }
+
+        String email = clean(user.getEmail());
+        return email.isBlank() ? clean(user.getId()) : email;
+    }
+
+    private String getReviewerName(Booking booking) {
+        String reviewerName = clean(booking.getReviewerName());
+        return reviewerName.isBlank() ? getUserDisplayName(booking.getCustomerId()) : reviewerName;
+    }
+
+    private String getReviewerName(Booking booking, Map<String, User> usersById) {
+        String reviewerName = clean(booking.getReviewerName());
+        return reviewerName.isBlank() ? getUserDisplayName(booking.getCustomerId(), usersById) : reviewerName;
     }
 }

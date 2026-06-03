@@ -146,7 +146,7 @@ public class BookingService {
             throw new AccessDeniedException("You are not authorized to cancel this booking");
         }
 
-        return doCancelBooking(booking);
+        return doCancelBooking(booking, isCustomer);
     }
 
     public BookingTokenAction processTokenAction(String token) {
@@ -160,7 +160,7 @@ public class BookingService {
                 .orElseThrow(() -> new ResourceNotFoundException("Provider", booking.getProviderId()));
             doConfirmBooking(booking, booking.getAgreedPrice(), provider);
         } else {
-            doCancelBooking(booking);
+            doCancelBooking(booking, false);
         }
 
         return result.action();
@@ -196,15 +196,44 @@ public class BookingService {
         return toBookingResponse(bookingRepository.save(booking));
     }
 
-    private BookingResponse doCancelBooking(Booking booking) {
-        if (booking.getStatus() != BookingStatus.AWAITING_PROVIDER_CONFIRMATION 
-            && booking.getStatus() != BookingStatus.CONFIRMED) {
-            throw new BookingStateException("Only bookings awaiting confirmation can be cancelled");
+    private BookingResponse doCancelBooking(Booking booking, boolean cancelledByCustomer) {
+        if (booking.getStatus() == BookingStatus.CANCELLED) {
+            throw new BookingStateException("Booking is already cancelled");
         }
 
         booking.setStatus(BookingStatus.CANCELLED);
         bookingRepository.save(booking);
         paymentService.cleanupStripeCustomer(booking.getStripeCustomerId());
+
+        if (cancelledByCustomer) {
+            userRepository.findById(booking.getProviderId()).ifPresent(provider -> {
+                String customerName = userRepository.findById(booking.getCustomerId())
+                    .map(c -> c.getFirstName() + " " + c.getLastName())
+                    .orElse("A customer");
+                emailService.sendBookingCancelledProviderEmail(
+                    provider.getEmail(),
+                    provider.getFirstName(),
+                    customerName,
+                    booking.getServiceTitle(),
+                    booking.getScheduledAt(),
+                    booking.getId()
+                );
+            });
+        } else {
+            userRepository.findById(booking.getCustomerId()).ifPresent(customer -> {
+                String providerName = userRepository.findById(booking.getProviderId())
+                    .map(p -> p.getFirstName() + " " + p.getLastName())
+                    .orElse("The provider");
+                emailService.sendBookingCancelledCustomerEmail(
+                    customer.getEmail(),
+                    customer.getFirstName(),
+                    providerName,
+                    booking.getServiceTitle(),
+                    booking.getScheduledAt(),
+                    booking.getId()
+                );
+            });
+        }
 
         return toBookingResponse(booking);
     }

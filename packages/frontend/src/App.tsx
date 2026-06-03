@@ -44,17 +44,22 @@ function AppRoutes() {
 
     async function checkSuspension() {
       try {
-        const response = await fetch(API_ENDPOINTS.user.profile, {
-          headers: {
-            Authorization: `Bearer ${token}`
+        const response = await fetch(
+          API_ENDPOINTS.user.profile,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`
+            }
           }
-        });
+        );
 
         if (!response.ok) {
           return;
         }
 
-        const user = await response.json() as { role?: string };
+        const user = (await response.json()) as {
+          role?: string;
+        };
 
         if (!cancelled && user.role === "suspended") {
           localStorage.clear();
@@ -66,7 +71,10 @@ function AppRoutes() {
     }
 
     void checkSuspension();
-    const interval = setInterval(() => void checkSuspension(), 300000);
+    const interval = setInterval(
+      () => void checkSuspension(),
+      300000
+    );
 
     return () => {
       cancelled = true;

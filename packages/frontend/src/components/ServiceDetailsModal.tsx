@@ -64,9 +64,13 @@ function ServiceDetailsModal({
 }: ServiceDetailsModalProps) {
   const [view, setView] = useState<ModalView>("details");
   const currentUserId = localStorage.getItem("user_id");
-  const [showReportDialog, setShowReportDialog] = useState(false);
-  const [reportReason, setReportReason] = useState("Inappropriate content");
-  const [otherReportReason, setOtherReportReason] = useState("");
+  const [showReportDialog, setShowReportDialog] =
+    useState(false);
+  const [reportReason, setReportReason] = useState(
+    "Inappropriate content"
+  );
+  const [otherReportReason, setOtherReportReason] =
+    useState("");
   const [isReporting, setIsReporting] = useState(false);
   const [setupClientSecret, setSetupClientSecret] =
     useState("");
@@ -145,7 +149,9 @@ function ServiceDetailsModal({
   async function handleReportSubmit() {
     const trimmedOtherReason = otherReportReason.trim();
     const submittedReason =
-      reportReason === "Other" ? `Other: ${trimmedOtherReason}` : reportReason;
+      reportReason === "Other"
+        ? `Other: ${trimmedOtherReason}`
+        : reportReason;
 
     if (reportReason === "Other" && !trimmedOtherReason) {
       toast.error("Please add details for Other.");
@@ -288,7 +294,9 @@ function ServiceDetailsModal({
                       <textarea
                         className="report-other-input"
                         value={otherReportReason}
-                        onChange={e => setOtherReportReason(e.target.value)}
+                        onChange={(e) =>
+                          setOtherReportReason(e.target.value)
+                        }
                         rows={3}
                         maxLength={250}
                         placeholder="Add details"

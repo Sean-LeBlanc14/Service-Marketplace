@@ -264,7 +264,9 @@ function AdminDashboard() {
         if (response.status === 403) {
           const responseText = await response.text();
           toast.error(
-            responseText.includes("Cannot suspend another admin")
+            responseText.includes(
+              "Cannot suspend another admin"
+            )
               ? "Cannot suspend another admin."
               : "You do not have permission to perform this action."
           );
@@ -276,7 +278,9 @@ function AdminDashboard() {
           return;
         }
 
-        toast.error("Failed to suspend user. Please try again.");
+        toast.error(
+          "Failed to suspend user. Please try again."
+        );
         return;
       }
 
@@ -292,7 +296,10 @@ function AdminDashboard() {
   }
 
   async function resolveOnly(report: Report) {
-    setActiveReportAction({ reportId: report.id, action: "resolve" });
+    setActiveReportAction({
+      reportId: report.id,
+      action: "resolve"
+    });
 
     try {
       await resolveReport(report.id);
@@ -360,7 +367,8 @@ function AdminDashboard() {
         <h1>Admin Dashboard</h1>
         <div className="admin-dashboard-header-actions">
           <p>
-            {visibleReports.length} {showResolved ? "reports" : "open reports"}
+            {visibleReports.length}{" "}
+            {showResolved ? "reports" : "open reports"}
           </p>
           <button
             type="button"
@@ -396,7 +404,9 @@ function AdminDashboard() {
                     <td
                       colSpan={7}
                       className="admin-dashboard-empty">
-                      {showResolved ? "No reports found." : "No open reports found."}
+                      {showResolved
+                        ? "No reports found."
+                        : "No open reports found."}
                     </td>
                   </tr>
                 ) : (
@@ -450,8 +460,13 @@ function AdminDashboard() {
                             <button
                               type="button"
                               className="admin-dashboard-action admin-dashboard-action-neutral"
-                              disabled={activeReportAction?.reportId === report.id}
-                              onClick={() => void resolveOnly(report)}>
+                              disabled={
+                                activeReportAction?.reportId ===
+                                report.id
+                              }
+                              onClick={() =>
+                                void resolveOnly(report)
+                              }>
                               Resolve Only
                             </button>
                           </div>

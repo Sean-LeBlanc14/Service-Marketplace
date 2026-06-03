@@ -135,4 +135,9 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
     }
 
+    @ExceptionHandler(FailedToDeleteUserException.class)
+    public ResponseEntity<String> handleFailedDelete(FailedToDeleteUserException e){
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+    }
+
 }

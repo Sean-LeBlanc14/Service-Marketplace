@@ -13,6 +13,8 @@ import com.ServiceMarketplace.service_marketplace.dto.SupportRequest;
 import com.ServiceMarketplace.service_marketplace.dto.SupportResponse;
 import com.ServiceMarketplace.service_marketplace.service.SupportService;
 
+import jakarta.validation.Valid;
+
 
 @RestController
 @RequestMapping("/api/support")
@@ -25,7 +27,7 @@ public class SupportController {
     }
     
     @PostMapping("/bug")
-    public ResponseEntity<SupportResponse> reportbug(@AuthenticationPrincipal UserDetails userDetails, @RequestBody SupportRequest request) {
+    public ResponseEntity<SupportResponse> reportbug(@AuthenticationPrincipal UserDetails userDetails,@Valid @RequestBody SupportRequest request) {
         
         SupportResponse response = supportService.reportBug(userDetails, request);
 
@@ -33,7 +35,7 @@ public class SupportController {
     }
 
     @PostMapping("/contact")
-    public ResponseEntity<SupportResponse> contactSupport(@AuthenticationPrincipal UserDetails userDetails, @RequestBody SupportRequest request) {
+    public ResponseEntity<SupportResponse> contactSupport(@AuthenticationPrincipal UserDetails userDetails,@Valid @RequestBody SupportRequest request) {
         
         SupportResponse response = supportService.contactSupport(userDetails, request);
 

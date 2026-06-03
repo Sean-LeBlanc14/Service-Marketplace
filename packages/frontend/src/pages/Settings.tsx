@@ -28,7 +28,7 @@ export default function Settings() {
     useState(false);
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
-  const [confirmNewPassword, setConfirmNewPassowrd] =
+  const [confirmNewPassword, setConfirmNewPassword] =
     useState("");
 
   //Variables to handle account deletion + reUse currentPassword for confirmation
@@ -56,8 +56,15 @@ export default function Settings() {
   const [campus, setCampus] = useState("");
 
   const handleLogout = async () => {
+    const authToken = getToken();
+
+    if (!authToken) {
+      toast.error("Please login");
+      navigate("/login");
+      return;
+    }
+
     try {
-      const authToken = getToken();
       const response = await fetch(API_ENDPOINTS.auth.logout, {
         method: "POST",
         headers: {
@@ -92,12 +99,22 @@ export default function Settings() {
     if (!authToken) {
       toast.error("Please login");
       navigate("/login");
+      return;
     }
+
+    const deleteAccountrequest = {
+      email: userEmail,
+      password: currentPassword
+    };
 
     try {
       const response = await fetch(API_ENDPOINTS.user.delete, {
         method: "DELETE",
-        headers: { Authorization: `Bearer ${authToken}` }
+        headers: {
+          Authorization: `Bearer ${authToken}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(deleteAccountrequest)
       });
 
       if (response.ok) {
@@ -175,6 +192,12 @@ export default function Settings() {
   async function handleChangePassword() {
     const authToken = getToken();
 
+    if (!authToken) {
+      toast.error("Please login");
+      navigate("/login");
+      return;
+    }
+
     if (newPassword !== confirmNewPassword) {
       toast.error("Passwords do not match!");
       return;
@@ -223,6 +246,12 @@ export default function Settings() {
   async function handleChangeMajor() {
     const authToken = getToken();
 
+    if (!authToken) {
+      toast.error("Please login");
+      navigate("/login");
+      return;
+    }
+
     try {
       const response = await fetch(
         API_ENDPOINTS.user.changeMajor,
@@ -232,7 +261,7 @@ export default function Settings() {
             Authorization: `Bearer ${authToken}`,
             "Content-Type": "application/json"
           },
-          body: JSON.stringify({ major: major })
+          body: JSON.stringify({ update: major })
         }
       );
 
@@ -254,6 +283,12 @@ export default function Settings() {
   async function handleChangeCampus() {
     const authToken = getToken();
 
+    if (!authToken) {
+      toast.error("Please login");
+      navigate("/login");
+      return;
+    }
+
     try {
       const response = await fetch(
         API_ENDPOINTS.user.changeCampus,
@@ -263,7 +298,7 @@ export default function Settings() {
             Authorization: `Bearer ${authToken}`,
             "Content-Type": "application/json"
           },
-          body: JSON.stringify({ campus: campus })
+          body: JSON.stringify({ update: campus })
         }
       );
 
@@ -331,7 +366,7 @@ export default function Settings() {
           placeHolder="Confirm New Password"
           value={confirmNewPassword}
           onChange={(e) =>
-            setConfirmNewPassowrd(e.target.value)
+            setConfirmNewPassword(e.target.value)
           }
           type="password"
         />

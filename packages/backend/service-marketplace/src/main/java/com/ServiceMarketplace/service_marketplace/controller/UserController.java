@@ -15,7 +15,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.ServiceMarketplace.service_marketplace.dto.ChangeFieldRequest;
 import com.ServiceMarketplace.service_marketplace.dto.ChangePasswordRequest;
+import com.ServiceMarketplace.service_marketplace.dto.DeleteAccountRequest;
 import com.ServiceMarketplace.service_marketplace.dto.UpdateUserProfileRequest;
 import com.ServiceMarketplace.service_marketplace.dto.UserProfile;
 import com.ServiceMarketplace.service_marketplace.model.User;
@@ -50,19 +52,19 @@ public class UserController {
     }
 
     @DeleteMapping("/delete")
-    public ResponseEntity<UserProfile> deleteUser(@AuthenticationPrincipal UserDetails userDetails){
+    public ResponseEntity deleteUser(@RequestBody DeleteAccountRequest request){
 
-        UserProfile response = userService.deleteUserProfile(userDetails);
+        userService.deleteUserProfile(request);
         
-        return ResponseEntity.status(HttpStatus.NO_CONTENT).body(response);
+        return ResponseEntity.noContent().build();
     }   
 
     @PatchMapping("/password")
-    public ResponseEntity<String> changeUserPassword(@AuthenticationPrincipal UserDetails userDetails, @RequestBody ChangePasswordRequest request){
+    public ResponseEntity changeUserPassword(@AuthenticationPrincipal UserDetails userDetails,@Valid @RequestBody ChangePasswordRequest request){
 
-        var response = userService.changeUserPassword(userDetails, request);
+        userService.changeUserPassword(userDetails, request);
 
-        return ResponseEntity.status(HttpStatus.OK).body(response);
+        return ResponseEntity.ok().build();
     }
     
 
@@ -109,17 +111,17 @@ public class UserController {
     }
 
     @PatchMapping("/major")
-    public ResponseEntity<UserProfile> changeMajor(@AuthenticationPrincipal UserDetails userDetails, @RequestBody String major){
+    public ResponseEntity<UserProfile> changeMajor(@AuthenticationPrincipal UserDetails userDetails, @RequestBody ChangeFieldRequest request){
 
-        UserProfile user = userService.changeUserMajor(userDetails, major);
+        UserProfile user = userService.changeUserMajor(userDetails, request.getUpdate());
 
         return ResponseEntity.status(HttpStatus.OK).body(user);
     }
 
     @PatchMapping("/campus")
-    public ResponseEntity<UserProfile> changeCampus(@AuthenticationPrincipal UserDetails userDetails, @RequestBody String campus){
+    public ResponseEntity<UserProfile> changeCampus(@AuthenticationPrincipal UserDetails userDetails, @RequestBody ChangeFieldRequest request){
 
-        UserProfile user = userService.changeUserCampus(userDetails, campus);
+        UserProfile user = userService.changeUserCampus(userDetails, request.getUpdate());
 
         return ResponseEntity.status(HttpStatus.OK).body(user);
     }

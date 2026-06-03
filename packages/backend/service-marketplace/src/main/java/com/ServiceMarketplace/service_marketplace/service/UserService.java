@@ -14,13 +14,14 @@ import org.springframework.stereotype.Service;
 
 import com.ServiceMarketplace.service_marketplace.dto.AuthResponse;
 import com.ServiceMarketplace.service_marketplace.dto.ChangePasswordRequest;
+import com.ServiceMarketplace.service_marketplace.dto.DeleteAccountRequest;
 import com.ServiceMarketplace.service_marketplace.dto.LoginRequest;
 import com.ServiceMarketplace.service_marketplace.dto.RegisterRequest;
 import com.ServiceMarketplace.service_marketplace.dto.ServiceDto;
 import com.ServiceMarketplace.service_marketplace.dto.UpdateUserProfileRequest;
 import com.ServiceMarketplace.service_marketplace.dto.UserProfile;
 import com.ServiceMarketplace.service_marketplace.exception.EmailAlreadyExistsException;
-import com.ServiceMarketplace.service_marketplace.exception.FailedToDeleteUser;
+import com.ServiceMarketplace.service_marketplace.exception.FailedToDeleteUserException;
 import com.ServiceMarketplace.service_marketplace.exception.RedundantChangeException;
 import com.ServiceMarketplace.service_marketplace.exception.InvalidEmailDomainException;
 import com.ServiceMarketplace.service_marketplace.exception.ResourceNotFoundException;
@@ -106,7 +107,7 @@ public class UserService {
 
     }
 
-    public String changeUserPassword(UserDetails userDetails, ChangePasswordRequest request) {
+    public void changeUserPassword(UserDetails userDetails, ChangePasswordRequest request) {
 
 
         var user = userRepository.findByEmail(userDetails.getUsername())
@@ -124,8 +125,6 @@ public class UserService {
         user.setPassword(passwordEncoder.encode(request.getNewPassword()));
         userRepository.save(user);
 
-        return "Success";
-
     }
 
     public UserProfile getUserProfile(UserDetails userDetails) {
@@ -136,20 +135,19 @@ public class UserService {
 
     }
 
-    public UserProfile deleteUserProfile(UserDetails userDetails) {
+    public void deleteUserProfile(DeleteAccountRequest request) {
 
         try{
             authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
-                    userDetails.getUsername(), userDetails.getPassword()));
+                    request.getEmail(), request.getPassword()));
         }catch(BadCredentialsException | InternalAuthenticationServiceException e) {
             throw new BadCredentialsException("Invalid email or password.");
         }
         
-        var user = userRepository.deleteByEmail(userDetails.getUsername())
-                .orElseThrow(() -> new FailedToDeleteUser("Could not delete the user: " + userDetails.getUsername()));
+        var user = userRepository.deleteByEmail(request.getEmail())
+                .orElseThrow(() -> new FailedToDeleteUserException("Could not delete the user: " + request.getEmail()));
 
-        return toUserProfile(user);
     }
 
     public UserProfile updateUserProfile(UserDetails userDetails, UpdateUserProfileRequest request) {

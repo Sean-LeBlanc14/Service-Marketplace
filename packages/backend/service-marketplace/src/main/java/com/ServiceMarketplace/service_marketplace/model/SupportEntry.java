@@ -4,7 +4,6 @@ import java.time.Instant;
 
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.index.Indexed; 
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import jakarta.validation.constraints.NotBlank;
@@ -17,7 +16,6 @@ import lombok.Data;
 public class SupportEntry {
     
     @Id
-    @Indexed
     private String id;
 
     @NotNull

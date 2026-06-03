@@ -126,9 +126,8 @@ public class UserServiceTest {
         when(passwordEncoder.matches("new-password", "encoded-old-password")).thenReturn(false);
         when(passwordEncoder.encode("new-password")).thenReturn("encoded-new-password");
 
-        String result = userService.changeUserPassword(userDetails, request);
+        userService.changeUserPassword(userDetails, request);
 
-        assertEquals("Success", result);
         assertEquals("encoded-new-password", user.getPassword());
         verify(userRepository).save(user);
     }

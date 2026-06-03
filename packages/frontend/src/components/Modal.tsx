@@ -13,10 +13,12 @@ export default function Modal({
 }: ModalProps) {
   if (!isOpen) return null;
 
-  // Close the modal if the user clicks on the darkened backdrop
-  const handleOverlayClick = () => {
+ const handleOverlayClick = (e: React.MouseEvent<HTMLDivElement>) => {
+  const target = e.target as HTMLElement;
+  if (target.classList.contains('modal-overlay')) {
     onClose();
-  };
+  }
+};
 
   return (
     <div className="modal-overlay" onClick={handleOverlayClick}>

@@ -137,6 +137,15 @@ public class UserService {
     }
 
     public UserProfile deleteUserProfile(UserDetails userDetails) {
+
+        try{
+            authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(
+                    userDetails.getUsername(), userDetails.getPassword()));
+        }catch(BadCredentialsException | InternalAuthenticationServiceException e) {
+            throw new BadCredentialsException("Invalid email or password.");
+        }
+        
         var user = userRepository.deleteByEmail(userDetails.getUsername())
                 .orElseThrow(() -> new FailedToDeleteUser("Could not delete the user: " + userDetails.getUsername()));
 

@@ -96,6 +96,7 @@ export default function Settings() {
 
     try {
       const response = await fetch(API_ENDPOINTS.user.delete, {
+        method: "DELETE",
         headers: { Authorization: `Bearer ${authToken}` }
       });
 

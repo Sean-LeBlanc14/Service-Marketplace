@@ -48,10 +48,16 @@ function getStatusLabel(status: string): string {
 function ServiceBooking({ booking, confirmBooking, cancelBooking, rejectBooking }: ServiceBookingProps) {
   const [isUpdating, setIsUpdating] = useState(false);
   const [ isRejecting, setIsRejecting] = useState(false);
+  const hasBookingActions =
+    booking.status === "AWAITING_PROVIDER_CONFIRMATION" ||
+    booking.status === "CONFIRMED";
 
 
   return (
-    <Card className="booking-card">
+    <Card
+      className={`booking-card ${
+        hasBookingActions ? "" : "booking-card-compact"
+      }`}>
       <Card.Body className="booking-card-body">
         <div className="booking-card-header">
           <div>
@@ -61,7 +67,7 @@ function ServiceBooking({ booking, confirmBooking, cancelBooking, rejectBooking 
             </Card.Title>
           </div>
           <Badge bg="none" className="booking-status">
-            {getStatusLabel(booking.status)}
+            {getStatusLabel(booking.status as string)}
           </Badge>
         </div>
 
@@ -73,12 +79,15 @@ function ServiceBooking({ booking, confirmBooking, cancelBooking, rejectBooking 
           <div>
             <span className="booking-detail-label">Scheduled</span>
             <span className="booking-detail-value">
-              {formatBookingTime(booking.scheduledAt)}
+              {formatBookingTime(booking.scheduledAt as string)}
             </span>
           </div>
         </div>
 
-        <div className="booking-card-footer">
+        <div
+          className={`booking-card-footer ${
+            hasBookingActions ? "" : "booking-card-footer-compact"
+          }`}>
           <span className="booking-price">
             {formatBookingPrice(booking)}
           </span>

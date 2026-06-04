@@ -1,11 +1,14 @@
 import { API_ENDPOINTS } from "../utils/api";
 import type { ApiBooking } from "../utils/types";
 import ServiceBooking from "../components/ServiceBooking";
+import DropDown from "../components/DropDown";
 import { toast } from "react-toastify";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "../styles/ServiceDashboard.css";
 import { getToken } from "../utils/helper";
+
+type DashboardView = "requests" | "upcoming" | "completed";
 
 export default function ServiceDashboard() {
 
@@ -16,6 +19,8 @@ export default function ServiceDashboard() {
   const [ serviceHistory, setServiceHistory ] = useState<ApiBooking[]>() || [];
 
   const [ upcomingBookings, setUpcomingBookings ] = useState<ApiBooking[]>() || [];
+
+  const [ selectedView, setSelectedView ] = useState<DashboardView>("requests");
 
   const authToken = getToken();
 
@@ -87,7 +92,7 @@ export default function ServiceDashboard() {
 
     try {
       const confirmResponse = await fetch(
-        API_ENDPOINTS.bookings.confirm(booking.id),
+        API_ENDPOINTS.bookings.confirm(booking.id as string),
         {
           method: "PUT",
           headers: {
@@ -113,7 +118,7 @@ export default function ServiceDashboard() {
   async function rejectBooking(booking: ApiBooking) {
 
     try{
-      const rejectionResponse = await fetch(API_ENDPOINTS.bookings.reject(booking.id), {
+      const rejectionResponse = await fetch(API_ENDPOINTS.bookings.reject(booking.id as string), {
         method: "DELETE",
       headers: {Authorization: `Bearer ${authToken}`,}
     });
@@ -159,49 +164,87 @@ export default function ServiceDashboard() {
   }
 
 
+  const dashboardViews: Record<DashboardView, {
+    heading: string;
+    emptyMessage: string;
+    bookings: ApiBooking[] | undefined;
+  }> = {
+    requests: {
+      heading: "Your Service Requests",
+      emptyMessage: "No incoming requests",
+      bookings: bookingRequests
+    },
+    upcoming: {
+      heading: "Your Scheduled Bookings",
+      emptyMessage: "No upcoming bookings",
+      bookings: upcomingBookings
+    },
+    completed: {
+      heading: "Your Completed Bookings",
+      emptyMessage: "No completed bookings",
+      bookings: serviceHistory
+    }
+  };
+
+  const activeView = dashboardViews[selectedView];
+
+  function renderBooking(booking: ApiBooking) {
+    if (selectedView === "requests") {
+      return (
+        <ServiceBooking
+          key={booking.id}
+          booking={booking}
+          confirmBooking={confirmBooking}
+          rejectBooking={rejectBooking}
+        />
+      );
+    }
+
+    if (selectedView === "upcoming") {
+      return (
+        <ServiceBooking
+          key={booking.id}
+          booking={booking}
+          cancelBooking={cancelBooking}
+        />
+      );
+    }
+
+    return <ServiceBooking key={booking.id} booking={booking}/>;
+  }
+
   return (
     <div className="serviceDashboard-wrapper">
       <h2>Your Service Provider Dashboard</h2>
 
+      <div className="service-dashboard-filter">
+        <DropDown
+          label="View"
+          value={selectedView}
+          placeHolder="Select bookings"
+          onChange={(event) =>
+            setSelectedView(event.target.value as DashboardView)
+          }
+          options={
+            <>
+              <option value="requests">Requests</option>
+              <option value="upcoming">Upcoming Bookings</option>
+              <option value="completed">Completed Bookings</option>
+            </>
+          }
+        />
+      </div>
+
       <section>
-        <h2>Your Service Requests</h2>
-
+        <h2>{activeView.heading}</h2>
         <div className="booking-container">
-          {bookingRequests && bookingRequests.length > 0 ? ( bookingRequests.map((booking: ApiBooking) => (
-              <ServiceBooking key={booking.id} booking={booking} confirmBooking={confirmBooking} rejectBooking={rejectBooking}/>
-            ))
+          {activeView.bookings && activeView.bookings.length > 0 ? (
+            activeView.bookings.map((booking: ApiBooking) => renderBooking(booking))
           ) : (
-            "No incoming requests"
+            activeView.emptyMessage
           )}
         </div>
       </section>
-
-      <section>
-        <h2>Your Scheduled Bookings</h2>
-
-        <div className="booking-container">
-          {upcomingBookings && upcomingBookings.length > 0 ? ( upcomingBookings.map((booking: ApiBooking) => (
-              <ServiceBooking key={booking.id} booking={booking} cancelBooking={cancelBooking}/>
-            ))
-          ) : (
-            "No upcoming bookings"
-          )}
-        </div>
-      </section>
-
-      <section className="bottom">
-        <h2>Your Service History</h2>
-
-        <div className="booking-container">
-          {serviceHistory && serviceHistory.length > 0 ? ( serviceHistory.map((booking: ApiBooking) => (
-              <ServiceBooking key={booking.id} booking={booking}/>
-            ))
-          ) : (
-            "No past bookings"
-          )}
-        </div>
-      </section>
-
     </div>
   );
 }

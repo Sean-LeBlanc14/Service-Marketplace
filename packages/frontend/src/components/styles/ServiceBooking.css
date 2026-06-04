@@ -1,13 +1,20 @@
 .booking-card {
+  width: 300px;
+  min-height: 315px;
   border-radius: 8px;
   border: 1px solid #dde4ea;
   box-shadow: 0 8px 22px rgba(20, 38, 46, 0.08);
   height: 100%;
-  min-width: 280px;
+  min-width: 0;
   overflow: hidden;
   transition:
     transform 0.18s ease,
     box-shadow 0.18s ease;
+}
+
+.booking-card-compact {
+  height: auto;
+  min-height: 0;
 }
 
 .booking-card:hover,
@@ -19,8 +26,9 @@
 .booking-card-body {
   display: flex;
   flex-direction: column;
-  gap: 16px;
-  padding: 20px;
+  gap: 10px;
+  height: 100%;
+  padding: 12px;
 }
 
 .booking-card-header {
@@ -33,7 +41,7 @@
 .booking-card-eyebrow {
   margin: 0 0 4px;
   color: #667386;
-  font-size: 0.78rem;
+  font-size: 0.72rem;
   font-weight: 700;
   letter-spacing: 0.04em;
   line-height: 1.2;
@@ -43,19 +51,20 @@
 .booking-card-title {
   margin-bottom: 0;
   color: #071b2d;
-  font-size: 1.15rem;
+  font-size: 1.05rem;
   font-weight: 800;
   line-height: 1.2;
+  overflow-wrap: anywhere;
 }
 
 .booking-status {
   flex: 0 0 auto;
-  max-width: 160px;
+  max-width: 145px;
   border-radius: 8px;
-  padding: 6px 12px;
+  padding: 5px 10px;
   background-color: #f3f5f7;
   color: #334155;
-  font-size: 0.78rem;
+  font-size: 0.72rem;
   font-weight: 600;
   line-height: 1.2;
   text-align: center;
@@ -64,7 +73,7 @@
 
 .booking-details {
   display: grid;
-  gap: 12px;
+  gap: 10px;
 }
 
 .booking-details > div {
@@ -74,7 +83,7 @@
 
 .booking-detail-label {
   color: #667386;
-  font-size: 0.78rem;
+  font-size: 0.72rem;
   font-weight: 700;
   line-height: 1.2;
   text-transform: uppercase;
@@ -82,21 +91,26 @@
 
 .booking-detail-value {
   color: #25364a;
-  font-size: 0.95rem;
+  font-size: 0.88rem;
   line-height: 1.5;
+  overflow-wrap: anywhere;
 }
 
 .booking-card-footer {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
   margin-top: auto;
   padding-top: 8px;
 }
 
+.booking-card-footer-compact {
+  margin-top: 0;
+}
+
 .booking-price {
   color: #c89418;
-  font-size: 1.35rem;
+  font-size: 1.22rem;
   font-weight: 800;
   line-height: 1;
 }
@@ -104,14 +118,19 @@
 .booking-action-container{
   display: flex;
   flex-direction: row;
-  gap: 10px;
+  gap: 8px;
 }
 
 .booking-action {
+  flex: 1 1 0;
+  min-width: 0;
   border-radius: 8px;
-  padding: 10px 18px;
+  padding: 9px 14px;
   border: none;
+  font-size: 0.9rem;
   font-weight: 700;
+  line-height: 1.2;
+  white-space: normal;
   cursor: pointer;
   transition:
     transform 0.2s ease,
@@ -143,7 +162,8 @@
 
 @media (max-width: 720px) {
   .booking-card {
-    min-width: 0;
+    width: 100%;
+    min-height: 0;
   }
 
   .booking-card-header,

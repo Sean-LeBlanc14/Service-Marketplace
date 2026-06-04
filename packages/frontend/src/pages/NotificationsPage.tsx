@@ -69,7 +69,9 @@ function getNotificationIcon(type: NotificationType): IconType {
   }
 }
 
-function getNotificationIconClass(type: NotificationType): string {
+function getNotificationIconClass(
+  type: NotificationType
+): string {
   switch (type) {
     case "PRICE_OFFER_REJECTED":
     case "BOOKING_CANCELLED":
@@ -206,7 +208,10 @@ export default function NotificationsPage() {
                 </span>
               </div>
               {!n.read && (
-                <span className="notif-dot" aria-label="unread" />
+                <span
+                  className="notif-dot"
+                  aria-label="unread"
+                />
               )}
             </button>
           );

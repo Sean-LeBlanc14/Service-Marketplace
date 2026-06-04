@@ -73,7 +73,7 @@ function ProfilePage() {
   const [customerBookings, setCustomerBookings] = useState<
     CustomerBooking[]
   >([]);
-  
+
   const [reviewDrafts, setReviewDrafts] = useState<
     Record<string, ReviewDraft>
   >({});
@@ -160,26 +160,8 @@ function ProfilePage() {
           }
         );
 
-        const bookingsResponse = await fetch(
-          API_ENDPOINTS.bookings.mine,
-          {
-            headers: { Authorization: `Bearer ${authToken}` }
-          }
-        );
-
-        const nextBookings = bookingsResponse.ok
-          ? normalizeBookings(
-              (await bookingsResponse.json()) as ApiBooking[]
-            )
-          : [];
-
-        if (!bookingsResponse.ok) {
-          toast.error("Could not load your bookings.");
-        }
-
         if (isMounted) {
           setProfile(nextProfile);
-          setCustomerBookings(nextBookings);
           setBioDraft(nextProfile.bio);
           setIsEditingBio(false);
           if (connectResponse.ok) {
@@ -195,7 +177,6 @@ function ProfilePage() {
       } finally {
         if (isMounted) {
           setIsLoading(false);
-          setIsLoadingBookings(false);
         }
       }
     }

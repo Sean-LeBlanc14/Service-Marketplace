@@ -318,7 +318,9 @@ export default function ServiceDashboard() {
     }
 
     if (review.length > REVIEW_MAX_LENGTH) {
-      toast.error("Keep the review to 1000 characters or fewer.");
+      toast.error(
+        "Keep the review to 1000 characters or fewer."
+      );
       return;
     }
 
@@ -342,11 +344,14 @@ export default function ServiceDashboard() {
         throw new Error(message || "Could not submit review.");
       }
 
-      const reviewedBooking = (await response.json()) as ApiBooking;
+      const reviewedBooking =
+        (await response.json()) as ApiBooking;
 
       setCustomerBookings((bookings) =>
         bookings.map((booking) =>
-          booking.id === reviewedBooking.id ? reviewedBooking : booking
+          booking.id === reviewedBooking.id
+            ? reviewedBooking
+            : booking
         )
       );
       toast.success("Review submitted");
@@ -363,7 +368,8 @@ export default function ServiceDashboard() {
   }
 
   const customerRequestBookings = customerBookings.filter(
-    (booking) => booking.status === "AWAITING_PROVIDER_CONFIRMATION"
+    (booking) =>
+      booking.status === "AWAITING_PROVIDER_CONFIRMATION"
   );
   const customerScheduledBookings = customerBookings.filter(
     (booking) => booking.status === "CONFIRMED"
@@ -517,7 +523,9 @@ export default function ServiceDashboard() {
                 </option>
               </optgroup>
               <optgroup label="As customer">
-                <option value="customerRequests">Requests</option>
+                <option value="customerRequests">
+                  Requests
+                </option>
                 <option value="customerScheduled">
                   Scheduled Bookings
                 </option>
@@ -546,7 +554,9 @@ export default function ServiceDashboard() {
         onClose={() => setReviewingBooking(null)}>
         {reviewingBooking && (
           <div className="dashboard-review-modal">
-            <p className="dashboard-review-eyebrow">Completed Booking</p>
+            <p className="dashboard-review-eyebrow">
+              Completed Booking
+            </p>
             <h2>Review {reviewingBooking.serviceTitle}</h2>
             {reviewingBooking.providerName && (
               <p className="dashboard-review-provider">
@@ -589,7 +599,9 @@ export default function ServiceDashboard() {
 
               <button
                 type="submit"
-                disabled={submittingReviewId === reviewingBooking.id}>
+                disabled={
+                  submittingReviewId === reviewingBooking.id
+                }>
                 {submittingReviewId === reviewingBooking.id
                   ? "Submitting..."
                   : "Submit Review"}

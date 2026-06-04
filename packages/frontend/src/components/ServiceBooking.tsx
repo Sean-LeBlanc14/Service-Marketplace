@@ -72,7 +72,8 @@ function ServiceBooking({
   const hasBookingActions =
     (booking.status === "AWAITING_PROVIDER_CONFIRMATION" &&
       Boolean(confirmBooking || rejectBooking)) ||
-    (booking.status === "CONFIRMED" && Boolean(cancelBooking)) ||
+    (booking.status === "CONFIRMED" &&
+      Boolean(cancelBooking)) ||
     (booking.status === "COMPLETED" &&
       Boolean(onReviewBooking) &&
       !hasReview);
@@ -127,46 +128,49 @@ function ServiceBooking({
           {booking.status ===
             "AWAITING_PROVIDER_CONFIRMATION" &&
             (confirmBooking || rejectBooking) && (
-            <div className="booking-action-container">
-              {confirmBooking && (
-                <button
-                  type="button"
-                  className="booking-action booking-action-primary"
-                  disabled={isUpdating}
-                  onClick={async () => {
-                    setIsUpdating(true);
-                    const succeeded =
-                      (await confirmBooking(booking)) ?? false;
+              <div className="booking-action-container">
+                {confirmBooking && (
+                  <button
+                    type="button"
+                    className="booking-action booking-action-primary"
+                    disabled={isUpdating}
+                    onClick={async () => {
+                      setIsUpdating(true);
+                      const succeeded =
+                        (await confirmBooking(booking)) ??
+                        false;
 
-                    if (!succeeded) {
-                      setIsUpdating(false);
-                    }
-                  }}>
-                  {isUpdating ? "Accepting..." : "Accept Booking"}
-                </button>
-              )}
+                      if (!succeeded) {
+                        setIsUpdating(false);
+                      }
+                    }}>
+                    {isUpdating
+                      ? "Accepting..."
+                      : "Accept Booking"}
+                  </button>
+                )}
 
-              {rejectBooking && (
-                <button
-                  type="button"
-                  className="booking-action booking-action-secondary"
-                  disabled={isRejecting}
-                  onClick={async () => {
-                    setIsRejecting(true);
-                    const succeeded =
-                      (await rejectBooking(booking)) ?? false;
+                {rejectBooking && (
+                  <button
+                    type="button"
+                    className="booking-action booking-action-secondary"
+                    disabled={isRejecting}
+                    onClick={async () => {
+                      setIsRejecting(true);
+                      const succeeded =
+                        (await rejectBooking(booking)) ?? false;
 
-                    if (!succeeded) {
-                      setIsRejecting(false);
-                    }
-                  }}>
-                  {isRejecting
-                    ? "Rejecting..."
-                    : "Reject Booking"}
-                </button>
-              )}
-            </div>
-          )}
+                      if (!succeeded) {
+                        setIsRejecting(false);
+                      }
+                    }}>
+                    {isRejecting
+                      ? "Rejecting..."
+                      : "Reject Booking"}
+                  </button>
+                )}
+              </div>
+            )}
 
           {booking.status === "CONFIRMED" && cancelBooking && (
             <button

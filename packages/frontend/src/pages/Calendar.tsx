@@ -10,7 +10,15 @@ import { FaCircleInfo } from "react-icons/fa6";
 
 type CalendarView = "provider" | "customer";
 
-const WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+const WEEKDAYS = [
+  "Sun",
+  "Mon",
+  "Tue",
+  "Wed",
+  "Thu",
+  "Fri",
+  "Sat"
+];
 
 function formatMonthHeading(date: Date) {
   return new Intl.DateTimeFormat(undefined, {
@@ -102,31 +110,36 @@ function getMonthDays(monthDate: Date) {
 
 export default function Calendar() {
   const authToken = getToken();
-  const [scheduledProviderBookings, setScheduledProviderBookings] = useState<
-    ApiBooking[]
-  >([]);
-  const [scheduledCustomerBookings, setScheduledCustomerBookings] = useState<
-    ApiBooking[]
-  >([]);
+  const [
+    scheduledProviderBookings,
+    setScheduledProviderBookings
+  ] = useState<ApiBooking[]>([]);
+  const [
+    scheduledCustomerBookings,
+    setScheduledCustomerBookings
+  ] = useState<ApiBooking[]>([]);
   const [selectedView, setSelectedView] =
     useState<CalendarView>("provider");
-  const [visibleMonth, setVisibleMonth] = useState(() => new Date());
+  const [visibleMonth, setVisibleMonth] = useState(
+    () => new Date()
+  );
   const [isLoading, setIsLoading] = useState(true);
   const [selectedBooking, setSelectedBooking] =
     useState<ApiBooking | null>(null);
   const [isCancelling, setIsCancelling] = useState(false);
 
-    useEffect(() => {
-      async function getUserBookings() {
-        if (!authToken) {
-          setIsLoading(false);
-          return;
-        }
+  useEffect(() => {
+    async function getUserBookings() {
+      if (!authToken) {
+        setIsLoading(false);
+        return;
+      }
 
-        setIsLoading(true);
+      setIsLoading(true);
 
-        try {
-          const [providerResponse, customerResponse] = await Promise.all([
+      try {
+        const [providerResponse, customerResponse] =
+          await Promise.all([
             fetch(API_ENDPOINTS.bookings.getProviderScheduled, {
               headers: { Authorization: `Bearer ${authToken}` }
             }),
@@ -135,30 +148,30 @@ export default function Calendar() {
             })
           ]);
 
-          if (providerResponse.ok) {
-            const bookings =
-              (await providerResponse.json()) as ApiBooking[];
-            setScheduledProviderBookings(bookings);
-          } else {
-            toast.error("Could not get your provided services");
-          }
-
-          if (customerResponse.ok) {
-            const bookings =
-              (await customerResponse.json()) as ApiBooking[];
-            setScheduledCustomerBookings(bookings);
-          } else {
-            toast.error("Could not get your purchased services");
-          }
-        } catch {
-          toast.warning("A network error occurred");
-        } finally {
-          setIsLoading(false);
+        if (providerResponse.ok) {
+          const bookings =
+            (await providerResponse.json()) as ApiBooking[];
+          setScheduledProviderBookings(bookings);
+        } else {
+          toast.error("Could not get your provided services");
         }
-      }
 
-      void getUserBookings();
-    }, [authToken]);
+        if (customerResponse.ok) {
+          const bookings =
+            (await customerResponse.json()) as ApiBooking[];
+          setScheduledCustomerBookings(bookings);
+        } else {
+          toast.error("Could not get your purchased services");
+        }
+      } catch {
+        toast.warning("A network error occurred");
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
+    void getUserBookings();
+  }, [authToken]);
 
   const calendarViews: Record<
     CalendarView,
@@ -175,34 +188,47 @@ export default function Calendar() {
   };
 
   const selectedCalendar = calendarViews[selectedView];
-  const days = useMemo(() => getMonthDays(visibleMonth), [visibleMonth]);
+  const days = useMemo(
+    () => getMonthDays(visibleMonth),
+    [visibleMonth]
+  );
   const bookingsByDay = useMemo(() => {
-    return selectedCalendar.bookings.reduce<Record<string, ApiBooking[]>>(
-      (bookingsMap, booking) => {
-        const dateKey = getBookingDateKey(booking);
+    return selectedCalendar.bookings.reduce<
+      Record<string, ApiBooking[]>
+    >((bookingsMap, booking) => {
+      const dateKey = getBookingDateKey(booking);
 
-        if (!dateKey) {
-          return bookingsMap;
-        }
-
-        bookingsMap[dateKey] = [...(bookingsMap[dateKey] ?? []), booking];
+      if (!dateKey) {
         return bookingsMap;
-      },
-      {}
-    );
+      }
+
+      bookingsMap[dateKey] = [
+        ...(bookingsMap[dateKey] ?? []),
+        booking
+      ];
+      return bookingsMap;
+    }, {});
   }, [selectedCalendar.bookings]);
 
   function goToPreviousMonth() {
     setVisibleMonth(
       (currentMonth) =>
-        new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1, 1)
+        new Date(
+          currentMonth.getFullYear(),
+          currentMonth.getMonth() - 1,
+          1
+        )
     );
   }
 
   function goToNextMonth() {
     setVisibleMonth(
       (currentMonth) =>
-        new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 1)
+        new Date(
+          currentMonth.getFullYear(),
+          currentMonth.getMonth() + 1,
+          1
+        )
     );
   }
 
@@ -215,7 +241,9 @@ export default function Calendar() {
   }
 
   function getOppositePersonLabel() {
-    return selectedView === "customer" ? "Provider" : "Customer";
+    return selectedView === "customer"
+      ? "Provider"
+      : "Customer";
   }
 
   function formatBookingPrice(booking: ApiBooking) {
@@ -256,17 +284,23 @@ export default function Calendar() {
       if (response.ok) {
         toast.success("Booking canceled");
         setScheduledProviderBookings((bookings) =>
-          bookings.filter((booking) => booking.id !== selectedBooking.id)
+          bookings.filter(
+            (booking) => booking.id !== selectedBooking.id
+          )
         );
         setScheduledCustomerBookings((bookings) =>
-          bookings.filter((booking) => booking.id !== selectedBooking.id)
+          bookings.filter(
+            (booking) => booking.id !== selectedBooking.id
+          )
         );
         setSelectedBooking(null);
       } else {
         toast.error("Something went wrong");
       }
     } catch {
-      toast.warning("A network error occurred, please try again");
+      toast.warning(
+        "A network error occurred, please try again"
+      );
     } finally {
       setIsCancelling(false);
     }
@@ -285,13 +319,19 @@ export default function Calendar() {
             label="Calendar View"
             value={selectedView}
             onChange={(event) =>
-              setSelectedView(event.target.value as CalendarView)
+              setSelectedView(
+                event.target.value as CalendarView
+              )
             }
             placeHolder="Select Calendar View"
             options={
               <>
-                <option value="provider">Provider Calendar</option>
-                <option value="customer">Customer Calendar</option>
+                <option value="provider">
+                  Provider Calendar
+                </option>
+                <option value="customer">
+                  Customer Calendar
+                </option>
               </>
             }
           />
@@ -316,8 +356,12 @@ export default function Calendar() {
         ))}
 
         {days.map((day, index) => {
-          const dateKey = day ? getDateKey(day) : `blank-${index}`;
-          const dayBookings = day ? bookingsByDay[dateKey] ?? [] : [];
+          const dateKey = day
+            ? getDateKey(day)
+            : `blank-${index}`;
+          const dayBookings = day
+            ? (bookingsByDay[dateKey] ?? [])
+            : [];
 
           return (
             <div
@@ -335,13 +379,23 @@ export default function Calendar() {
                         type="button"
                         className="calendar-booking-tag"
                         key={booking.id}
-                        onClick={() => setSelectedBooking(booking)}
+                        onClick={() =>
+                          setSelectedBooking(booking)
+                        }
                         aria-label={`View booking details for ${
                           booking.serviceTitle || "service"
                         }`}>
-                        <span>{formatBookingTime(booking.scheduledAt)}</span>
-                        <span>{getBookingPersonName(booking)}</span>
-                        <span>{booking.serviceTitle || "Service"}</span>
+                        <span>
+                          {formatBookingTime(
+                            booking.scheduledAt
+                          )}
+                        </span>
+                        <span>
+                          {getBookingPersonName(booking)}
+                        </span>
+                        <span>
+                          {booking.serviceTitle || "Service"}
+                        </span>
                         <FaCircleInfo aria-hidden="true" />
                       </button>
                     ))}
@@ -364,27 +418,37 @@ export default function Calendar() {
         onClose={() => setSelectedBooking(null)}>
         {selectedBooking && (
           <div className="calendar-booking-modal">
-            <p className="calendar-modal-eyebrow">Booking Details</p>
+            <p className="calendar-modal-eyebrow">
+              Booking Details
+            </p>
             <h2>{selectedBooking.serviceTitle || "Service"}</h2>
 
             <div className="calendar-modal-details">
               <div>
                 <span>{getOppositePersonLabel()}</span>
-                <strong>{getBookingPersonName(selectedBooking)}</strong>
+                <strong>
+                  {getBookingPersonName(selectedBooking)}
+                </strong>
               </div>
               <div>
                 <span>Scheduled</span>
                 <strong>
-                  {formatBookingDateTime(selectedBooking.scheduledAt)}
+                  {formatBookingDateTime(
+                    selectedBooking.scheduledAt
+                  )}
                 </strong>
               </div>
               <div>
                 <span>Price</span>
-                <strong>{formatBookingPrice(selectedBooking)}</strong>
+                <strong>
+                  {formatBookingPrice(selectedBooking)}
+                </strong>
               </div>
               <div>
                 <span>Status</span>
-                <strong>{selectedBooking.status || "Scheduled"}</strong>
+                <strong>
+                  {selectedBooking.status || "Scheduled"}
+                </strong>
               </div>
             </div>
 
@@ -394,7 +458,9 @@ export default function Calendar() {
                 className="calendar-modal-cancel"
                 disabled={isCancelling}
                 onClick={() => void cancelBooking()}>
-                {isCancelling ? "Canceling..." : "Cancel Booking"}
+                {isCancelling
+                  ? "Canceling..."
+                  : "Cancel Booking"}
               </button>
             </div>
           </div>

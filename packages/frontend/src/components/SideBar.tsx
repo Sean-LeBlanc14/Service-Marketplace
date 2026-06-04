@@ -53,7 +53,7 @@ export default function SideBar() {
         <NavigationButton
           to="/calendar"
           label="Calendar"
-          icon={<FaCalendarAlt/>}
+          icon={<FaCalendarAlt />}
         />
 
         <NavigationButton
@@ -66,7 +66,6 @@ export default function SideBar() {
               : undefined
           }
         />
-
       </div>
 
       <div className="sidebar-bottom">

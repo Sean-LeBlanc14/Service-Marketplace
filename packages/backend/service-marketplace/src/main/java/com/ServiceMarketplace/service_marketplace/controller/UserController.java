@@ -6,6 +6,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -14,7 +15,13 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+<<<<<<< HEAD
 import com.ServiceMarketplace.service_marketplace.dto.ProviderProfile;
+=======
+import com.ServiceMarketplace.service_marketplace.dto.ChangeFieldRequest;
+import com.ServiceMarketplace.service_marketplace.dto.ChangePasswordRequest;
+import com.ServiceMarketplace.service_marketplace.dto.DeleteAccountRequest;
+>>>>>>> 4fe37a8efbefb68711fc96f4a7a35022f5489b0a
 import com.ServiceMarketplace.service_marketplace.dto.UpdateUserProfileRequest;
 import com.ServiceMarketplace.service_marketplace.dto.UserProfile;
 import com.ServiceMarketplace.service_marketplace.model.User;
@@ -48,12 +55,31 @@ public class UserController {
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 
+<<<<<<< HEAD
     @GetMapping("/{userId}/profile")
     public ResponseEntity<ProviderProfile> getProviderProfile(@PathVariable String userId) {
         ProviderProfile response = userService.getProviderProfile(userId);
 
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }
+=======
+    @DeleteMapping("/delete")
+    public ResponseEntity deleteUser(@RequestBody DeleteAccountRequest request){
+
+        userService.deleteUserProfile(request);
+        
+        return ResponseEntity.noContent().build();
+    }   
+
+    @PatchMapping("/password")
+    public ResponseEntity changeUserPassword(@AuthenticationPrincipal UserDetails userDetails,@Valid @RequestBody ChangePasswordRequest request){
+
+        userService.changeUserPassword(userDetails, request);
+
+        return ResponseEntity.ok().build();
+    }
+    
+>>>>>>> 4fe37a8efbefb68711fc96f4a7a35022f5489b0a
 
     @GetMapping
     public ResponseEntity<List<User>> getUsers(@AuthenticationPrincipal UserDetails userDetails) {
@@ -95,5 +121,21 @@ public class UserController {
         }
 
         return ResponseEntity.status(HttpStatus.OK).body(userService.unsuspendUser(userId));
+    }
+
+    @PatchMapping("/major")
+    public ResponseEntity<UserProfile> changeMajor(@AuthenticationPrincipal UserDetails userDetails, @RequestBody ChangeFieldRequest request){
+
+        UserProfile user = userService.changeUserMajor(userDetails, request.getUpdate());
+
+        return ResponseEntity.status(HttpStatus.OK).body(user);
+    }
+
+    @PatchMapping("/campus")
+    public ResponseEntity<UserProfile> changeCampus(@AuthenticationPrincipal UserDetails userDetails, @RequestBody ChangeFieldRequest request){
+
+        UserProfile user = userService.changeUserCampus(userDetails, request.getUpdate());
+
+        return ResponseEntity.status(HttpStatus.OK).body(user);
     }
 }

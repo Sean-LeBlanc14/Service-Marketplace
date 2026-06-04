@@ -9,4 +9,11 @@
 
   /* Primary text color for crisp accessibility */
   --text-primary: #333333;
+
+  --background-light: #f4f4f4;
+  --background-dark: ;
+  --background-light-hover: ;
+  --background-dark-hover: ;
+
+  --font-heading: "Utopia", "Georgia", serif;
 }

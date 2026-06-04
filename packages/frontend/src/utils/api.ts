@@ -13,7 +13,13 @@ export const API_ENDPOINTS = {
   user: {
     profile: `${API_ROUTE}/users/me`,
     providerProfile: (userId: string) =>
-      `${API_ROUTE}/users/${encodeURIComponent(userId)}/profile`
+      `${API_ROUTE}/users/${encodeURIComponent(userId)}/profile`,
+    other: (userId: string) =>
+      `${API_ROUTE}/users/profile/${encodeURIComponent(userId)}`,
+    delete: `${API_ROUTE}/users/delete`,
+    changePassword: `${API_ROUTE}/users/password`,
+    changeMajor: `${API_ROUTE}/users/major`,
+    changeCampus: `${API_ROUTE}/users/campus`
   },
   users: {
     all: `${API_ROUTE}/users`,
@@ -52,5 +58,9 @@ export const API_ENDPOINTS = {
     all: `${API_ROUTE}/reports`,
     resolve: (reportId: string) =>
       `${API_ROUTE}/reports/${encodeURIComponent(reportId)}/resolve`
+  },
+  support: {
+    bug: `${API_ROUTE}/support/bug`,
+    contact: `${API_ROUTE}/support/contact`
   }
 };

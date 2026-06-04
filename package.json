@@ -20,7 +20,8 @@
     "test": "npm run front-test && npm run back-test",
     "ci": "npm run format:check && npm run lint && npm run build && npm run test",
     "back-test": "node scripts/run-backend-tests.mjs",
-    "front-test": "npm run test -w packages/frontend"
+    "front-test": "npm run test -w packages/frontend",
+    "compile": "cd packages/backend/service-marketplace && mvn clean compile"
   },
   "overrides": {
     "react": "18.3.1",

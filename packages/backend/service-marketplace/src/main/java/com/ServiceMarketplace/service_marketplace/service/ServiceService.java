@@ -14,8 +14,10 @@ import com.ServiceMarketplace.service_marketplace.dto.CreateServiceRequest;
 import com.ServiceMarketplace.service_marketplace.dto.ServiceDto;
 import com.ServiceMarketplace.service_marketplace.dto.UpdateServiceRequest;
 import com.ServiceMarketplace.service_marketplace.exception.ResourceNotFoundException;
+import com.ServiceMarketplace.service_marketplace.model.Booking;
 import com.ServiceMarketplace.service_marketplace.model.Service;
 import com.ServiceMarketplace.service_marketplace.model.User;
+import com.ServiceMarketplace.service_marketplace.repository.BookingRepository;
 import com.ServiceMarketplace.service_marketplace.repository.ServiceRepository;
 import com.ServiceMarketplace.service_marketplace.repository.UserRepository;
 
@@ -24,27 +26,34 @@ public class ServiceService {
 
     private final ServiceRepository serviceRepository;
     private final UserRepository userRepository;
+    private final BookingRepository bookingRepository;
 
-    public ServiceService(ServiceRepository serviceRepository, UserRepository userRepository) {
+    public ServiceService(ServiceRepository serviceRepository, UserRepository userRepository,
+            BookingRepository bookingRepository) {
         this.serviceRepository = serviceRepository;
         this.userRepository = userRepository;
+        this.bookingRepository = bookingRepository;
     }
 
+    public record ProviderRatingSummary(Double averageRating, int reviewCount) {}
+
     private ServiceDto toDto(Service service) {
-        return toDto(service, getProviderName(service.getUserId()));
+        return toDto(service, getProviderName(service.getUserId()), getProviderRatingSummary(service.getUserId()));
     }
 
     private ServiceDto toDto(Service service, User provider) {
-        return toDto(service, getDisplayName(provider));
+        return toDto(service, getDisplayName(provider), getProviderRatingSummary(provider.getId()));
     }
 
-    private ServiceDto toDto(Service service, String providerName) {
+    private ServiceDto toDto(Service service, String providerName, ProviderRatingSummary providerRating) {
         return new ServiceDto(
             service.getId(),
             service.getTitle(),
             service.getCategory(),
             service.getUserId(),
             providerName,
+            providerRating.averageRating(),
+            providerRating.reviewCount(),
             service.getPriceMin(),
             service.getPriceMax(),
             service.getPriceUnit(),
@@ -73,6 +82,36 @@ public class ServiceService {
             .stream()
             .map(this::toDto)
             .collect(Collectors.toList());
+    }
+
+    public ProviderRatingSummary getProviderRatingSummary(String userId) {
+        String cleanUserId = clean(userId);
+
+        if (cleanUserId.isBlank()) {
+            return new ProviderRatingSummary(null, 0);
+        }
+
+        List<Booking> reviewedBookings = bookingRepository.findReviewedBookingsByProviderId(cleanUserId);
+
+        if (reviewedBookings == null || reviewedBookings.isEmpty()) {
+            return new ProviderRatingSummary(null, 0);
+        }
+
+        List<Integer> ratings = reviewedBookings.stream()
+            .map(Booking::getRating)
+            .filter(rating -> rating != null)
+            .toList();
+
+        if (ratings.isEmpty()) {
+            return new ProviderRatingSummary(null, 0);
+        }
+
+        double average = ratings.stream()
+            .mapToInt(Integer::intValue)
+            .average()
+            .orElse(0);
+
+        return new ProviderRatingSummary(Math.round(average * 10.0) / 10.0, ratings.size());
     }
 
     public ServiceDto createService(CreateServiceRequest request, UserDetails userDetails) {

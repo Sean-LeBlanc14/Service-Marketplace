@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.ServiceMarketplace.service_marketplace.dto.ProviderProfile;
 import com.ServiceMarketplace.service_marketplace.dto.UpdateUserProfileRequest;
 import com.ServiceMarketplace.service_marketplace.dto.UserProfile;
 import com.ServiceMarketplace.service_marketplace.model.User;
@@ -43,6 +44,13 @@ public class UserController {
     public ResponseEntity<UserProfile> updateUserProfile(@AuthenticationPrincipal UserDetails userDetails, @Valid @RequestBody UpdateUserProfileRequest request) {
 
         UserProfile response = userService.updateUserProfile(userDetails, request);
+
+        return ResponseEntity.status(HttpStatus.OK).body(response);
+    }
+
+    @GetMapping("/{userId}/profile")
+    public ResponseEntity<ProviderProfile> getProviderProfile(@PathVariable String userId) {
+        ProviderProfile response = userService.getProviderProfile(userId);
 
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }

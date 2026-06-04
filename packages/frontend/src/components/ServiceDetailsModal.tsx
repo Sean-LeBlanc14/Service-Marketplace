@@ -1,16 +1,21 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import InputField from "./InputField";
 import SubmitButton from "./SubmitButton";
 import PaymentForm from "./PaymentForm";
 import "./styles/ServiceDetailsModal.css";
 import { API_ENDPOINTS } from "../utils/api";
 import { toast } from "react-toastify";
+import { formatProviderRating } from "../utils/serviceFormatting";
 
 const TOKEN_STORAGE_KEY = "jwt_token";
 
 interface ServiceDetails {
   id: string;
   userId: string;
+  providerName: string;
+  providerAverageRating: number | null;
+  providerReviewCount: number;
   title: string;
   price: string;
   priceMin: number;
@@ -49,6 +54,17 @@ function MessageIcon() {
   );
 }
 
+function getProviderInitials(providerName: string) {
+  const initials = providerName
+    .trim()
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((namePart) => namePart[0]?.toUpperCase() ?? "")
+    .join("");
+
+  return initials || "SP";
+}
+
 type ModalView = "details" | "booking" | "payment" | "success";
 
 interface BookingFormState {
@@ -80,6 +96,10 @@ function ServiceDetailsModal({
     error: "",
     isLoading: false
   });
+  const ratingText = formatProviderRating(
+    service.providerAverageRating,
+    service.providerReviewCount
+  );
 
   async function handleBookingSubmit() {
     const price = Number(form.agreedPrice);
@@ -227,6 +247,32 @@ function ServiceDetailsModal({
 
         {view === "details" && (
           <>
+            <div className="service-details-provider">
+              <div className="service-details-avatar">
+                {getProviderInitials(service.providerName)}
+              </div>
+              <div className="service-details-provider-copy">
+                <p className="service-details-provider-name">
+                  {service.providerName}
+                </p>
+                <p className="service-details-rating">
+                  <span
+                    className="service-details-star"
+                    aria-hidden="true">
+                    {"\u2605"}
+                  </span>
+                  <span>{ratingText}</span>
+                </p>
+              </div>
+              {service.userId && (
+                <Link
+                  to={`/providers/${encodeURIComponent(service.userId)}`}
+                  className="service-details-profile-link">
+                  View profile
+                </Link>
+              )}
+            </div>
+
             <div className="service-details-location">
               <PinIcon />
               <span>{service.location}</span>

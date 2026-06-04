@@ -64,6 +64,10 @@
   font-weight: 800;
 }
 
+.service-details-provider-copy {
+  min-width: 0;
+}
+
 .service-details-provider-name {
   margin: 0;
   color: #071b2d;
@@ -87,6 +91,23 @@
 
 .service-details-muted {
   color: #667386;
+}
+
+.service-details-profile-link {
+  flex: 0 0 auto;
+  margin-left: auto;
+  border-radius: 8px;
+  padding: 10px 14px;
+  background: #edf5f2;
+  color: #1f4a3f;
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.service-details-profile-link:hover,
+.service-details-profile-link:focus-visible {
+  color: #16382f;
+  text-decoration: none;
 }
 
 .service-details-location {
@@ -394,6 +415,17 @@
 
   .service-details-actions button {
     width: 100%;
+  }
+
+  .service-details-provider {
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .service-details-profile-link {
+    width: 100%;
+    margin-left: 0;
+    text-align: center;
   }
 
   .service-report-backdrop {

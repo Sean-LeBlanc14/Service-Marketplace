@@ -13,6 +13,11 @@ import type {
   ApiUserProfile,
   ApiService
 } from "../utils/types";
+import {
+  formatProviderRating,
+  normalizeRatingValue,
+  normalizeReviewCount
+} from "../utils/serviceFormatting";
 import { useNavigate } from "react-router-dom";
 
 const TOKEN_STORAGE_KEY = "jwt_token";
@@ -54,6 +59,8 @@ interface UserProfile {
   major: string;
   campus: string;
   bio: string;
+  averageRating: number | null;
+  reviewCount: number;
   services: ServiceListing[];
 }
 
@@ -93,6 +100,8 @@ const emptyProfile: UserProfile = {
   major: "",
   campus: "",
   bio: "",
+  averageRating: null,
+  reviewCount: 0,
   services: []
 };
 
@@ -273,6 +282,8 @@ function normalizeProfile(
     major: cleanText(profile.major),
     campus: cleanText(profile.campus),
     bio: cleanText(profile.bio),
+    averageRating: normalizeRatingValue(profile.averageRating),
+    reviewCount: normalizeReviewCount(profile.reviewCount),
     services: normalizeServices(profile.services)
   };
 }
@@ -925,6 +936,10 @@ function ProfilePage() {
   const displayName =
     `${profile.firstName} ${profile.lastName}`.trim() ||
     "Profile";
+  const ratingText = formatProviderRating(
+    profile.averageRating,
+    profile.reviewCount
+  );
   const isDeletingPendingService =
     servicePendingDeletion !== null &&
     deletingServiceId === servicePendingDeletion.id;
@@ -960,7 +975,13 @@ function ProfilePage() {
               </p>
             )}
           </div>
-          <p>{profile.services.length} services</p>
+          <div className="profile-header-stats">
+            <p>{profile.services.length} services</p>
+            <p className="profile-rating-summary">
+              <span aria-hidden="true">{"\u2605"}</span>
+              {ratingText}
+            </p>
+          </div>
         </header>
 
         <section

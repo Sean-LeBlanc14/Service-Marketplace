@@ -11,7 +11,9 @@ export const API_ENDPOINTS = {
     resend: `${API_ROUTE}/verification/resend`
   },
   user: {
-    profile: `${API_ROUTE}/users/me`
+    profile: `${API_ROUTE}/users/me`,
+    providerProfile: (userId: string) =>
+      `${API_ROUTE}/users/${encodeURIComponent(userId)}/profile`
   },
   users: {
     all: `${API_ROUTE}/users`,

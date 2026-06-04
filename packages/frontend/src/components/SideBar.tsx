@@ -1,5 +1,6 @@
 import {
   FaBell,
+  FaCalendarAlt,
   FaHome,
   FaMoneyBill,
   FaUserShield
@@ -50,6 +51,12 @@ export default function SideBar() {
         )}
 
         <NavigationButton
+          to="/calendar"
+          label="Calendar"
+          icon={<FaCalendarAlt/>}
+        />
+
+        <NavigationButton
           to="/inbox"
           label="Messages"
           icon={<FiMessageCircle />}
@@ -59,6 +66,7 @@ export default function SideBar() {
               : undefined
           }
         />
+
       </div>
 
       <div className="sidebar-bottom">

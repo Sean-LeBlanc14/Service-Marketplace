@@ -55,6 +55,15 @@ public class BookingController {
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 
+    @GetMapping("/customer/scheduled/me")
+    public ResponseEntity<List<BookingResponse>> getCustomerScheduledBookings(@AuthenticationPrincipal UserDetails userDetails){
+
+      List<BookingResponse> response = bookingService.getCustomerScheduledBookings(userDetails);
+
+      return ResponseEntity.status(HttpStatus.OK).body(response);
+
+    }
+
     @GetMapping("/provider/{providerId}/reviews")
     public ResponseEntity<List<ProviderReviewResponse>> getProviderReviews(
             @PathVariable String providerId) {

@@ -23,6 +23,7 @@ import SuspendedPage from "./pages/SuspendedPage";
 import NotificationsPage from "./pages/NotificationsPage";
 import { API_ENDPOINTS } from "./utils/api";
 import { WebSocketProvider } from "./context/WebSocketContext";
+import Calendar from "./pages/Calendar";
 
 const TOKEN_STORAGE_KEY = "jwt_token";
 
@@ -107,6 +108,7 @@ function AppRoutes() {
           path="dashboard"
           element={<ServiceDashboard />}
         />
+        <Route path="/calendar" element={ <Calendar/>}/>
         <Route path="inbox" element={<Inbox />} />
         <Route
           path="notifications"

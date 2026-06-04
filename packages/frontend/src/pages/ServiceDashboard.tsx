@@ -2,13 +2,22 @@ import { API_ENDPOINTS } from "../utils/api";
 import type { ApiBooking } from "../utils/types";
 import ServiceBooking from "../components/ServiceBooking";
 import DropDown from "../components/DropDown";
+import Modal from "../components/Modal";
 import { toast } from "react-toastify";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "../styles/ServiceDashboard.css";
 import { getToken } from "../utils/helper";
 
-type DashboardView = "requests" | "upcoming" | "completed";
+type DashboardView =
+  | "requests"
+  | "upcoming"
+  | "completed"
+  | "customerRequests"
+  | "customerScheduled"
+  | "customerCompleted";
+
+const REVIEW_MAX_LENGTH = 1000;
 
 export default function ServiceDashboard() {
   const navigate = useNavigate();
@@ -25,8 +34,19 @@ export default function ServiceDashboard() {
     ApiBooking[]
   >([]);
 
+  const [customerBookings, setCustomerBookings] = useState<
+    ApiBooking[]
+  >([]);
+
   const [selectedView, setSelectedView] =
     useState<DashboardView>("requests");
+  const [reviewingBooking, setReviewingBooking] =
+    useState<ApiBooking | null>(null);
+  const [reviewRating, setReviewRating] = useState("5");
+  const [reviewText, setReviewText] = useState("");
+  const [submittingReviewId, setSubmittingReviewId] = useState<
+    string | null
+  >(null);
 
   const authToken = getToken();
 
@@ -99,6 +119,25 @@ export default function ServiceDashboard() {
         } else {
           toast.warning("A network error occurred");
         }
+
+        const customerBookingsResponse = await fetch(
+          API_ENDPOINTS.bookings.mine,
+          {
+            headers: {
+              Authorization: `Bearer ${authToken}`,
+              Accept: "application/json"
+            }
+          }
+        );
+
+        if (customerBookingsResponse.ok) {
+          const customerBookings =
+            (await customerBookingsResponse.json()) as ApiBooking[];
+
+          setCustomerBookings(customerBookings);
+        } else {
+          toast.warning("Could not get your customer bookings");
+        }
       } catch (e) {
         console.error(e);
         toast.warning(
@@ -112,6 +151,7 @@ export default function ServiceDashboard() {
     setBookingRequests,
     setServiceHistory,
     setUpcomingBookings,
+    setCustomerBookings,
     authToken
   ]);
 
@@ -227,6 +267,11 @@ export default function ServiceDashboard() {
             (appointment) => appointment.id !== booking.id
           )
         );
+        setCustomerBookings((bookings) =>
+          bookings.filter(
+            (appointment) => appointment.id !== booking.id
+          )
+        );
         return true;
       } else {
         toast.error("Something went wrong");
@@ -241,39 +286,159 @@ export default function ServiceDashboard() {
     return false;
   }
 
+  function openReviewModal(booking: ApiBooking) {
+    setReviewingBooking(booking);
+    setReviewRating("5");
+    setReviewText("");
+  }
+
+  async function submitReview() {
+    if (!reviewingBooking?.id) {
+      toast.error("Could not submit review.");
+      return;
+    }
+
+    if (!authToken) {
+      navigate("/login");
+      toast.error("Please login");
+      return;
+    }
+
+    const rating = Number(reviewRating);
+    const review = reviewText.trim();
+
+    if (!Number.isInteger(rating) || rating < 1 || rating > 5) {
+      toast.error("Choose a rating from 1 to 5.");
+      return;
+    }
+
+    if (!review) {
+      toast.error("Write a review before submitting.");
+      return;
+    }
+
+    if (review.length > REVIEW_MAX_LENGTH) {
+      toast.error("Keep the review to 1000 characters or fewer.");
+      return;
+    }
+
+    setSubmittingReviewId(reviewingBooking.id);
+
+    try {
+      const response = await fetch(
+        API_ENDPOINTS.bookings.review(reviewingBooking.id),
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${authToken}`,
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({ rating, review })
+        }
+      );
+
+      if (!response.ok) {
+        const message = await response.text();
+        throw new Error(message || "Could not submit review.");
+      }
+
+      const reviewedBooking = (await response.json()) as ApiBooking;
+
+      setCustomerBookings((bookings) =>
+        bookings.map((booking) =>
+          booking.id === reviewedBooking.id ? reviewedBooking : booking
+        )
+      );
+      toast.success("Review submitted");
+      setReviewingBooking(null);
+    } catch (error) {
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "Could not submit review."
+      );
+    } finally {
+      setSubmittingReviewId(null);
+    }
+  }
+
+  const customerRequestBookings = customerBookings.filter(
+    (booking) => booking.status === "AWAITING_PROVIDER_CONFIRMATION"
+  );
+  const customerScheduledBookings = customerBookings.filter(
+    (booking) => booking.status === "CONFIRMED"
+  );
+  const customerCompletedBookings = customerBookings.filter(
+    (booking) => booking.status === "COMPLETED"
+  );
+
   const dashboardViews: Record<
     DashboardView,
     {
       heading: string;
       emptyMessage: string;
       bookings: ApiBooking[] | undefined;
+      viewAs: "provider" | "customer";
     }
   > = {
     requests: {
-      heading: "Your Service Requests",
+      heading: "Booking Requests as a Provider",
       emptyMessage: "No incoming requests",
-      bookings: bookingRequests
+      bookings: bookingRequests,
+      viewAs: "provider"
     },
     upcoming: {
-      heading: "Your Scheduled Bookings",
+      heading: "Scheduled Bookings as a Provider",
       emptyMessage: "No upcoming bookings",
-      bookings: upcomingBookings
+      bookings: upcomingBookings,
+      viewAs: "provider"
     },
     completed: {
-      heading: "Your Completed Bookings",
+      heading: "Completed Bookings as a Provider",
       emptyMessage: "No completed bookings",
-      bookings: serviceHistory
+      bookings: serviceHistory,
+      viewAs: "provider"
+    },
+    customerRequests: {
+      heading: "Requested Bookings as a Customer",
+      emptyMessage: "No requested customer bookings",
+      bookings: customerRequestBookings,
+      viewAs: "customer"
+    },
+    customerScheduled: {
+      heading: "Scheduled Bookings as a Customer",
+      emptyMessage: "No scheduled customer bookings",
+      bookings: customerScheduledBookings,
+      viewAs: "customer"
+    },
+    customerCompleted: {
+      heading: "Completed Bookings as a Customer",
+      emptyMessage: "No completed customer bookings",
+      bookings: customerCompletedBookings,
+      viewAs: "customer"
     }
   };
 
   const activeView = dashboardViews[selectedView];
 
   function renderBooking(booking: ApiBooking) {
+    const participantProps =
+      activeView.viewAs === "customer"
+        ? {
+            participantLabel: "Provider",
+            participantName: booking.providerName
+          }
+        : {
+            participantLabel: "Customer",
+            participantName: booking.customerName
+          };
+
     if (selectedView === "requests") {
       return (
         <ServiceBooking
           key={booking.id}
           booking={booking}
+          {...participantProps}
           confirmBooking={confirmBooking}
           rejectBooking={rejectBooking}
         />
@@ -285,19 +450,52 @@ export default function ServiceDashboard() {
         <ServiceBooking
           key={booking.id}
           booking={booking}
+          {...participantProps}
           cancelBooking={cancelBooking}
         />
       );
     }
 
+    if (
+      activeView.viewAs === "customer" &&
+      booking.status === "CONFIRMED"
+    ) {
+      return (
+        <ServiceBooking
+          key={booking.id}
+          booking={booking}
+          {...participantProps}
+          cancelBooking={cancelBooking}
+        />
+      );
+    }
+
+    if (
+      activeView.viewAs === "customer" &&
+      booking.status === "COMPLETED"
+    ) {
+      return (
+        <ServiceBooking
+          key={booking.id}
+          booking={booking}
+          {...participantProps}
+          onReviewBooking={openReviewModal}
+        />
+      );
+    }
+
     return (
-      <ServiceBooking key={booking.id} booking={booking} />
+      <ServiceBooking
+        key={booking.id}
+        booking={booking}
+        {...participantProps}
+      />
     );
   }
 
   return (
     <div className="serviceDashboard-wrapper">
-      <h2>Your Service Provider Dashboard</h2>
+      <h1>Your Bookings Dashboard</h1>
 
       <div className="service-dashboard-filter">
         <DropDown
@@ -309,13 +507,24 @@ export default function ServiceDashboard() {
           }
           options={
             <>
-              <option value="requests">Requests</option>
-              <option value="upcoming">
-                Upcoming Bookings
-              </option>
-              <option value="completed">
-                Completed Bookings
-              </option>
+              <optgroup label="As provider">
+                <option value="requests">Requests</option>
+                <option value="upcoming">
+                  Scheduled Bookings
+                </option>
+                <option value="completed">
+                  Completed Bookings
+                </option>
+              </optgroup>
+              <optgroup label="As customer">
+                <option value="customerRequests">Requests</option>
+                <option value="customerScheduled">
+                  Scheduled Bookings
+                </option>
+                <option value="customerCompleted">
+                  Completed Bookings
+                </option>
+              </optgroup>
             </>
           }
         />
@@ -331,6 +540,64 @@ export default function ServiceDashboard() {
             : activeView.emptyMessage}
         </div>
       </section>
+
+      <Modal
+        isOpen={reviewingBooking !== null}
+        onClose={() => setReviewingBooking(null)}>
+        {reviewingBooking && (
+          <div className="dashboard-review-modal">
+            <p className="dashboard-review-eyebrow">Completed Booking</p>
+            <h2>Review {reviewingBooking.serviceTitle}</h2>
+            {reviewingBooking.providerName && (
+              <p className="dashboard-review-provider">
+                Provider {reviewingBooking.providerName}
+              </p>
+            )}
+
+            <form
+              className="dashboard-review-form"
+              onSubmit={(event) => {
+                event.preventDefault();
+                void submitReview();
+              }}>
+              <label>
+                <span>Rating</span>
+                <select
+                  value={reviewRating}
+                  onChange={(event) =>
+                    setReviewRating(event.target.value)
+                  }>
+                  <option value="5">5 - Excellent</option>
+                  <option value="4">4 - Good</option>
+                  <option value="3">3 - Okay</option>
+                  <option value="2">2 - Poor</option>
+                  <option value="1">1 - Bad</option>
+                </select>
+              </label>
+
+              <label>
+                <span>Written review</span>
+                <textarea
+                  value={reviewText}
+                  maxLength={REVIEW_MAX_LENGTH}
+                  onChange={(event) =>
+                    setReviewText(event.target.value)
+                  }
+                  rows={5}
+                />
+              </label>
+
+              <button
+                type="submit"
+                disabled={submittingReviewId === reviewingBooking.id}>
+                {submittingReviewId === reviewingBooking.id
+                  ? "Submitting..."
+                  : "Submit Review"}
+              </button>
+            </form>
+          </div>
+        )}
+      </Modal>
     </div>
   );
 }

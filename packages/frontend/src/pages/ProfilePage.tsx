@@ -42,7 +42,6 @@ import {
   parseServiceTags
 } from "./profile/utils";
 import { BioSection } from "./profile/BioSection";
-import { BookingsSection } from "./profile/BookingsSection";
 import {
   DeleteServiceModal,
   ReviewModal
@@ -74,9 +73,7 @@ function ProfilePage() {
   const [customerBookings, setCustomerBookings] = useState<
     CustomerBooking[]
   >([]);
-  const [isLoadingBookings, setIsLoadingBookings] = useState(
-    Boolean(authToken)
-  );
+  
   const [reviewDrafts, setReviewDrafts] = useState<
     Record<string, ReviewDraft>
   >({});
@@ -770,14 +767,6 @@ function ProfilePage() {
           connectStatus={connectStatus}
           isConnecting={isConnecting}
           onConnectStripe={() => void handleConnectStripe()}
-        />
-
-        <BookingsSection
-          bookings={customerBookings}
-          isLoading={isLoadingBookings}
-          onReviewBooking={(bookingId) =>
-            setReviewingBookingId(bookingId)
-          }
         />
 
         <ServicesSection

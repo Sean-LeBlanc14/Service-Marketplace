@@ -36,6 +36,7 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.GET, "/api/bookings/action").permitAll()
                 .requestMatchers("/api/auth/register", "/api/auth/login", "/api/payments/webhook")
                 .permitAll()
+                .requestMatchers("/ws/**").permitAll()
                 .anyRequest().authenticated())
                 .sessionManagement(session -> session
                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS))

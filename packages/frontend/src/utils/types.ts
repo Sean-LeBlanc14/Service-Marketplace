@@ -30,6 +30,64 @@ export type ApiBookingStatus =
   | "COMPLETED"
   | "CANCELLED";
 
+export type MessageType =
+  | "TEXT"
+  | "PRICE_OFFER"
+  | "PRICE_ACCEPTED"
+  | "PRICE_REJECTED";
+
+export type NotificationType =
+  | "NEW_MESSAGE"
+  | "PRICE_OFFER_RECEIVED"
+  | "PRICE_OFFER_ACCEPTED"
+  | "PRICE_OFFER_REJECTED"
+  | "BOOKING_REQUESTED"
+  | "BOOKING_CONFIRMED"
+  | "BOOKING_CANCELLED"
+  | "REVIEW_RECEIVED";
+
+export interface ApiConversation {
+  id: string;
+  serviceId: string;
+  serviceTitle: string;
+  customerId: string;
+  customerName: string;
+  providerId: string;
+  providerName: string;
+  lastMessagePreview: string | null;
+  lastMessageAt: string | null;
+  unreadCount: number;
+  createdAt: string;
+}
+
+export interface ApiMessage {
+  id: string;
+  conversationId: string;
+  senderId: string;
+  senderName: string;
+  type: MessageType;
+  content: string | null;
+  offeredPrice: number | string | null;
+  offerResponded: boolean;
+  read: boolean;
+  createdAt: string;
+}
+
+export interface ApiNotification {
+  id: string;
+  type: NotificationType;
+  title: string;
+  body: string;
+  referenceId: string | null;
+  read: boolean;
+  createdAt: string;
+}
+
+export interface ApiUnreadCounts {
+  messages: number;
+  notifications: number;
+}
+
 export interface ApiBooking {
   id?: string;
   serviceId?: string;

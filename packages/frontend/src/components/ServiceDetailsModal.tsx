@@ -151,18 +151,25 @@ function ServiceDetailsModal({
   async function handleMessageProvider() {
     const token = localStorage.getItem(TOKEN_STORAGE_KEY);
     try {
-      const res = await fetch(API_ENDPOINTS.conversations.start, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`
-        },
-        body: JSON.stringify({ serviceId: service.id })
-      });
+      const res = await fetch(
+        API_ENDPOINTS.conversations.start,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`
+          },
+          body: JSON.stringify({ serviceId: service.id })
+        }
+      );
       if (res.ok) {
-        const conversation = (await res.json()) as { id: string };
+        const conversation = (await res.json()) as {
+          id: string;
+        };
         onClose();
-        navigate("/inbox", { state: { conversationId: conversation.id } });
+        navigate("/inbox", {
+          state: { conversationId: conversation.id }
+        });
       } else {
         toast.error("Could not open conversation.");
       }

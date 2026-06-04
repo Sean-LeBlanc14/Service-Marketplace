@@ -7,12 +7,19 @@ import {
   useState
 } from "react";
 import { Client } from "@stomp/stompjs";
-import type { ApiMessage, ApiNotification, ApiUnreadCounts } from "../utils/types";
+import type {
+  ApiMessage,
+  ApiNotification,
+  ApiUnreadCounts
+} from "../utils/types";
 import { API_ENDPOINTS } from "../utils/api";
 
 function buildWsUrl(): string {
-  const apiBase = import.meta.env.VITE_API_BASE_ROUTE as string | undefined;
-  const httpBase = apiBase?.replace("/api", "") ?? "http://localhost:8080";
+  const apiBase = import.meta.env.VITE_API_BASE_ROUTE as
+    | string
+    | undefined;
+  const httpBase =
+    apiBase?.replace("/api", "") ?? "http://localhost:8080";
   return httpBase.replace(/^http/, "ws") + "/ws";
 }
 
@@ -34,12 +41,18 @@ export function useWebSocketContext() {
   return useContext(WebSocketContext);
 }
 
-export function WebSocketProvider({ children }: { children: React.ReactNode }) {
-  const [unreadCounts, setUnreadCounts] = useState<ApiUnreadCounts>({
-    messages: 0,
-    notifications: 0
-  });
-  const [latestMessage, setLatestMessage] = useState<ApiMessage | null>(null);
+export function WebSocketProvider({
+  children
+}: {
+  children: React.ReactNode;
+}) {
+  const [unreadCounts, setUnreadCounts] =
+    useState<ApiUnreadCounts>({
+      messages: 0,
+      notifications: 0
+    });
+  const [latestMessage, setLatestMessage] =
+    useState<ApiMessage | null>(null);
   const [latestNotification, setLatestNotification] =
     useState<ApiNotification | null>(null);
   const clientRef = useRef<Client | null>(null);
@@ -80,14 +93,19 @@ export function WebSocketProvider({ children }: { children: React.ReactNode }) {
           }));
         });
 
-        client.subscribe("/user/queue/notifications", (frame) => {
-          const notif = JSON.parse(frame.body) as ApiNotification;
-          setLatestNotification(notif);
-          setUnreadCounts((prev) => ({
-            ...prev,
-            notifications: prev.notifications + 1
-          }));
-        });
+        client.subscribe(
+          "/user/queue/notifications",
+          (frame) => {
+            const notif = JSON.parse(
+              frame.body
+            ) as ApiNotification;
+            setLatestNotification(notif);
+            setUnreadCounts((prev) => ({
+              ...prev,
+              notifications: prev.notifications + 1
+            }));
+          }
+        );
       }
     });
 

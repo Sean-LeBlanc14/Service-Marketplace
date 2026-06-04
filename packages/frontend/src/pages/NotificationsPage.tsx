@@ -1,7 +1,10 @@
 import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { API_ENDPOINTS } from "../utils/api";
-import type { ApiNotification, NotificationType } from "../utils/types";
+import type {
+  ApiNotification,
+  NotificationType
+} from "../utils/types";
 import { useWebSocketContext } from "../context/WebSocketContext";
 import "./styles/NotificationsPage.css";
 
@@ -25,33 +28,53 @@ function formatTime(iso: string): string {
   if (diffHours < 24) return `${diffHours}h ago`;
   const diffDays = Math.floor(diffHours / 24);
   if (diffDays < 7) return `${diffDays}d ago`;
-  return d.toLocaleDateString([], { month: "short", day: "numeric" });
+  return d.toLocaleDateString([], {
+    month: "short",
+    day: "numeric"
+  });
 }
 
 function notifIcon(type: NotificationType): string {
   switch (type) {
-    case "NEW_MESSAGE": return "💬";
-    case "PRICE_OFFER_RECEIVED": return "💰";
-    case "PRICE_OFFER_ACCEPTED": return "✅";
-    case "PRICE_OFFER_REJECTED": return "❌";
-    case "BOOKING_REQUESTED": return "📋";
-    case "BOOKING_CONFIRMED": return "🎉";
-    case "BOOKING_CANCELLED": return "🚫";
-    case "REVIEW_RECEIVED": return "⭐";
-    default: return "🔔";
+    case "NEW_MESSAGE":
+      return "💬";
+    case "PRICE_OFFER_RECEIVED":
+      return "💰";
+    case "PRICE_OFFER_ACCEPTED":
+      return "✅";
+    case "PRICE_OFFER_REJECTED":
+      return "❌";
+    case "BOOKING_REQUESTED":
+      return "📋";
+    case "BOOKING_CONFIRMED":
+      return "🎉";
+    case "BOOKING_CANCELLED":
+      return "🚫";
+    case "REVIEW_RECEIVED":
+      return "⭐";
+    default:
+      return "🔔";
   }
 }
 
 export default function NotificationsPage() {
   const navigate = useNavigate();
-  const { refreshUnreadCounts, latestNotification } = useWebSocketContext();
-  const [notifications, setNotifications] = useState<ApiNotification[]>([]);
+  const { refreshUnreadCounts, latestNotification } =
+    useWebSocketContext();
+  const [notifications, setNotifications] = useState<
+    ApiNotification[]
+  >([]);
   const [loading, setLoading] = useState(true);
 
   const load = useCallback(async () => {
     try {
-      const res = await fetch(API_ENDPOINTS.notifications.all, { headers: authHeaders() });
-      if (res.ok) setNotifications((await res.json()) as ApiNotification[]);
+      const res = await fetch(API_ENDPOINTS.notifications.all, {
+        headers: authHeaders()
+      });
+      if (res.ok)
+        setNotifications(
+          (await res.json()) as ApiNotification[]
+        );
     } finally {
       setLoading(false);
     }
@@ -83,7 +106,9 @@ export default function NotificationsPage() {
       method: "PATCH",
       headers: authHeaders()
     });
-    setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+    setNotifications((prev) =>
+      prev.map((n) => ({ ...n, read: true }))
+    );
     refreshUnreadCounts();
   }
 
@@ -96,18 +121,24 @@ export default function NotificationsPage() {
       notif.type === "PRICE_OFFER_ACCEPTED" ||
       notif.type === "PRICE_OFFER_REJECTED"
     ) {
-      navigate("/inbox", { state: { conversationId: notif.referenceId } });
+      navigate("/inbox", {
+        state: { conversationId: notif.referenceId }
+      });
     }
   }
 
-  const unreadCount = notifications.filter((n) => !n.read).length;
+  const unreadCount = notifications.filter(
+    (n) => !n.read
+  ).length;
 
   return (
     <div className="notif-page">
       <div className="notif-header">
         <h1 className="notif-title">Notifications</h1>
         {unreadCount > 0 && (
-          <button className="notif-mark-all" onClick={() => void markAllRead()}>
+          <button
+            className="notif-mark-all"
+            onClick={() => void markAllRead()}>
             Mark all as read
           </button>
         )}
@@ -131,9 +162,13 @@ export default function NotificationsPage() {
             <div className="notif-body">
               <p className="notif-item-title">{n.title}</p>
               <p className="notif-item-body">{n.body}</p>
-              <span className="notif-time">{formatTime(n.createdAt)}</span>
+              <span className="notif-time">
+                {formatTime(n.createdAt)}
+              </span>
             </div>
-            {!n.read && <span className="notif-dot" aria-label="unread" />}
+            {!n.read && (
+              <span className="notif-dot" aria-label="unread" />
+            )}
           </button>
         ))}
       </div>

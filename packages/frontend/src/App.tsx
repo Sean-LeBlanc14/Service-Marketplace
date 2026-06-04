@@ -103,7 +103,10 @@ function AppRoutes() {
           element={<ServiceDashboard />}
         />
         <Route path="inbox" element={<Inbox />} />
-        <Route path="notifications" element={<NotificationsPage />} />
+        <Route
+          path="notifications"
+          element={<NotificationsPage />}
+        />
         <Route path="admin" element={<AdminDashboard />} />
       </Route>
       <Route index element={<LandingPage />} />

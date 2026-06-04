@@ -53,7 +53,11 @@ export default function SideBar() {
           to="/inbox"
           label="Messages"
           icon={<FiMessageCircle />}
-          badge={unreadCounts.messages > 0 ? unreadCounts.messages : undefined}
+          badge={
+            unreadCounts.messages > 0
+              ? unreadCounts.messages
+              : undefined
+          }
         />
       </div>
 
@@ -68,7 +72,11 @@ export default function SideBar() {
           to="/notifications"
           label=""
           icon={<FaBell />}
-          badge={unreadCounts.notifications > 0 ? unreadCounts.notifications : undefined}
+          badge={
+            unreadCounts.notifications > 0
+              ? unreadCounts.notifications
+              : undefined
+          }
         />
       </div>
     </aside>

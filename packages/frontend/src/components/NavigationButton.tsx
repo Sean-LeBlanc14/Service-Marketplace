@@ -23,7 +23,9 @@ export default function NavigationButton({
       <span className="nav-badge-wrapper">
         {icon}
         {badge != null && badge > 0 && (
-          <span className="nav-badge">{badge > 99 ? "99+" : badge}</span>
+          <span className="nav-badge">
+            {badge > 99 ? "99+" : badge}
+          </span>
         )}
       </span>
       <span>{label}</span>

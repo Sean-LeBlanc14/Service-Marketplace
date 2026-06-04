@@ -136,7 +136,6 @@ public class UserService {
 
     }
 
-<<<<<<< HEAD
     public ProviderProfile getProviderProfile(String userId) {
         User user = getUserById(userId);
 
@@ -155,8 +154,6 @@ public class UserService {
         );
     }
 
-    public UserProfile updateUserProfile(UserDetails userDetails, UpdateUserProfileRequest request){
-=======
     public void deleteUserProfile(DeleteAccountRequest request) {
 
         try{
@@ -173,7 +170,6 @@ public class UserService {
     }
 
     public UserProfile updateUserProfile(UserDetails userDetails, UpdateUserProfileRequest request) {
->>>>>>> 4fe37a8efbefb68711fc96f4a7a35022f5489b0a
 
         User user = getUserByEmail(userDetails.getUsername());
 

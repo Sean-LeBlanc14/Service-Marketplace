@@ -176,6 +176,7 @@ public class UserServiceTest {
 
         when(userRepository.findByEmail("student@example.com")).thenReturn(Optional.of(user));
         when(serviceService.getServicesByUserId("user123")).thenReturn(List.of());
+        when(serviceService.getProviderRatingSummary("user123")).thenReturn(new ServiceService.ProviderRatingSummary(null, 0));
 
         UserProfile result = userService.changeUserMajor(userDetails, "Electrical Engineering");
 
@@ -214,6 +215,7 @@ public class UserServiceTest {
 
         when(userRepository.findByEmail("student@example.com")).thenReturn(Optional.of(user));
         when(serviceService.getServicesByUserId("user123")).thenReturn(List.of());
+        when(serviceService.getProviderRatingSummary("user123")).thenReturn(new ServiceService.ProviderRatingSummary(null, 0));
 
         UserProfile result = userService.changeUserCampus(userDetails, "San Luis Obispo");
 

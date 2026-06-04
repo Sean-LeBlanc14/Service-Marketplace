@@ -45,7 +45,9 @@ export function BookingsSection({
               booking.review.length > 0;
 
             return (
-              <article className="booking-card" key={booking.id}>
+              <article
+                className="booking-card"
+                key={booking.id}>
                 <div className="booking-card-heading">
                   <div>
                     <h3>{booking.serviceTitle}</h3>
@@ -58,7 +60,8 @@ export function BookingsSection({
                 </div>
 
                 <p className="booking-scheduled">
-                  Scheduled {formatDateTime(booking.scheduledAt)}
+                  Scheduled{" "}
+                  {formatDateTime(booking.scheduledAt)}
                 </p>
                 {booking.providerName && (
                   <p className="booking-user">

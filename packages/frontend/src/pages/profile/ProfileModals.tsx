@@ -24,7 +24,10 @@ export function DeleteServiceModal({
       className="profile-modal-backdrop"
       role="presentation"
       onMouseDown={(event) => {
-        if (event.target === event.currentTarget && !isDeleting) {
+        if (
+          event.target === event.currentTarget &&
+          !isDeleting
+        ) {
           onCancel();
         }
       }}>
@@ -120,7 +123,8 @@ export function ReviewModal({
               <span>Rating</span>
               <select
                 value={
-                  reviewDrafts[reviewingBookingId]?.rating ?? "5"
+                  reviewDrafts[reviewingBookingId]?.rating ??
+                  "5"
                 }
                 onChange={(event) =>
                   onUpdateDraft(reviewingBookingId, {
@@ -155,7 +159,9 @@ export function ReviewModal({
             <div className="profile-confirm-actions">
               <button
                 type="submit"
-                disabled={submittingReviewId === reviewingBookingId}>
+                disabled={
+                  submittingReviewId === reviewingBookingId
+                }>
                 {submittingReviewId === reviewingBookingId
                   ? "Submitting..."
                   : "Submit Review"}

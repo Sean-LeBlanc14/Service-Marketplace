@@ -76,7 +76,9 @@ export function normalizeService(
     ? service.tags.map(cleanText).filter(Boolean)
     : [];
   const id = cleanText(service.id) || `service-${index}`;
-  const priceMin = Number(cleanNumberValue(service.priceMin) || 0);
+  const priceMin = Number(
+    cleanNumberValue(service.priceMin) || 0
+  );
   const priceMax = Number(
     cleanNumberValue(service.priceMax) || priceMin
   );

@@ -304,7 +304,11 @@ function ServiceDetailsModal({
                 className="service-details-book"
                 onClick={() => setView("booking")}
                 disabled={currentUserId === service.userId}
-                title={currentUserId === service.userId ? "You cannot book your own service" : ""}>
+                title={
+                  currentUserId === service.userId
+                    ? "You cannot book your own service"
+                    : ""
+                }>
                 Book Now
               </button>
               <button

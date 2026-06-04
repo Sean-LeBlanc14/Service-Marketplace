@@ -17,7 +17,8 @@ export function PaymentsSection({
         <div>
           <h2>Payments</h2>
           <p>
-            Connect Stripe to receive payments for your services.
+            Connect Stripe to receive payments for your
+            services.
           </p>
         </div>
         {connectStatus && !connectStatus.chargesEnabled && (
@@ -40,8 +41,8 @@ export function PaymentsSection({
         </p>
       ) : connectStatus?.detailsSubmitted ? (
         <p className="connect-status">
-          Stripe setup in progress. Payments will be enabled once
-          verification is complete.
+          Stripe setup in progress. Payments will be enabled
+          once verification is complete.
         </p>
       ) : (
         <p className="empty-state">

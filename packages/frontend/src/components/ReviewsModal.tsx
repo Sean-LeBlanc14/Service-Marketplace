@@ -46,25 +46,29 @@ export function ReviewsModal({
 
         const data = await response.json();
         setReviews(
-          data.map((booking: {
-            id: string;
-            serviceTitle: string;
-            rating: number;
-            review: string;
-            reviewerName: string;
-            reviewedAt: string;
-          }) => ({
-            id: booking.id,
-            serviceTitle: booking.serviceTitle,
-            rating: booking.rating,
-            review: booking.review,
-            reviewerName: booking.reviewerName,
-            reviewedAt: booking.reviewedAt
-          }))
+          data.map(
+            (booking: {
+              id: string;
+              serviceTitle: string;
+              rating: number;
+              review: string;
+              reviewerName: string;
+              reviewedAt: string;
+            }) => ({
+              id: booking.id,
+              serviceTitle: booking.serviceTitle,
+              rating: booking.rating,
+              review: booking.review,
+              reviewerName: booking.reviewerName,
+              reviewedAt: booking.reviewedAt
+            })
+          )
         );
       } catch (err) {
         setError(
-          err instanceof Error ? err.message : "Failed to load reviews"
+          err instanceof Error
+            ? err.message
+            : "Failed to load reviews"
         );
       } finally {
         setLoading(false);
@@ -107,9 +111,7 @@ export function ReviewsModal({
           ) : error ? (
             <p className="reviews-error">{error}</p>
           ) : reviews.length === 0 ? (
-            <p className="reviews-empty">
-              No reviews yet.
-            </p>
+            <p className="reviews-empty">No reviews yet.</p>
           ) : (
             <div className="reviews-list">
               {reviews.map((review) => (
@@ -124,15 +126,11 @@ export function ReviewsModal({
                       </p>
                     </div>
                     <div className="review-rating">
-                      <span aria-hidden="true">
-                        {"\u2605"}
-                      </span>
+                      <span aria-hidden="true">{"\u2605"}</span>
                       <strong>{review.rating}/5</strong>
                     </div>
                   </div>
-                  <p className="review-text">
-                    {review.review}
-                  </p>
+                  <p className="review-text">{review.review}</p>
                   <p className="review-date">
                     {formatDateTime(review.reviewedAt)}
                   </p>

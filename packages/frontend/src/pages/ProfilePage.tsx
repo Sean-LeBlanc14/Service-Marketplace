@@ -42,7 +42,10 @@ import {
 } from "./profile/utils";
 import { BioSection } from "./profile/BioSection";
 import { BookingsSection } from "./profile/BookingsSection";
-import { DeleteServiceModal, ReviewModal } from "./profile/ProfileModals";
+import {
+  DeleteServiceModal,
+  ReviewModal
+} from "./profile/ProfileModals";
 import { PaymentsSection } from "./profile/PaymentsSection";
 import { ProfileHeader } from "./profile/ProfileHeader";
 import { ServicesSection } from "./profile/ServicesSection";
@@ -858,7 +861,9 @@ function ProfilePage() {
           isDeleting={isDeletingPendingService}
           service={servicePendingDeletion}
           onCancel={() => setServicePendingDeletion(null)}
-          onConfirm={(service) => void handleDeleteService(service)}
+          onConfirm={(service) =>
+            void handleDeleteService(service)
+          }
         />
       )}
 

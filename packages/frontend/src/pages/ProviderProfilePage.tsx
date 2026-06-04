@@ -156,7 +156,9 @@ function ProviderProfilePage() {
             aria-label={`View ${reviewCount} reviews`}>
             <div className="provider-profile-rating">
               <span aria-hidden="true">{"\u2605"}</span>
-              <strong>{averageRating?.toFixed(1) ?? "No rating"}</strong>
+              <strong>
+                {averageRating?.toFixed(1) ?? "No rating"}
+              </strong>
               <p>{ratingText}</p>
             </div>
           </button>

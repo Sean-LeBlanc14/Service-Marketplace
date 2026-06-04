@@ -15,13 +15,10 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-<<<<<<< HEAD
 import com.ServiceMarketplace.service_marketplace.dto.ProviderProfile;
-=======
 import com.ServiceMarketplace.service_marketplace.dto.ChangeFieldRequest;
 import com.ServiceMarketplace.service_marketplace.dto.ChangePasswordRequest;
 import com.ServiceMarketplace.service_marketplace.dto.DeleteAccountRequest;
->>>>>>> 4fe37a8efbefb68711fc96f4a7a35022f5489b0a
 import com.ServiceMarketplace.service_marketplace.dto.UpdateUserProfileRequest;
 import com.ServiceMarketplace.service_marketplace.dto.UserProfile;
 import com.ServiceMarketplace.service_marketplace.model.User;
@@ -55,14 +52,13 @@ public class UserController {
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 
-<<<<<<< HEAD
     @GetMapping("/{userId}/profile")
     public ResponseEntity<ProviderProfile> getProviderProfile(@PathVariable String userId) {
         ProviderProfile response = userService.getProviderProfile(userId);
 
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }
-=======
+
     @DeleteMapping("/delete")
     public ResponseEntity deleteUser(@RequestBody DeleteAccountRequest request){
 
@@ -78,8 +74,6 @@ public class UserController {
 
         return ResponseEntity.ok().build();
     }
-    
->>>>>>> 4fe37a8efbefb68711fc96f4a7a35022f5489b0a
 
     @GetMapping
     public ResponseEntity<List<User>> getUsers(@AuthenticationPrincipal UserDetails userDetails) {

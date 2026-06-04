@@ -49,7 +49,9 @@ interface ServicesSectionProps {
   onServiceMinPriceChange: (value: string) => void;
   onServicePriceChange: (value: string) => void;
   onServicePriceUnitChange: (value: string) => void;
-  onServicePricingTypeChange: (value: ServicePricingType) => void;
+  onServicePricingTypeChange: (
+    value: ServicePricingType
+  ) => void;
   onServicePostingTypeChange: (value: string) => void;
   onServiceTagsChange: (value: string) => void;
   onServiceTitleChange: (value: string) => void;
@@ -128,7 +130,9 @@ export function ServicesSection({
           onSubmit={onSubmit}>
           <div className="service-form-header">
             <h3>
-              {isEditingService ? "Edit Service" : "Create Service"}
+              {isEditingService
+                ? "Edit Service"
+                : "Create Service"}
             </h3>
           </div>
           <div className="service-form-grid">
@@ -176,7 +180,9 @@ export function ServicesSection({
                 <button
                   type="button"
                   className={
-                    servicePricingType === "flat" ? "active" : ""
+                    servicePricingType === "flat"
+                      ? "active"
+                      : ""
                   }
                   aria-pressed={servicePricingType === "flat"}
                   onClick={() =>
@@ -283,7 +289,9 @@ export function ServicesSection({
                   <option value="" disabled hidden>
                     Select a price unit
                   </option>
-                  <option value={NO_PRICE_UNIT_VALUE}>N/A</option>
+                  <option value={NO_PRICE_UNIT_VALUE}>
+                    N/A
+                  </option>
                   {hasCustomPriceUnit && (
                     <option value={servicePriceUnit}>
                       {formatPriceUnit(servicePriceUnit)}
@@ -397,7 +405,9 @@ export function ServicesSection({
                     <button
                       type="button"
                       className="danger-button"
-                      disabled={deletingServiceId === service.id}
+                      disabled={
+                        deletingServiceId === service.id
+                      }
                       onClick={() =>
                         onRequestDeleteService(service)
                       }>

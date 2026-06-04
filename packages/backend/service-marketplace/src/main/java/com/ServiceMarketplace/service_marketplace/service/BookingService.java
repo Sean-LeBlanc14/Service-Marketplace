@@ -25,6 +25,7 @@ import com.ServiceMarketplace.service_marketplace.exception.BookingStateExceptio
 import com.ServiceMarketplace.service_marketplace.exception.InvalidBookingReviewException;
 import com.ServiceMarketplace.service_marketplace.exception.InvalidPriceException;
 import com.ServiceMarketplace.service_marketplace.exception.ResourceNotFoundException;
+import com.ServiceMarketplace.service_marketplace.exception.UnauthorizedBookingRejectionException;
 import com.ServiceMarketplace.service_marketplace.model.Booking;
 import com.ServiceMarketplace.service_marketplace.model.BookingStatus;
 import com.ServiceMarketplace.service_marketplace.model.BookingTokenAction;
@@ -262,6 +263,80 @@ public class BookingService {
         return toBookingResponse(booking);
     }
 
+    public List<BookingResponse> getProviderBookingRequests(UserDetails userDetails){
+        var user = getUserByEmail(userDetails.getUsername());
+
+        List<Booking> bookingRequests = bookingRepository.findByProviderIdAndStatusOrderByCreatedAtDesc(
+            user.getId(), BookingStatus.AWAITING_PROVIDER_CONFIRMATION);
+        
+        var userIds = getUsersById(bookingRequests);
+
+        return bookingRequests.stream()
+            .map(booking -> toBookingResponse(booking, userIds))
+            .toList();
+    }   
+
+    //Gets all scheduled services/bookings for a provider
+    public List<BookingResponse> getProviderScheduledBookings(UserDetails userDetails){
+        var user = getUserByEmail(userDetails.getUsername());
+
+        List<Booking> bookingRequests = bookingRepository.findByProviderIdAndStatusOrderByCreatedAtDesc(
+            user.getId(), BookingStatus.CONFIRMED);
+        
+        var userIds = getUsersById(bookingRequests);
+
+        return bookingRequests.stream()
+            .map(booking -> toBookingResponse(booking, userIds))
+            .toList();
+    }
+
+    public void rejectBooking(String bookingId, UserDetails userDetails){
+
+        var provider = getUserByEmail(userDetails.getUsername());
+
+        var rejectedBooking = bookingRepository.findById(bookingId)
+            .orElseThrow(() -> new ResourceNotFoundException("Booking", bookingId));
+
+        if (!provider.getId().equals(rejectedBooking.getProviderId()) && !rejectedBooking.getStatus().equals(BookingStatus.AWAITING_PROVIDER_CONFIRMATION)){
+            throw new UnauthorizedBookingRejectionException("You are not the provider for this booking");
+        }
+
+        rejectedBooking.setStatus(BookingStatus.REJECTED);
+        bookingRepository.save(rejectedBooking);
+        
+        userRepository.findById(rejectedBooking.getCustomerId()).ifPresent(customer -> {
+                String providerName = provider.getFirstName() + " " + provider.getLastName();
+
+                emailService.sendBookingRejectedCustomerEmail(
+                    customer.getEmail(),
+                    customer.getFirstName(),
+                    providerName,
+                    rejectedBooking.getServiceTitle(),
+                    rejectedBooking.getScheduledAt(),
+                    rejectedBooking.getId()
+                );
+                notificationService.send(customer.getId(), NotificationType.BOOKING_REJECTED,
+                    "Booking Cancelled",
+                    providerName + " cancelled your booking for " + rejectedBooking.getServiceTitle(),
+                    rejectedBooking.getId());
+            });
+        
+    }
+
+    //Gets all completed bookings for a provider
+    public List<BookingResponse> getProviderCompletedBookings(UserDetails userDetails){
+        var user = getUserByEmail(userDetails.getUsername());
+
+        List<Booking> bookingRequests = bookingRepository.findByProviderIdAndStatusOrderByCreatedAtDesc(
+            user.getId(), BookingStatus.COMPLETED);
+        
+        var userIds = getUsersById(bookingRequests);
+
+        return bookingRequests.stream()
+            .map(booking -> toBookingResponse(booking, userIds))
+            .toList();
+    }
+
     public List<BookingResponse> getCustomerBookings(UserDetails userDetails) {
         var customer = getCurrentUser(userDetails);
         var bookings = bookingRepository.findByCustomerIdOrderByCreatedAtDesc(customer.getId());
@@ -427,5 +502,10 @@ public class BookingService {
     private String getReviewerName(Booking booking, Map<String, User> usersById) {
         String reviewerName = clean(booking.getReviewerName());
         return reviewerName.isBlank() ? getUserDisplayName(booking.getCustomerId(), usersById) : reviewerName;
+    }
+
+    private User getUserByEmail(String email){
+        return userRepository.findByEmail(email)
+            .orElseThrow(() -> new UsernameNotFoundException("User not found"));
     }
 }

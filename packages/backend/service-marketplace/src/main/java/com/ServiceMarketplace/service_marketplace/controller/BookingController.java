@@ -7,6 +7,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -28,7 +29,6 @@ import com.ServiceMarketplace.service_marketplace.service.BookingService;
 
 import jakarta.validation.Valid;
 
-
 @RestController
 @RequestMapping("/api/bookings")
 public class BookingController {
@@ -47,10 +47,31 @@ public class BookingController {
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
 
-    @GetMapping("/me")
+    @GetMapping("/customer/me")
     public ResponseEntity<List<BookingResponse>> getCustomerBookings(
             @AuthenticationPrincipal UserDetails userDetails) {
         List<BookingResponse> response = bookingService.getCustomerBookings(userDetails);
+        return ResponseEntity.status(HttpStatus.OK).body(response);
+    }
+
+    @GetMapping("/provider/requests/me")
+    public ResponseEntity<List<BookingResponse>> getProviderBookingRequests(@AuthenticationPrincipal UserDetails userDetails){
+        List<BookingResponse> response = bookingService.getProviderBookingRequests(userDetails);
+
+        return ResponseEntity.status(HttpStatus.OK).body(response);
+    }
+
+    @GetMapping("/provider/scheduled/me")
+    public ResponseEntity<List<BookingResponse>> getProviderScheduledBookings(@AuthenticationPrincipal UserDetails userDetails){
+        List<BookingResponse> response = bookingService.getProviderScheduledBookings(userDetails);
+
+        return ResponseEntity.status(HttpStatus.OK).body(response);
+    }
+
+    @GetMapping("/provider/completed/me")
+    public ResponseEntity<List<BookingResponse>> getProviderCompletedBookings(@AuthenticationPrincipal UserDetails userDetails){
+        List<BookingResponse> response = bookingService.getProviderCompletedBookings(userDetails);
+
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 
@@ -80,28 +101,36 @@ public class BookingController {
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
+    @DeleteMapping("/{id}/reject")
+    public ResponseEntity<Void> rejectBooking(@PathVariable String id, @AuthenticationPrincipal UserDetails userDetails){
+        
+        bookingService.rejectBooking(id, userDetails);
+
+        return ResponseEntity.noContent().build();
+    }
+
     @GetMapping("/action")
     public ResponseEntity<String> handleBookingAction(@RequestParam String token) {
         try {
             BookingTokenAction action = bookingService.processTokenAction(token);
             String title = action == BookingTokenAction.CONFIRM ? "Booking Confirmed" : "Booking Cancelled";
             String message = action == BookingTokenAction.CONFIRM
-                ? "The booking has been confirmed and the customer's payment is being processed."
-                : "The booking request has been cancelled and the customer's card details have been removed.";
+                    ? "The booking has been confirmed and the customer's payment is being processed."
+                    : "The booking request has been cancelled and the customer's card details have been removed.";
             return ResponseEntity.ok()
-                .contentType(MediaType.TEXT_HTML)
-                .body(buildHtmlPage(title, message, "#2e7d32"));
+                    .contentType(MediaType.TEXT_HTML)
+                    .body(buildHtmlPage(title, message, "#2e7d32"));
         } catch (BookingTokenException e) {
             return ResponseEntity.badRequest()
-                .contentType(MediaType.TEXT_HTML)
-                .body(buildHtmlPage("Link Invalid", e.getMessage(), "#c62828"));
+                    .contentType(MediaType.TEXT_HTML)
+                    .body(buildHtmlPage("Link Invalid", e.getMessage(), "#c62828"));
         } catch (BookingStateException e) {
             return ResponseEntity.ok()
-                .contentType(MediaType.TEXT_HTML)
-                .body(buildHtmlPage("Already Actioned", "This booking has already been confirmed or cancelled.", "#e65100"));
+                    .contentType(MediaType.TEXT_HTML)
+                    .body(buildHtmlPage("Already Actioned", "This booking has already been confirmed or cancelled.", "#e65100"));
         }
     }
-    
+
     private String buildHtmlPage(String heading, String message, String headingColor) {
         return """
             <!DOCTYPE html>

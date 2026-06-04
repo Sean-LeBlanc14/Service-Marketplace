@@ -22,8 +22,8 @@ import com.ServiceMarketplace.service_marketplace.dto.UpdateUserProfileRequest;
 import com.ServiceMarketplace.service_marketplace.dto.UserProfile;
 import com.ServiceMarketplace.service_marketplace.exception.EmailAlreadyExistsException;
 import com.ServiceMarketplace.service_marketplace.exception.FailedToDeleteUserException;
-import com.ServiceMarketplace.service_marketplace.exception.RedundantChangeException;
 import com.ServiceMarketplace.service_marketplace.exception.InvalidEmailDomainException;
+import com.ServiceMarketplace.service_marketplace.exception.RedundantChangeException;
 import com.ServiceMarketplace.service_marketplace.exception.ResourceNotFoundException;
 import com.ServiceMarketplace.service_marketplace.model.User;
 import com.ServiceMarketplace.service_marketplace.repository.UserRepository;
@@ -57,23 +57,25 @@ public class UserService {
     }
 
     public AuthResponse registerUser(RegisterRequest request) {
-        if (!request.getEmail().endsWith("@calpoly.edu")) {
-            throw new InvalidEmailDomainException("Registration is limited to Cal Poly email addresses.");
+        String email = clean(request.getEmail()).toLowerCase();
+
+        if (!email.endsWith("@calpoly.edu")) {
+            throw new InvalidEmailDomainException("Registration requires a Cal Poly email address.");
         }
 
-        if (userRepository.existsByEmail(request.getEmail())) {
-            throw new EmailAlreadyExistsException(request.getEmail());
+        if (userRepository.existsByEmail(email)) {
+            throw new EmailAlreadyExistsException(email);
         }
 
         User user = new User();
-        user.setEmail(request.getEmail());
+        user.setEmail(email);
         user.setPassword(passwordEncoder.encode(request.getPassword()));
         user.setFirstName(request.getFirstName());
         user.setLastName(request.getLastName());
         user.setMajor(request.getMajor());
         user.setCampus(request.getCampus());
 
-        String jwtToken = jwtService.generateToken(request.getEmail());
+        String jwtToken = jwtService.generateToken(email);
 
         String code = verificationService.generateVerificationCode();
 

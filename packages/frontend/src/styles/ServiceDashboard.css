@@ -18,7 +18,7 @@
   flex-direction: column;
 }
 
-.booking-container{
+.booking-container {
   display: grid;
   grid-template-columns: repeat(auto-fit, 300px);
   align-items: start;

@@ -45,13 +45,17 @@ function getStatusLabel(status: string): string {
     .join(" ");
 }
 
-function ServiceBooking({ booking, confirmBooking, cancelBooking, rejectBooking }: ServiceBookingProps) {
+function ServiceBooking({
+  booking,
+  confirmBooking,
+  cancelBooking,
+  rejectBooking
+}: ServiceBookingProps) {
   const [isUpdating, setIsUpdating] = useState(false);
-  const [ isRejecting, setIsRejecting] = useState(false);
+  const [isRejecting, setIsRejecting] = useState(false);
   const hasBookingActions =
     booking.status === "AWAITING_PROVIDER_CONFIRMATION" ||
     booking.status === "CONFIRMED";
-
 
   return (
     <Card
@@ -73,11 +77,17 @@ function ServiceBooking({ booking, confirmBooking, cancelBooking, rejectBooking 
 
         <div className="booking-details">
           <div>
-            <span className="booking-detail-label">Customer</span>
-            <span className="booking-detail-value">{booking.customerName}</span>
+            <span className="booking-detail-label">
+              Customer
+            </span>
+            <span className="booking-detail-value">
+              {booking.customerName}
+            </span>
           </div>
           <div>
-            <span className="booking-detail-label">Scheduled</span>
+            <span className="booking-detail-label">
+              Scheduled
+            </span>
             <span className="booking-detail-value">
               {formatBookingTime(booking.scheduledAt as string)}
             </span>
@@ -86,40 +96,41 @@ function ServiceBooking({ booking, confirmBooking, cancelBooking, rejectBooking 
 
         <div
           className={`booking-card-footer ${
-            hasBookingActions ? "" : "booking-card-footer-compact"
+            hasBookingActions
+              ? ""
+              : "booking-card-footer-compact"
           }`}>
           <span className="booking-price">
             {formatBookingPrice(booking)}
           </span>
 
-          {booking.status === "AWAITING_PROVIDER_CONFIRMATION" && (
+          {booking.status ===
+            "AWAITING_PROVIDER_CONFIRMATION" && (
             <div className="booking-action-container">
-             <button
-              type="button"
-              className="booking-action booking-action-primary"
-              disabled={isUpdating}
-              onClick={() => {
-                setIsUpdating(true);
-                confirmBooking?.(booking);
-              }}
-            >
-              {isUpdating ? "Accepting..." : "Accept Booking"}
-            </button>
+              <button
+                type="button"
+                className="booking-action booking-action-primary"
+                disabled={isUpdating}
+                onClick={() => {
+                  setIsUpdating(true);
+                  confirmBooking?.(booking);
+                }}>
+                {isUpdating ? "Accepting..." : "Accept Booking"}
+              </button>
 
-            <button
-              type="button"
-              className="booking-action booking-action-secondary"
-              disabled={isRejecting}
-              onClick={() => {
-                setIsRejecting(true);
-                rejectBooking?.(booking);
-              }}
-            >
-              {isRejecting ? "Rejecting..." : "Reject Booking"}
-            </button>
+              <button
+                type="button"
+                className="booking-action booking-action-secondary"
+                disabled={isRejecting}
+                onClick={() => {
+                  setIsRejecting(true);
+                  rejectBooking?.(booking);
+                }}>
+                {isRejecting
+                  ? "Rejecting..."
+                  : "Reject Booking"}
+              </button>
             </div>
-            
-            
           )}
 
           {booking.status === "CONFIRMED" && (
@@ -130,8 +141,7 @@ function ServiceBooking({ booking, confirmBooking, cancelBooking, rejectBooking 
               onClick={() => {
                 setIsUpdating(true);
                 cancelBooking?.(booking);
-              }}
-            >
+              }}>
               {isUpdating ? "Canceling..." : "Cancel Booking"}
             </button>
           )}

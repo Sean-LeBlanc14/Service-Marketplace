@@ -9,6 +9,7 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -240,12 +241,41 @@ public class BookingService {
 
     public List<BookingResponse> getCustomerBookings(UserDetails userDetails) {
         var customer = getCurrentUser(userDetails);
+        completeOverdueBookings();
         var bookings = bookingRepository.findByCustomerIdOrderByCreatedAtDesc(customer.getId());
         var usersById = getUsersById(bookings);
 
         return bookings.stream()
             .map(booking -> toBookingResponse(booking, usersById))
             .collect(Collectors.toList());
+    }
+
+    public List<BookingResponse> getProviderReviews(String providerId) {
+        String cleanProviderId = clean(providerId);
+        List<Booking> reviewedBookings = bookingRepository.findReviewedBookingsByProviderId(cleanProviderId);
+        var usersById = getUsersById(reviewedBookings);
+
+        return reviewedBookings.stream()
+            .map(booking -> toBookingResponse(booking, usersById))
+            .collect(Collectors.toList());
+    }
+
+    private void completeOverdueBookings() {
+        Instant now = Instant.now();
+        List<Booking> overdueBookings = bookingRepository.findByStatusOrderByCreatedAtDesc(BookingStatus.CONFIRMED)
+            .stream()
+            .filter(booking -> booking.getScheduledAt() != null && booking.getScheduledAt().isBefore(now))
+            .collect(Collectors.toList());
+
+        for (Booking booking : overdueBookings) {
+            booking.setStatus(BookingStatus.COMPLETED);
+            bookingRepository.save(booking);
+        }
+    }
+
+    @Scheduled(fixedDelay = 300000)
+    public void scheduleBookingCompletion() {
+        completeOverdueBookings();
     }
 
     public BookingResponse submitReview(String bookingId, SubmitReviewRequest request, UserDetails userDetails) {

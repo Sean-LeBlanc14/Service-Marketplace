@@ -53,6 +53,13 @@ public class BookingController {
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 
+    @GetMapping("/provider/{providerId}/reviews")
+    public ResponseEntity<List<BookingResponse>> getProviderReviews(
+            @PathVariable String providerId) {
+        List<BookingResponse> response = bookingService.getProviderReviews(providerId);
+        return ResponseEntity.status(HttpStatus.OK).body(response);
+    }
+
     @PostMapping("/{bookingId}/review")
     public ResponseEntity<BookingResponse> submitReview(
             @PathVariable String bookingId,

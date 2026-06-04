@@ -4,12 +4,14 @@ interface ProfileHeaderProps {
   displayName: string;
   profile: UserProfile;
   ratingText: string;
+  onReviewsClick: () => void;
 }
 
 export function ProfileHeader({
   displayName,
   profile,
-  ratingText
+  ratingText,
+  onReviewsClick
 }: ProfileHeaderProps) {
   return (
     <header className="profile-header">
@@ -26,10 +28,16 @@ export function ProfileHeader({
       </div>
       <div className="profile-header-stats">
         <p>{profile.services.length} services</p>
-        <p className="profile-rating-summary">
-          <span aria-hidden="true">{"\u2605"}</span>
-          {ratingText}
-        </p>
+        <button
+          type="button"
+          className="profile-rating-button"
+          onClick={onReviewsClick}
+          aria-label="View your reviews">
+          <p className="profile-rating-summary">
+            <span aria-hidden="true">{"\u2605"}</span>
+            {ratingText}
+          </p>
+        </button>
       </div>
     </header>
   );

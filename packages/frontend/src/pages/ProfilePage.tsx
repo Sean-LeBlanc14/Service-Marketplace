@@ -46,6 +46,7 @@ import { DeleteServiceModal, ReviewModal } from "./profile/ProfileModals";
 import { PaymentsSection } from "./profile/PaymentsSection";
 import { ProfileHeader } from "./profile/ProfileHeader";
 import { ServicesSection } from "./profile/ServicesSection";
+import { ReviewsModal } from "../components/ReviewsModal";
 
 function ProfilePage() {
   const [profile, setProfile] =
@@ -107,6 +108,7 @@ function ProfilePage() {
   >(null);
   const [servicePendingDeletion, setServicePendingDeletion] =
     useState<ServiceListing | null>(null);
+  const [showOwnReviews, setShowOwnReviews] = useState(false);
 
   const isEditingService = editingServiceId !== null;
   const hasCustomPriceUnit =
@@ -726,6 +728,7 @@ function ProfilePage() {
           displayName={displayName}
           profile={profile}
           ratingText={ratingText}
+          onReviewsClick={() => setShowOwnReviews(true)}
         />
 
         <BioSection
@@ -859,6 +862,14 @@ function ProfilePage() {
           onClose={() => setReviewingBookingId(null)}
           onSubmit={handleReviewSubmit}
           onUpdateDraft={updateReviewDraft}
+        />
+      )}
+
+      {showOwnReviews && (
+        <ReviewsModal
+          providerId={localStorage.getItem("user_id") || ""}
+          providerName={displayName}
+          onClose={() => setShowOwnReviews(false)}
         />
       )}
     </>

@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Col, Container, Row } from "react-bootstrap";
 import { Link, useParams } from "react-router-dom";
 import ServiceCard from "../components/ServiceCard";
+import { ReviewsModal } from "../components/ReviewsModal";
 import { API_ENDPOINTS } from "../utils/api";
 import {
   cleanText,
@@ -24,6 +25,7 @@ function ProviderProfilePage() {
     useState<ApiProviderProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [showReviews, setShowReviews] = useState(false);
 
   useEffect(() => {
     let isMounted = true;
@@ -147,11 +149,17 @@ function ProviderProfilePage() {
             {profileMeta && <p>{profileMeta}</p>}
           </div>
 
-          <div className="provider-profile-rating">
-            <span aria-hidden="true">{"\u2605"}</span>
-            <strong>{averageRating?.toFixed(1) ?? "No rating"}</strong>
-            <p>{ratingText}</p>
-          </div>
+          <button
+            type="button"
+            className="provider-profile-rating-button"
+            onClick={() => setShowReviews(true)}
+            aria-label={`View ${reviewCount} reviews`}>
+            <div className="provider-profile-rating">
+              <span aria-hidden="true">{"\u2605"}</span>
+              <strong>{averageRating?.toFixed(1) ?? "No rating"}</strong>
+              <p>{ratingText}</p>
+            </div>
+          </button>
         </header>
 
         <section className="provider-profile-section">
@@ -185,6 +193,14 @@ function ProviderProfilePage() {
           )}
         </section>
       </Container>
+
+      {showReviews && userId && (
+        <ReviewsModal
+          providerId={userId}
+          providerName={displayName}
+          onClose={() => setShowReviews(false)}
+        />
+      )}
     </main>
   );
 }

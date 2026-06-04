@@ -44,6 +44,18 @@
   font-weight: 600;
 }
 
+.provider-profile-rating-button {
+  border: none;
+  background: transparent;
+  padding: 0;
+  cursor: pointer;
+}
+
+.provider-profile-rating-button:hover .provider-profile-rating {
+  background: #f0f0f0;
+  border-color: #1f4a3f;
+}
+
 .provider-profile-rating {
   min-width: 190px;
   border: 1px solid #d8e0e4;

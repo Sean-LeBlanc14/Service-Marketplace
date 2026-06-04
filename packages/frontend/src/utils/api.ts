@@ -43,7 +43,9 @@ export const API_ENDPOINTS = {
     confirm: (bookingId: string) =>
       `${API_ROUTE}/bookings/${encodeURIComponent(bookingId)}/confirm`,
     cancel: (bookingId: string) =>
-      `${API_ROUTE}/bookings/${encodeURIComponent(bookingId)}/cancel`
+      `${API_ROUTE}/bookings/${encodeURIComponent(bookingId)}/cancel`,
+    providerReviews: (providerId: string) =>
+      `${API_ROUTE}/bookings/provider/${encodeURIComponent(providerId)}/reviews`
   },
   reports: {
     create: `${API_ROUTE}/reports`,

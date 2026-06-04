@@ -31,6 +31,17 @@
   font-weight: 600;
 }
 
+.profile-rating-button {
+  border: none;
+  background: transparent;
+  padding: 0;
+  cursor: pointer;
+}
+
+.profile-rating-button:hover .profile-rating-summary {
+  text-decoration: underline;
+}
+
 .profile-header-stats {
   display: grid;
   gap: 6px;
@@ -63,7 +74,15 @@
   letter-spacing: 0;
 }
 
-.profile-bio p,
+.profile-bio h2 {
+  color: #5b5b5b;
+}
+
+.profile-bio p {
+  margin: 8px 0 0;
+  color: #161616;
+}
+
 .section-heading p,
 .empty-state {
   margin: 8px 0 0;
@@ -109,7 +128,13 @@
   border: 1px solid #cfcfcf;
   border-radius: 8px;
   padding: 12px;
+  color: #161616;
   font: inherit;
+}
+
+.bio-textarea::placeholder {
+  color: #757575;
+  opacity: 1;
 }
 
 .bio-form-actions {

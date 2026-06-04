@@ -35,6 +35,8 @@ export default function Settings() {
   const [isDeletingAccount, setIsDeletingAccount] =
     useState(false);
   const [userEmail, setUserEmail] = useState("");
+  const [accountDeletePassword, setAccountDeletePassword] =
+    useState("");
 
   const [isLoggingOut, setIsLoggingOut] = useState(false);
 
@@ -104,7 +106,7 @@ export default function Settings() {
 
     const deleteAccountrequest = {
       email: userEmail,
-      password: currentPassword
+      password: accountDeletePassword
     };
 
     try {
@@ -331,8 +333,10 @@ export default function Settings() {
         <InputField
           label=""
           placeHolder="Password"
-          value={currentPassword}
-          onChange={(e) => setCurrentPassword(e.target.value)}
+          value={accountDeletePassword}
+          onChange={(e) =>
+            setAccountDeletePassword(e.target.value)
+          }
           type="password"
         />
         <SubmitButton

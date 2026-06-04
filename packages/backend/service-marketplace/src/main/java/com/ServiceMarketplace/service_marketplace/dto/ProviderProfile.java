@@ -5,11 +5,9 @@ import java.util.List;
 import lombok.Value;
 
 @Value
-public class UserProfile {
+public class ProviderProfile {
 
     private String id;
-    
-    private String email;
 
     private String firstName;
 
@@ -20,10 +18,6 @@ public class UserProfile {
     private String campus;
 
     private String bio;
-
-    private boolean isVerified;
-
-    private String role;
 
     private Double averageRating;
 

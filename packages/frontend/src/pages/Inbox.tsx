@@ -11,10 +11,10 @@ import type {
   ApiMessage
 } from "../utils/types";
 import { useWebSocketContext } from "../context/WebSocketContext";
+import { USER_ID_KEY } from "./profile/constants";
 import "./styles/Inbox.css";
 
 const TOKEN_KEY = "jwt_token";
-const USER_ID_KEY = "user_id";
 
 function authHeaders() {
   return {

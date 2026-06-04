@@ -3,8 +3,10 @@ package com.ServiceMarketplace.service_marketplace;
 import com.ServiceMarketplace.service_marketplace.dto.CreateServiceRequest;
 import com.ServiceMarketplace.service_marketplace.dto.ServiceDto;
 import com.ServiceMarketplace.service_marketplace.dto.UpdateServiceRequest;
+import com.ServiceMarketplace.service_marketplace.model.Booking;
 import com.ServiceMarketplace.service_marketplace.model.Service;
 import com.ServiceMarketplace.service_marketplace.model.User;
+import com.ServiceMarketplace.service_marketplace.repository.BookingRepository;
 import com.ServiceMarketplace.service_marketplace.repository.ServiceRepository;
 import com.ServiceMarketplace.service_marketplace.repository.UserRepository;
 import com.ServiceMarketplace.service_marketplace.service.ServiceService;
@@ -32,6 +34,9 @@ public class ServiceServiceTest {
 
     @Mock
     private UserRepository userRepository;
+
+    @Mock
+    private BookingRepository bookingRepository;
 
     @InjectMocks
     private ServiceService serviceService;
@@ -61,7 +66,8 @@ public class ServiceServiceTest {
         user.setLastName("Chen");
 
         when(serviceRepository.findAll()).thenReturn(List.of(s1, s2));
-        when(userRepository.findById("user123")).thenReturn(Optional.of(user));
+        when(userRepository.findAllById(any())).thenReturn(List.of(user));
+        when(bookingRepository.findReviewedBookingsByProviderIdIn(any())).thenReturn(List.of());
 
         List<ServiceDto> result = serviceService.getAllServices();
 
@@ -84,10 +90,35 @@ public class ServiceServiceTest {
     }
 
     @Test
+    void getAllServices_includesProviderAverageRating() {
+        Service service = createMockService("1", "tutoring");
+        Booking firstReview = new Booking();
+        firstReview.setProviderId("user123");
+        firstReview.setRating(5);
+        Booking secondReview = new Booking();
+        secondReview.setProviderId("user123");
+        secondReview.setRating(4);
+
+        when(serviceRepository.findAll()).thenReturn(List.of(service));
+        when(userRepository.findAllById(any())).thenReturn(List.of());
+        when(bookingRepository.findReviewedBookingsByProviderIdIn(any()))
+            .thenReturn(List.of(firstReview, secondReview));
+
+        List<ServiceDto> result = serviceService.getAllServices();
+
+        assertEquals(1, result.size());
+        assertEquals(4.5, result.get(0).getProviderAverageRating());
+        assertEquals(2, result.get(0).getProviderReviewCount());
+        verify(bookingRepository, never()).findReviewedBookingsByProviderId("user123");
+    }
+
+    @Test
     void getServicesByCategory_returnsMatchingServices() {
         Service s1 = createMockService("1", "tutoring");
 
         when(serviceRepository.findByCategory("tutoring")).thenReturn(List.of(s1));
+        when(userRepository.findAllById(any())).thenReturn(List.of());
+        when(bookingRepository.findReviewedBookingsByProviderIdIn(any())).thenReturn(List.of());
 
         List<ServiceDto> result = serviceService.getServicesByCategory("tutoring");
 
@@ -111,6 +142,8 @@ public class ServiceServiceTest {
         Service s1 = createMockService("1", "tutoring");
 
         when(serviceRepository.findByUserId("user123")).thenReturn(List.of(s1));
+        when(userRepository.findAllById(any())).thenReturn(List.of());
+        when(bookingRepository.findReviewedBookingsByProviderIdIn(any())).thenReturn(List.of());
 
         List<ServiceDto> result = serviceService.getServicesByUserId("user123");
 

@@ -16,6 +16,7 @@ import com.ServiceMarketplace.service_marketplace.dto.AuthResponse;
 import com.ServiceMarketplace.service_marketplace.dto.ChangePasswordRequest;
 import com.ServiceMarketplace.service_marketplace.dto.DeleteAccountRequest;
 import com.ServiceMarketplace.service_marketplace.dto.LoginRequest;
+import com.ServiceMarketplace.service_marketplace.dto.ProviderProfile;
 import com.ServiceMarketplace.service_marketplace.dto.RegisterRequest;
 import com.ServiceMarketplace.service_marketplace.dto.ServiceDto;
 import com.ServiceMarketplace.service_marketplace.dto.UpdateUserProfileRequest;
@@ -137,6 +138,28 @@ public class UserService {
 
     }
 
+    public ProviderProfile getProviderProfile(String userId) {
+        User user = getUserById(userId);
+
+        if ("suspended".equalsIgnoreCase(clean(user.getRole()))) {
+            throw new ResourceNotFoundException("Provider", userId);
+        }
+
+        var ratingSummary = serviceService.getProviderRatingSummary(user.getId());
+
+        return new ProviderProfile(
+            user.getId(),
+            user.getFirstName(),
+            user.getLastName(),
+            user.getMajor(),
+            user.getCampus(),
+            clean(user.getBio()),
+            ratingSummary.averageRating(),
+            ratingSummary.reviewCount(),
+            getProfileServices(user.getId())
+        );
+    }
+
     public void deleteUserProfile(DeleteAccountRequest request) {
 
         try{
@@ -232,8 +255,11 @@ public class UserService {
     }
 
     private UserProfile toUserProfile(User user) {
-        return new UserProfile(user.getEmail(), user.getFirstName(), user.getLastName(), user.getMajor(),
+        var ratingSummary = serviceService.getProviderRatingSummary(user.getId());
+
+        return new UserProfile(user.getId(), user.getEmail(), user.getFirstName(), user.getLastName(), user.getMajor(),
             user.getCampus(), clean(user.getBio()), user.getVerificationStatus(), user.getRole(),
+            ratingSummary.averageRating(), ratingSummary.reviewCount(),
             getProfileServices(user.getId()));
     }
 

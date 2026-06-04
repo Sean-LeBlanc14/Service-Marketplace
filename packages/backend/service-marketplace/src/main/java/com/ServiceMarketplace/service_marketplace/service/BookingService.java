@@ -9,9 +9,15 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.data.mongodb.core.FindAndModifyOptions;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.stereotype.Service;
 
 import com.ServiceMarketplace.service_marketplace.dto.BookingResponse;
@@ -19,12 +25,14 @@ import com.ServiceMarketplace.service_marketplace.dto.ConfirmBookingRequest;
 import com.ServiceMarketplace.service_marketplace.dto.CreateBookingRequest;
 import com.ServiceMarketplace.service_marketplace.dto.CreateBookingResponse;
 import com.ServiceMarketplace.service_marketplace.dto.PaymentIntentResult;
+import com.ServiceMarketplace.service_marketplace.dto.ProviderReviewResponse;
 import com.ServiceMarketplace.service_marketplace.dto.SetupIntentResult;
 import com.ServiceMarketplace.service_marketplace.dto.SubmitReviewRequest;
 import com.ServiceMarketplace.service_marketplace.exception.BookingStateException;
 import com.ServiceMarketplace.service_marketplace.exception.InvalidBookingReviewException;
 import com.ServiceMarketplace.service_marketplace.exception.InvalidPriceException;
 import com.ServiceMarketplace.service_marketplace.exception.ResourceNotFoundException;
+import com.ServiceMarketplace.service_marketplace.exception.ServiceUnavailableException;
 import com.ServiceMarketplace.service_marketplace.exception.UnauthorizedBookingRejectionException;
 import com.ServiceMarketplace.service_marketplace.model.Booking;
 import com.ServiceMarketplace.service_marketplace.model.BookingStatus;
@@ -47,10 +55,12 @@ public class BookingService {
     private final EmailService emailService;
     private final BookingTokenService bookingTokenService;
     private final NotificationService notificationService;
+    private final MongoTemplate mongoTemplate;
 
     public BookingService(BookingRepository bookingRepository, ServiceRepository serviceRepository,
             UserRepository userRepository, PaymentService paymentService, EmailService emailService,
-            BookingTokenService bookingTokenService, NotificationService notificationService) {
+            BookingTokenService bookingTokenService, NotificationService notificationService,
+            MongoTemplate mongoTemplate) {
         this.bookingRepository = bookingRepository;
         this.serviceRepository = serviceRepository;
         this.userRepository = userRepository;
@@ -58,6 +68,7 @@ public class BookingService {
         this.emailService = emailService;
         this.bookingTokenService = bookingTokenService;
         this.notificationService = notificationService;
+        this.mongoTemplate = mongoTemplate;
     }
 
     public CreateBookingResponse createBooking(CreateBookingRequest request, UserDetails userDetails) {
@@ -68,6 +79,10 @@ public class BookingService {
             .findById(request.getServiceId())
             .orElseThrow(() -> new ResourceNotFoundException("Service", request.getServiceId()));
 
+        if (Boolean.FALSE.equals(service.getIsAvailable())) {
+            throw new ServiceUnavailableException("This service is no longer available.");
+        }
+
         if (request.getProposedPrice().compareTo(service.getPriceMin()) < 0 ||
             request.getProposedPrice().compareTo(service.getPriceMax()) > 0) {
             throw new InvalidPriceException(
@@ -75,56 +90,73 @@ public class BookingService {
             );
         }
 
-        User provider = userRepository.findById(service.getUserId())
-            .orElseThrow(() -> new ResourceNotFoundException("Provider", service.getUserId()));
+        String providerId = service.getUserId();
+        User provider = userRepository.findById(providerId)
+            .orElseThrow(() -> new ResourceNotFoundException("Provider", providerId));
 
-        String customerName = customer.getFirstName() + " " + customer.getLastName();
-        SetupIntentResult setupResult = paymentService.createSetupIntent(customer.getEmail(), customerName);
+        boolean reservedSinglePosting = false;
+        Booking saved = null;
 
-        Booking booking = new Booking();
-        booking.setServiceId(request.getServiceId());
-        booking.setCustomerId(customer.getId());
-        booking.setProviderId(service.getUserId());
-        booking.setServiceTitle(service.getTitle());
-        booking.setAgreedPrice(request.getProposedPrice());
-        booking.setPriceUnit(service.getPriceUnit());
-        booking.setScheduledAt(request.getScheduledAt());
-        booking.setStatus(BookingStatus.AWAITING_PROVIDER_CONFIRMATION);
-        booking.setStripeSetupIntentId(setupResult.getSetupIntentId());
-        booking.setStripeCustomerId(setupResult.getStripeCustomerId());
+        if (isSinglePosting(service)) {
+            service = reserveSinglePostingService(service.getId());
+            reservedSinglePosting = true;
+        }
 
-        Booking saved = bookingRepository.save(booking);
+        try {
+            String customerName = customer.getFirstName() + " " + customer.getLastName();
+            SetupIntentResult setupResult = paymentService.createSetupIntent(customer.getEmail(), customerName);
 
-        emailService.sendBookingRequestedCustomerEmail(
-            customer.getEmail(),
-            customer.getFirstName(),
-            service.getTitle(),
-            request.getProposedPrice(),
-            service.getPriceUnit(),
-            request.getScheduledAt(),
-            saved.getId()
-        );
+            Booking booking = new Booking();
+            booking.setServiceId(request.getServiceId());
+            booking.setCustomerId(customer.getId());
+            booking.setProviderId(service.getUserId());
+            booking.setServiceTitle(service.getTitle());
+            booking.setAgreedPrice(request.getProposedPrice());
+            booking.setPriceUnit(service.getPriceUnit());
+            booking.setScheduledAt(request.getScheduledAt());
+            booking.setStatus(BookingStatus.AWAITING_PROVIDER_CONFIRMATION);
+            booking.setStripeSetupIntentId(setupResult.getSetupIntentId());
+            booking.setStripeCustomerId(setupResult.getStripeCustomerId());
 
-        TokenPair tokenPair = bookingTokenService.generateTokenPair(saved.getId());
+            saved = bookingRepository.save(booking);
 
-        emailService.sendProviderBookingNotificationEmail(
-            provider.getEmail(),
-            provider.getFirstName(),
-            customerName,
-            service.getTitle(),
-            request.getProposedPrice(),
-            service.getPriceUnit(),
-            request.getScheduledAt(),
-            tokenPair.confirmUrl(),
-            tokenPair.cancelUrl()
-        );
+            emailService.sendBookingRequestedCustomerEmail(
+                customer.getEmail(),
+                customer.getFirstName(),
+                service.getTitle(),
+                request.getProposedPrice(),
+                service.getPriceUnit(),
+                request.getScheduledAt(),
+                saved.getId()
+            );
 
-        notificationService.send(provider.getId(), NotificationType.BOOKING_REQUESTED,
-            "New Booking Request",
-            customerName + " has requested to book " + service.getTitle(),
-            saved.getId());
+            TokenPair tokenPair = bookingTokenService.generateTokenPair(saved.getId());
 
-        return new CreateBookingResponse(toBookingResponse(saved), setupResult.getSetupClientSecret());
+            emailService.sendProviderBookingNotificationEmail(
+                provider.getEmail(),
+                provider.getFirstName(),
+                customerName,
+                service.getTitle(),
+                request.getProposedPrice(),
+                service.getPriceUnit(),
+                request.getScheduledAt(),
+                tokenPair.confirmUrl(),
+                tokenPair.cancelUrl()
+            );
+
+            notificationService.send(provider.getId(), NotificationType.BOOKING_REQUESTED,
+                "New Booking Request",
+                customerName + " has requested to book " + service.getTitle(),
+                saved.getId());
+
+            return new CreateBookingResponse(toBookingResponse(saved), setupResult.getSetupClientSecret());
+        } catch (RuntimeException e) {
+            if (reservedSinglePosting && saved == null) {
+                releaseSinglePostingService(service.getId());
+            }
+
+            throw e;
+        }
     }
 
     public BookingResponse confirmBooking(String bookingId, ConfirmBookingRequest request, UserDetails userDetails) {
@@ -347,6 +379,34 @@ public class BookingService {
             .collect(Collectors.toList());
     }
 
+    public List<ProviderReviewResponse> getProviderReviews(String providerId) {
+        String cleanProviderId = clean(providerId);
+        List<Booking> reviewedBookings = bookingRepository.findReviewedBookingsByProviderId(cleanProviderId);
+        var usersById = getUsersById(reviewedBookings);
+
+        return reviewedBookings.stream()
+            .map(booking -> toProviderReviewResponse(booking, usersById))
+            .collect(Collectors.toList());
+    }
+
+    private void completeOverdueBookings() {
+        Instant now = Instant.now();
+        List<Booking> overdueBookings = bookingRepository.findByStatusOrderByCreatedAtDesc(BookingStatus.CONFIRMED)
+            .stream()
+            .filter(booking -> booking.getScheduledAt() != null && booking.getScheduledAt().isBefore(now))
+            .collect(Collectors.toList());
+
+        for (Booking booking : overdueBookings) {
+            booking.setStatus(BookingStatus.COMPLETED);
+            bookingRepository.save(booking);
+        }
+    }
+
+    @Scheduled(fixedDelay = 300000)
+    void scheduleBookingCompletion() {
+        completeOverdueBookings();
+    }
+
     public BookingResponse submitReview(String bookingId, SubmitReviewRequest request, UserDetails userDetails) {
         var customer = getCurrentUser(userDetails);
         var booking = bookingRepository.findById(bookingId)
@@ -384,6 +444,52 @@ public class BookingService {
             .orElseThrow(() -> new UsernameNotFoundException("User not found"));
     }
 
+    private boolean isSinglePosting(com.ServiceMarketplace.service_marketplace.model.Service service) {
+        return "single".equalsIgnoreCase(clean(service.getPostingType()));
+    }
+
+    private com.ServiceMarketplace.service_marketplace.model.Service reserveSinglePostingService(String serviceId) {
+        Criteria availabilityCriteria = new Criteria().orOperator(
+            Criteria.where("isAvailable").is(true),
+            Criteria.where("isAvailable").is(null),
+            Criteria.where("isAvailable").exists(false)
+        );
+        Query query = Query.query(new Criteria().andOperator(
+            Criteria.where("_id").is(serviceId),
+            Criteria.where("postingType").regex("^single$", "i"),
+            availabilityCriteria
+        ));
+        Update update = new Update().set("isAvailable", false);
+
+        com.ServiceMarketplace.service_marketplace.model.Service reservedService = mongoTemplate.findAndModify(
+            query,
+            update,
+            FindAndModifyOptions.options().returnNew(true),
+            com.ServiceMarketplace.service_marketplace.model.Service.class
+        );
+
+        if (reservedService == null) {
+            throw new ServiceUnavailableException("This service is no longer available.");
+        }
+
+        return reservedService;
+    }
+
+    private void releaseSinglePostingService(String serviceId) {
+        Query query = Query.query(new Criteria().andOperator(
+            Criteria.where("_id").is(serviceId),
+            Criteria.where("postingType").regex("^single$", "i"),
+            Criteria.where("isAvailable").is(false)
+        ));
+        Update update = new Update().set("isAvailable", true);
+
+        mongoTemplate.updateFirst(
+            query,
+            update,
+            com.ServiceMarketplace.service_marketplace.model.Service.class
+        );
+    }
+
     private BookingResponse toBookingResponse(Booking booking) {
         return new BookingResponse(
             booking.getId(),
@@ -402,6 +508,16 @@ public class BookingService {
             booking.getReview(),
             booking.getReviewedAt(),
             booking.getCreatedAt()
+        );
+    }
+
+    private ProviderReviewResponse toProviderReviewResponse(Booking booking, Map<String, User> usersById) {
+        return new ProviderReviewResponse(
+            booking.getServiceTitle(),
+            booking.getRating(),
+            clean(booking.getReview()),
+            getReviewerFirstName(booking, usersById),
+            booking.getReviewedAt()
         );
     }
 
@@ -502,6 +618,23 @@ public class BookingService {
     private String getReviewerName(Booking booking, Map<String, User> usersById) {
         String reviewerName = clean(booking.getReviewerName());
         return reviewerName.isBlank() ? getUserDisplayName(booking.getCustomerId(), usersById) : reviewerName;
+    }
+
+    private String getReviewerFirstName(Booking booking, Map<String, User> usersById) {
+        String customerId = clean(booking.getCustomerId());
+        User customer = usersById.get(customerId);
+
+        if (customer != null && !clean(customer.getFirstName()).isBlank()) {
+            return clean(customer.getFirstName());
+        }
+
+        String reviewerName = getReviewerName(booking, usersById);
+
+        if (reviewerName.isBlank()) {
+            return "";
+        }
+
+        return reviewerName.split("\\s+")[0];
     }
 
     private User getUserByEmail(String email){

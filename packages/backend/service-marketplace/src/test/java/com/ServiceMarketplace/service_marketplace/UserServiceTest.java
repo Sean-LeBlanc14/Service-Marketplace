@@ -5,6 +5,8 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+
+import com.ServiceMarketplace.service_marketplace.exception.ResourceNotFoundException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import static org.mockito.ArgumentMatchers.any;
@@ -175,12 +177,24 @@ public class UserServiceTest {
     }
 
     @Test
+    void getProviderProfile_suspendedUser_throwsResourceNotFound() {
+        User user = createProfileUser();
+        user.setRole("suspended");
+
+        when(userRepository.findById("user123")).thenReturn(Optional.of(user));
+
+        assertThrows(ResourceNotFoundException.class, () -> userService.getProviderProfile("user123"));
+        verifyNoInteractions(serviceService);
+    }
+
+    @Test
     void changeUserMajor_success_updatesMajorAndReturnsProfile() {
         User user = createProfileUser();
         UserDetails userDetails = mockUserDetails();
 
         when(userRepository.findByEmail("student@example.com")).thenReturn(Optional.of(user));
         when(serviceService.getServicesByUserId("user123")).thenReturn(List.of());
+        when(serviceService.getProviderRatingSummary("user123")).thenReturn(new ServiceService.ProviderRatingSummary(null, 0));
 
         UserProfile result = userService.changeUserMajor(userDetails, "Electrical Engineering");
 
@@ -219,6 +233,7 @@ public class UserServiceTest {
 
         when(userRepository.findByEmail("student@example.com")).thenReturn(Optional.of(user));
         when(serviceService.getServicesByUserId("user123")).thenReturn(List.of());
+        when(serviceService.getProviderRatingSummary("user123")).thenReturn(new ServiceService.ProviderRatingSummary(null, 0));
 
         UserProfile result = userService.changeUserCampus(userDetails, "San Luis Obispo");
 

@@ -21,6 +21,7 @@ import com.ServiceMarketplace.service_marketplace.dto.BookingResponse;
 import com.ServiceMarketplace.service_marketplace.dto.ConfirmBookingRequest;
 import com.ServiceMarketplace.service_marketplace.dto.CreateBookingRequest;
 import com.ServiceMarketplace.service_marketplace.dto.CreateBookingResponse;
+import com.ServiceMarketplace.service_marketplace.dto.ProviderReviewResponse;
 import com.ServiceMarketplace.service_marketplace.dto.SubmitReviewRequest;
 import com.ServiceMarketplace.service_marketplace.exception.BookingStateException;
 import com.ServiceMarketplace.service_marketplace.exception.BookingTokenException;
@@ -51,6 +52,13 @@ public class BookingController {
     public ResponseEntity<List<BookingResponse>> getCustomerBookings(
             @AuthenticationPrincipal UserDetails userDetails) {
         List<BookingResponse> response = bookingService.getCustomerBookings(userDetails);
+        return ResponseEntity.status(HttpStatus.OK).body(response);
+    }
+
+    @GetMapping("/provider/{providerId}/reviews")
+    public ResponseEntity<List<ProviderReviewResponse>> getProviderReviews(
+            @PathVariable String providerId) {
+        List<ProviderReviewResponse> response = bookingService.getProviderReviews(providerId);
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 

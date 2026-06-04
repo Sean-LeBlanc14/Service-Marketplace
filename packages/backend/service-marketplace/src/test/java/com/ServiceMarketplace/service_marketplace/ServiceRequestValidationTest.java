@@ -43,6 +43,22 @@ public class ServiceRequestValidationTest {
         assertHasViolation(request, "Use no more than 5 tags");
     }
 
+    @Test
+    void createServiceRequest_rejectsInvalidPostingType() {
+        CreateServiceRequest request = validCreateServiceRequest();
+        request.setPostingType("recurring");
+
+        assertHasViolation(request, "Posting type must be 'single' or 'continuous'");
+    }
+
+    @Test
+    void updateServiceRequest_rejectsInvalidPostingType() {
+        UpdateServiceRequest request = validUpdateServiceRequest();
+        request.setPostingType("recurring");
+
+        assertHasViolation(request, "Posting type must be 'single' or 'continuous'");
+    }
+
     private CreateServiceRequest validCreateServiceRequest() {
         CreateServiceRequest request = new CreateServiceRequest();
         request.setTitle("Calculus tutoring");

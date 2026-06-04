@@ -12,6 +12,8 @@ export const API_ENDPOINTS = {
   },
   user: {
     profile: `${API_ROUTE}/users/me`,
+    providerProfile: (userId: string) =>
+      `${API_ROUTE}/users/${encodeURIComponent(userId)}/profile`,
     other: (userId: string) =>
       `${API_ROUTE}/users/profile/${encodeURIComponent(userId)}`,
     delete: `${API_ROUTE}/users/delete`,
@@ -48,6 +50,8 @@ export const API_ENDPOINTS = {
       `${API_ROUTE}/bookings/${encodeURIComponent(bookingId)}/confirm`,
     cancel: (bookingId: string) =>
       `${API_ROUTE}/bookings/${encodeURIComponent(bookingId)}/cancel`,
+    providerReviews: (providerId: string) =>
+      `${API_ROUTE}/bookings/provider/${encodeURIComponent(providerId)}/reviews`,
     reject: (bookingId: string) =>
       `${API_ROUTE}/bookings/${encodeURIComponent(bookingId)}/reject`,
     getProviderRequests: `${API_ROUTE}/bookings/provider/requests/me`,

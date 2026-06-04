@@ -20,6 +20,10 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.mongodb.core.FindAndModifyOptions;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.userdetails.UserDetails;
 
@@ -35,6 +39,7 @@ import com.ServiceMarketplace.service_marketplace.exception.BookingTokenExceptio
 import com.ServiceMarketplace.service_marketplace.exception.InvalidBookingReviewException;
 import com.ServiceMarketplace.service_marketplace.exception.InvalidPriceException;
 import com.ServiceMarketplace.service_marketplace.exception.ResourceNotFoundException;
+import com.ServiceMarketplace.service_marketplace.exception.ServiceUnavailableException;
 import com.ServiceMarketplace.service_marketplace.model.Booking;
 import com.ServiceMarketplace.service_marketplace.model.BookingStatus;
 import com.ServiceMarketplace.service_marketplace.model.BookingTokenAction;
@@ -61,6 +66,7 @@ class BookingServiceTest {
     @Mock private EmailService emailService;
     @Mock private BookingTokenService bookingTokenService;
     @Mock private NotificationService notificationService;
+    @Mock private MongoTemplate mongoTemplate;
     @Mock private UserDetails userDetails;
 
     @InjectMocks
@@ -133,6 +139,63 @@ class BookingServiceTest {
     }
 
     @Test
+    void createBooking_unavailableService_throwsServiceUnavailableException() {
+        CreateBookingRequest request = new CreateBookingRequest("service-123", new BigDecimal("50.00"), Instant.now());
+        mockService.setIsAvailable(false);
+
+        when(userRepository.findByEmail("student@calpoly.edu")).thenReturn(Optional.of(mockCustomer));
+        when(serviceRepository.findById("service-123")).thenReturn(Optional.of(mockService));
+
+        assertThatThrownBy(() -> bookingService.createBooking(request, userDetails))
+            .isInstanceOf(ServiceUnavailableException.class);
+
+        verify(paymentService, never()).createSetupIntent(any(), any());
+        verify(bookingRepository, never()).save(any());
+    }
+
+    @Test
+    void createBooking_singlePostingService_reservesServiceAtomically() {
+        CreateBookingRequest request = new CreateBookingRequest("service-123", new BigDecimal("50.00"), Instant.now());
+        mockService.setPostingType("single");
+        mockService.setIsAvailable(true);
+
+        when(userRepository.findByEmail("student@calpoly.edu")).thenReturn(Optional.of(mockCustomer));
+        when(serviceRepository.findById("service-123")).thenReturn(Optional.of(mockService));
+        when(userRepository.findById("provider-456")).thenReturn(Optional.of(mockProvider));
+        when(mongoTemplate.findAndModify(any(Query.class), any(Update.class), any(FindAndModifyOptions.class), eq(Service.class)))
+            .thenReturn(mockService);
+        when(paymentService.createSetupIntent(eq("student@calpoly.edu"), eq("Alice Student")))
+            .thenReturn(new SetupIntentResult("seti_secret_test", "cus_test_123", "seti_test_id"));
+        when(bookingTokenService.generateTokenPair(any()))
+            .thenReturn(new TokenPair("http://localhost/confirm/abc", "http://localhost/cancel/xyz"));
+        when(bookingRepository.save(any(Booking.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        bookingService.createBooking(request, userDetails);
+
+        verify(mongoTemplate).findAndModify(any(Query.class), any(Update.class), any(FindAndModifyOptions.class), eq(Service.class));
+        verify(serviceRepository, never()).save(any(Service.class));
+    }
+
+    @Test
+    void createBooking_singlePostingAlreadyReserved_throwsServiceUnavailableException() {
+        CreateBookingRequest request = new CreateBookingRequest("service-123", new BigDecimal("50.00"), Instant.now());
+        mockService.setPostingType("single");
+        mockService.setIsAvailable(true);
+
+        when(userRepository.findByEmail("student@calpoly.edu")).thenReturn(Optional.of(mockCustomer));
+        when(serviceRepository.findById("service-123")).thenReturn(Optional.of(mockService));
+        when(userRepository.findById("provider-456")).thenReturn(Optional.of(mockProvider));
+        when(mongoTemplate.findAndModify(any(Query.class), any(Update.class), any(FindAndModifyOptions.class), eq(Service.class)))
+            .thenReturn(null);
+
+        assertThatThrownBy(() -> bookingService.createBooking(request, userDetails))
+            .isInstanceOf(ServiceUnavailableException.class);
+
+        verify(paymentService, never()).createSetupIntent(any(), any());
+        verify(bookingRepository, never()).save(any());
+    }
+
+    @Test
     void createBooking_priceBelowMin_throwsInvalidPriceException() {
         CreateBookingRequest request = new CreateBookingRequest("service-123", new BigDecimal("10.00"), Instant.now());
 
@@ -186,6 +249,28 @@ class BookingServiceTest {
         assertThat(result.get(0).getStatus()).isEqualTo(BookingStatus.CONFIRMED);
         verify(userRepository).findAllById(any());
         verify(userRepository, never()).findById(any());
+        verify(bookingRepository, never()).findByStatusOrderByCreatedAtDesc(any());
+    }
+
+    @Test
+    void getProviderReviews_returnsReviewOnlyResponse() {
+        Booking booking = createBookingWithStatus(BookingStatus.COMPLETED);
+        booking.setRating(5);
+        booking.setReview("Helpful tutoring.");
+        booking.setReviewedAt(Instant.now());
+        booking.setReviewerName("Alice Student");
+
+        when(bookingRepository.findReviewedBookingsByProviderId("provider-456"))
+            .thenReturn(List.of(booking));
+        when(userRepository.findAllById(any())).thenReturn(List.of(mockCustomer, mockProvider));
+
+        var result = bookingService.getProviderReviews("provider-456");
+
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).getServiceTitle()).isEqualTo("Math Tutoring");
+        assertThat(result.get(0).getRating()).isEqualTo(5);
+        assertThat(result.get(0).getReview()).isEqualTo("Helpful tutoring.");
+        assertThat(result.get(0).getReviewerFirstName()).isEqualTo("Alice");
     }
 
     @Test

@@ -1,0 +1,126 @@
+.reviews-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(0, 0, 0, 0.72);
+}
+
+.reviews-modal {
+  box-sizing: border-box;
+  width: min(600px, 100%);
+  max-height: calc(100svh - 48px);
+  display: flex;
+  flex-direction: column;
+  border-radius: 16px;
+  background: #ffffff;
+  color: #071b2d;
+  box-shadow: 0 24px 60px rgba(12, 18, 24, 0.24);
+}
+
+.reviews-modal-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+  border-bottom: 1px solid #e0e0e0;
+  padding: 28px;
+  flex: 0 0 auto;
+}
+
+.reviews-modal-header h2 {
+  margin: 0;
+  color: #071b2d;
+  font-size: 24px;
+  font-weight: 800;
+}
+
+.reviews-modal-close {
+  flex: 0 0 auto;
+  border: none;
+  padding: 2px;
+  background: transparent;
+  color: #050505;
+  font-size: 34px;
+  line-height: 0.8;
+  cursor: pointer;
+}
+
+.reviews-modal-content {
+  overflow-y: auto;
+  padding: 28px;
+  flex: 1 1 auto;
+}
+
+.reviews-list {
+  display: grid;
+  gap: 20px;
+}
+
+.review-item {
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 16px;
+  background: #f9f9f9;
+}
+
+.review-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 12px;
+}
+
+.review-header h3 {
+  margin: 0;
+  color: #071b2d;
+  font-size: 18px;
+  font-weight: 800;
+}
+
+.review-meta {
+  margin: 4px 0 0;
+  color: #25364a;
+  font-size: 14px;
+}
+
+.review-rating {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 0 0 auto;
+  color: #d8a20b;
+  font-size: 18px;
+}
+
+.review-rating strong {
+  color: #071b2d;
+}
+
+.review-text {
+  margin: 12px 0;
+  color: #25364a;
+  line-height: 1.6;
+}
+
+.review-date {
+  margin: 8px 0 0;
+  color: #68746f;
+  font-size: 14px;
+}
+
+.reviews-empty,
+.reviews-error {
+  text-align: center;
+  color: #25364a;
+  padding: 40px 20px;
+  margin: 0;
+}
+
+.reviews-error {
+  color: #9b1c31;
+}

@@ -1,17 +1,22 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import InputField from "./InputField";
 import SubmitButton from "./SubmitButton";
 import PaymentForm from "./PaymentForm";
 import "./styles/ServiceDetailsModal.css";
 import { API_ENDPOINTS } from "../utils/api";
 import { toast } from "react-toastify";
+import { formatProviderRating } from "../utils/serviceFormatting";
+import { USER_ID_KEY } from "../pages/profile/constants";
 
 const TOKEN_STORAGE_KEY = "jwt_token";
 
 interface ServiceDetails {
   id: string;
   userId: string;
+  providerName: string;
+  providerAverageRating: number | null;
+  providerReviewCount: number;
   title: string;
   price: string;
   priceMin: number;
@@ -50,6 +55,17 @@ function MessageIcon() {
   );
 }
 
+function getProviderInitials(providerName: string) {
+  const initials = providerName
+    .trim()
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((namePart) => namePart[0]?.toUpperCase() ?? "")
+    .join("");
+
+  return initials || "SP";
+}
+
 type ModalView = "details" | "booking" | "payment" | "success";
 
 interface BookingFormState {
@@ -65,7 +81,7 @@ function ServiceDetailsModal({
 }: ServiceDetailsModalProps) {
   const navigate = useNavigate();
   const [view, setView] = useState<ModalView>("details");
-  const currentUserId = localStorage.getItem("user_id");
+  const currentUserId = localStorage.getItem(USER_ID_KEY);
   const [showReportDialog, setShowReportDialog] =
     useState(false);
   const [reportReason, setReportReason] = useState(
@@ -82,6 +98,10 @@ function ServiceDetailsModal({
     error: "",
     isLoading: false
   });
+  const ratingText = formatProviderRating(
+    service.providerAverageRating,
+    service.providerReviewCount
+  );
 
   async function handleBookingSubmit() {
     const price = Number(form.agreedPrice);
@@ -259,6 +279,32 @@ function ServiceDetailsModal({
 
         {view === "details" && (
           <>
+            <div className="service-details-provider">
+              <div className="service-details-avatar">
+                {getProviderInitials(service.providerName)}
+              </div>
+              <div className="service-details-provider-copy">
+                <p className="service-details-provider-name">
+                  {service.providerName}
+                </p>
+                <p className="service-details-rating">
+                  <span
+                    className="service-details-star"
+                    aria-hidden="true">
+                    {"\u2605"}
+                  </span>
+                  <span>{ratingText}</span>
+                </p>
+              </div>
+              {service.userId && (
+                <Link
+                  to={`/providers/${encodeURIComponent(service.userId)}`}
+                  className="service-details-profile-link">
+                  View profile
+                </Link>
+              )}
+            </div>
+
             <div className="service-details-location">
               <PinIcon />
               <span>{service.location}</span>
@@ -288,7 +334,13 @@ function ServiceDetailsModal({
               <button
                 type="button"
                 className="service-details-book"
-                onClick={() => setView("booking")}>
+                onClick={() => setView("booking")}
+                disabled={currentUserId === service.userId}
+                title={
+                  currentUserId === service.userId
+                    ? "You cannot book your own service"
+                    : ""
+                }>
                 Book Now
               </button>
               {currentUserId !== service.userId && (

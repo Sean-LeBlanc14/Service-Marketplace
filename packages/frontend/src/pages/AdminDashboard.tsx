@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Navigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { API_ENDPOINTS } from "../utils/api";
+import { USER_ID_KEY } from "./profile/constants";
 import "../components/styles/AdminDashboard.css";
 
 const TOKEN_STORAGE_KEY = "jwt_token";
@@ -72,7 +73,7 @@ function AdminDashboard() {
     string | null
   >(null);
   const [reloadVersion, setReloadVersion] = useState(0);
-  const currentUserId = localStorage.getItem("user_id");
+  const currentUserId = localStorage.getItem(USER_ID_KEY);
   const suspendedUsers = users.filter(
     (user) => user.role === "suspended"
   );

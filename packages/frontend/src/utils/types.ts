@@ -4,6 +4,8 @@ export interface ApiService {
   category?: string;
   userId?: string;
   providerName?: string;
+  providerAverageRating?: number | string | null;
+  providerReviewCount?: number | string | null;
   priceMin?: number | string | null;
   priceMax?: number | string | null;
   priceUnit?: string | null;
@@ -13,6 +15,7 @@ export interface ApiService {
 }
 
 export interface ApiUserProfile {
+  id?: string;
   email: string;
   firstName: string;
   lastName: string;
@@ -20,7 +23,21 @@ export interface ApiUserProfile {
   campus: string;
   bio: string;
   verified: string;
+  averageRating?: number | string | null;
+  reviewCount?: number | string | null;
   services: ApiService[];
+}
+
+export interface ApiProviderProfile {
+  id?: string;
+  firstName?: string;
+  lastName?: string;
+  major?: string;
+  campus?: string;
+  bio?: string;
+  averageRating?: number | string | null;
+  reviewCount?: number | string | null;
+  services?: ApiService[] | null;
 }
 
 export type ApiBookingStatus =

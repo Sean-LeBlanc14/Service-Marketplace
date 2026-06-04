@@ -10,6 +10,7 @@ import DropDown from "../components/DropDown";
 import { toast } from "react-toastify";
 import "../styles/SignupPage.css";
 import { API_ENDPOINTS } from "../utils/api";
+import { USER_ID_KEY } from "./profile/constants";
 
 function SignupPage() {
   const [email, setEmail] = useState("");
@@ -52,7 +53,7 @@ function SignupPage() {
         const data = await response.json();
         localStorage.setItem("jwt_token", data.token);
         localStorage.setItem("user_role", data.role);
-        localStorage.setItem("user_id", data.id);
+        localStorage.setItem(USER_ID_KEY, data.id);
         navigate("/verify", {
           state: { email: data.email, token: data.token }
         });

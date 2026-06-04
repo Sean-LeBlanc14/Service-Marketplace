@@ -12,6 +12,7 @@ import SignupPage from "./pages/SignupPage";
 import LoginPage from "./pages/LoginPage";
 import VerifyAccount from "./pages/VerifyAccount";
 import ProfilePage from "./pages/ProfilePage";
+import ProviderProfilePage from "./pages/ProviderProfilePage";
 import Settings from "./pages/Settings";
 import { ToastContainer } from "react-toastify";
 import Inbox from "./pages/Inbox";
@@ -97,6 +98,10 @@ function AppRoutes() {
       <Route path="/" element={<Layout />}>
         <Route path="homepage" element={<HomePage />} />
         <Route path="profile" element={<ProfilePage />} />
+        <Route
+          path="providers/:userId"
+          element={<ProviderProfilePage />}
+        />
         <Route path="settings" element={<Settings />} />
         <Route
           path="dashboard"

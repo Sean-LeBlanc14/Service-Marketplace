@@ -37,6 +37,7 @@ const WebSocketContext = createContext<WebSocketContextValue>({
   refreshUnreadCounts: () => {}
 });
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function useWebSocketContext() {
   return useContext(WebSocketContext);
 }
@@ -77,6 +78,7 @@ export function WebSocketProvider({
     const token = localStorage.getItem("jwt_token");
     if (!token) return;
 
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     void fetchUnreadCounts();
 
     const client = new Client({

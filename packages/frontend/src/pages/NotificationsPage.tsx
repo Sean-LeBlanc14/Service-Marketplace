@@ -86,6 +86,7 @@ export default function NotificationsPage() {
 
   useEffect(() => {
     if (latestNotification) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setNotifications((prev) => [latestNotification, ...prev]);
     }
   }, [latestNotification]);

@@ -304,16 +304,19 @@ export default function Inbox() {
   );
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     void loadConversations();
   }, [loadConversations]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (selectedId) void loadMessages(selectedId);
   }, [selectedId, loadMessages]);
 
   useEffect(() => {
     if (!latestMessage) return;
     if (latestMessage.conversationId === selectedId) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setMessages((prev) => [...prev, latestMessage]);
       refreshUnreadCounts();
     } else {

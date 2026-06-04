@@ -1,0 +1,95 @@
+.settings-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px;
+  gap: 20px;
+  height: 100vh;
+}
+
+.settings-title {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: flex-start;
+  min-width: 50%;
+}
+
+.setting-section {
+  min-width: 50%;
+  display: flex;
+  flex-direction: column;
+}
+
+.setting-container {
+  display: flex;
+  flex-direction: column;
+  border-radius: 10px;
+  border: 1px solid #333;
+  min-width: 100%;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25);
+}
+
+.setting-container button {
+  min-width: 100%;
+  background-color: transparent;
+  color: var(--text-primary);
+  border: none;
+  border-bottom: 1px solid #333;
+  cursor: pointer;
+  font-size: large;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 15px;
+  text-decoration: none;
+  transition: all 0.2s ease;
+  justify-content: space-between;
+}
+
+.setting-container button:last-child {
+  border: none;
+  border-radius: inherit;
+}
+
+.setting-container button:first-child {
+  border-top-left-radius: inherit;
+  border-top-right-radius: inherit;
+}
+
+.setting-container button:hover {
+  color: #2a6a3b;
+  background-color: #f8f9fa;
+}
+
+.delete-account-button:hover {
+  color: #c92a2a !important;
+  background-color: #fff5f5 !important;
+}
+
+.logout-button:hover {
+  color: #c92a2a !important;
+  background-color: #fff5f5 !important;
+}
+
+.modal-style {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.modal-title {
+  color: var(--cp-green);
+}
+
+.modal-input {
+  min-height: 200px;
+  max-height: 400px;
+  padding: 10px;
+  border-radius: 7px;
+  border: 1px solid #333;
+}
+
+.modal-input:focus {
+  border: 2px solid var(--cp-gold);
+}

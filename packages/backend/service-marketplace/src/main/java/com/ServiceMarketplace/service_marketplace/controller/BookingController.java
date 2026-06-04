@@ -29,7 +29,6 @@ import com.ServiceMarketplace.service_marketplace.service.BookingService;
 
 import jakarta.validation.Valid;
 
-
 @RestController
 @RequestMapping("/api/bookings")
 public class BookingController {
@@ -87,44 +86,21 @@ public class BookingController {
             BookingTokenAction action = bookingService.processTokenAction(token);
             String title = action == BookingTokenAction.CONFIRM ? "Booking Confirmed" : "Booking Cancelled";
             String message = action == BookingTokenAction.CONFIRM
-                ? "The booking has been confirmed and the customer's payment is being processed."
-                : "The booking request has been cancelled and the customer's card details have been removed.";
+                    ? "The booking has been confirmed and the customer's payment is being processed."
+                    : "The booking request has been cancelled and the customer's card details have been removed.";
             return ResponseEntity.ok()
-                .contentType(MediaType.TEXT_HTML)
-                .body(buildHtmlPage(title, message, "#2e7d32"));
+                    .contentType(MediaType.TEXT_HTML)
+                    .body(buildHtmlPage(title, message, "#2e7d32"));
         } catch (BookingTokenException e) {
             return ResponseEntity.badRequest()
-                .contentType(MediaType.TEXT_HTML)
-                .body(buildHtmlPage("Link Invalid", e.getMessage(), "#c62828"));
+                    .contentType(MediaType.TEXT_HTML)
+                    .body(buildHtmlPage("Link Invalid", e.getMessage(), "#c62828"));
         } catch (BookingStateException e) {
             return ResponseEntity.ok()
-                .contentType(MediaType.TEXT_HTML)
-                .body(buildHtmlPage("Already Actioned", "This booking has already been confirmed or cancelled.", "#e65100"));
+                    .contentType(MediaType.TEXT_HTML)
+                    .body(buildHtmlPage("Already Actioned", "This booking has already been confirmed or cancelled.", "#e65100"));
         }
     }
-
-    @GetMapping("/requests")
-    public ResponseEntity<List<BookingResponse>> getRequests(@AuthenticationPrincipal UserDetails userDetails) {
-      List<BookingResponse> response = bookingService.getUserBookingRequests(userDetails);
-
-      return ResponseEntity.status(HttpStatus.OK).body(response);
-    }
-
-    @GetMapping("/completed")
-    public ResponseEntity<List<BookingResponse>> getCompletedBookings(@AuthenticationPrincipal UserDetails userDetails){
-      List<BookingResponse> response = bookingService.getUserCompletedBookings(userDetails);
-
-      return ResponseEntity.status(HttpStatus.OK).body(response);
-    }
-
-    @GetMapping("/scheduled")
-    public ResponseEntity<List<BookingResponse>> getScheduledBookings(@AuthenticationPrincipal UserDetails userDetails) {
-      List<BookingResponse> response = bookingService.getUserScheduledBookings(userDetails);
-
-      return ResponseEntity.status(HttpStatus.OK).body(response);
-    }
-    
-    
 
     private String buildHtmlPage(String heading, String message, String headingColor) {
         return """

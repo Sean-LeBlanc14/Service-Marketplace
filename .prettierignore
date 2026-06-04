@@ -1,3 +1,4 @@
 node_modules
 packages/frontend/dist
 packages/backend/service-marketplace/target
+.github/java-upgrade/hooks

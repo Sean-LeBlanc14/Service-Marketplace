@@ -10,9 +10,11 @@ import { FiMessageCircle } from "react-icons/fi";
 import "../styles/global.css";
 import "./styles/SideBar.css";
 import NavigationButton from "./NavigationButton";
+import { useWebSocketContext } from "../context/WebSocketContext";
 
 export default function SideBar() {
   const isAdmin = localStorage.getItem("user_role") === "admin";
+  const { unreadCounts } = useWebSocketContext();
 
   return (
     <aside className="sidebar-container">
@@ -51,6 +53,11 @@ export default function SideBar() {
           to="/inbox"
           label="Messages"
           icon={<FiMessageCircle />}
+          badge={
+            unreadCounts.messages > 0
+              ? unreadCounts.messages
+              : undefined
+          }
         />
       </div>
 
@@ -65,6 +72,11 @@ export default function SideBar() {
           to="/notifications"
           label=""
           icon={<FaBell />}
+          badge={
+            unreadCounts.notifications > 0
+              ? unreadCounts.notifications
+              : undefined
+          }
         />
       </div>
     </aside>

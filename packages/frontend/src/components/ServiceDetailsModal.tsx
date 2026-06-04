@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import InputField from "./InputField";
 import SubmitButton from "./SubmitButton";
 import PaymentForm from "./PaymentForm";
@@ -78,6 +78,7 @@ function ServiceDetailsModal({
   service,
   onClose
 }: ServiceDetailsModalProps) {
+  const navigate = useNavigate();
   const [view, setView] = useState<ModalView>("details");
   const currentUserId = localStorage.getItem("user_id");
   const [showReportDialog, setShowReportDialog] =
@@ -163,6 +164,36 @@ function ServiceDetailsModal({
       }));
     } finally {
       setForm((f) => ({ ...f, isLoading: false }));
+    }
+  }
+
+  async function handleMessageProvider() {
+    const token = localStorage.getItem(TOKEN_STORAGE_KEY);
+    try {
+      const res = await fetch(
+        API_ENDPOINTS.conversations.start,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`
+          },
+          body: JSON.stringify({ serviceId: service.id })
+        }
+      );
+      if (res.ok) {
+        const conversation = (await res.json()) as {
+          id: string;
+        };
+        onClose();
+        navigate("/inbox", {
+          state: { conversationId: conversation.id }
+        });
+      } else {
+        toast.error("Could not open conversation.");
+      }
+    } catch {
+      toast.error("Could not open conversation.");
     }
   }
 
@@ -311,12 +342,15 @@ function ServiceDetailsModal({
                 }>
                 Book Now
               </button>
-              <button
-                type="button"
-                className="service-details-message">
-                <MessageIcon />
-                Message
-              </button>
+              {currentUserId !== service.userId && (
+                <button
+                  type="button"
+                  className="service-details-message"
+                  onClick={() => void handleMessageProvider()}>
+                  <MessageIcon />
+                  Message
+                </button>
+              )}
             </div>
 
             {currentUserId !== service.userId && (

@@ -62,5 +62,24 @@ export const API_ENDPOINTS = {
   support: {
     bug: `${API_ROUTE}/support/bug`,
     contact: `${API_ROUTE}/support/contact`
-  }
+  },
+  conversations: {
+    start: `${API_ROUTE}/conversations`,
+    all: `${API_ROUTE}/conversations`,
+    messages: (conversationId: string) =>
+      `${API_ROUTE}/conversations/${encodeURIComponent(conversationId)}/messages`,
+    sendMessage: (conversationId: string) =>
+      `${API_ROUTE}/conversations/${encodeURIComponent(conversationId)}/messages`,
+    acceptOffer: (conversationId: string, messageId: string) =>
+      `${API_ROUTE}/conversations/${encodeURIComponent(conversationId)}/messages/${encodeURIComponent(messageId)}/accept`,
+    rejectOffer: (conversationId: string, messageId: string) =>
+      `${API_ROUTE}/conversations/${encodeURIComponent(conversationId)}/messages/${encodeURIComponent(messageId)}/reject`
+  },
+  notifications: {
+    all: `${API_ROUTE}/notifications`,
+    markRead: (notificationId: string) =>
+      `${API_ROUTE}/notifications/${encodeURIComponent(notificationId)}/read`,
+    markAllRead: `${API_ROUTE}/notifications/read-all`
+  },
+  unreadCounts: `${API_ROUTE}/unread-counts`
 };

@@ -164,7 +164,7 @@ public class UserService {
             throw new BadCredentialsException("Invalid email or password.");
         }
         
-        var user = userRepository.deleteByEmail(request.getEmail())
+        userRepository.deleteByEmail(request.getEmail())
                 .orElseThrow(() -> new FailedToDeleteUserException("Could not delete the user: " + request.getEmail()));
 
     }

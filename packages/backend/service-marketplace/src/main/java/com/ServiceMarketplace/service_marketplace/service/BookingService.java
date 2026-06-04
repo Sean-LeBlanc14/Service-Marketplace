@@ -28,6 +28,7 @@ import com.ServiceMarketplace.service_marketplace.exception.ResourceNotFoundExce
 import com.ServiceMarketplace.service_marketplace.model.Booking;
 import com.ServiceMarketplace.service_marketplace.model.BookingStatus;
 import com.ServiceMarketplace.service_marketplace.model.BookingTokenAction;
+import com.ServiceMarketplace.service_marketplace.model.NotificationType;
 import com.ServiceMarketplace.service_marketplace.model.User;
 import com.ServiceMarketplace.service_marketplace.repository.BookingRepository;
 import com.ServiceMarketplace.service_marketplace.repository.ServiceRepository;
@@ -44,16 +45,18 @@ public class BookingService {
     private final PaymentService paymentService;
     private final EmailService emailService;
     private final BookingTokenService bookingTokenService;
+    private final NotificationService notificationService;
 
     public BookingService(BookingRepository bookingRepository, ServiceRepository serviceRepository,
             UserRepository userRepository, PaymentService paymentService, EmailService emailService,
-            BookingTokenService bookingTokenService) {
+            BookingTokenService bookingTokenService, NotificationService notificationService) {
         this.bookingRepository = bookingRepository;
         this.serviceRepository = serviceRepository;
         this.userRepository = userRepository;
         this.paymentService = paymentService;
         this.emailService = emailService;
         this.bookingTokenService = bookingTokenService;
+        this.notificationService = notificationService;
     }
 
     public CreateBookingResponse createBooking(CreateBookingRequest request, UserDetails userDetails) {
@@ -114,6 +117,11 @@ public class BookingService {
             tokenPair.confirmUrl(),
             tokenPair.cancelUrl()
         );
+
+        notificationService.send(provider.getId(), NotificationType.BOOKING_REQUESTED,
+            "New Booking Request",
+            customerName + " has requested to book " + service.getTitle(),
+            saved.getId());
 
         return new CreateBookingResponse(toBookingResponse(saved), setupResult.getSetupClientSecret());
     }
@@ -193,7 +201,15 @@ public class BookingService {
         booking.setStripePaymentIntentId(paymentResult.getPaymentIntentId());
         booking.setStatus(BookingStatus.PENDING_PAYMENT);
 
-        return toBookingResponse(bookingRepository.save(booking));
+        Booking confirmedBooking = bookingRepository.save(booking);
+
+        userRepository.findById(confirmedBooking.getCustomerId()).ifPresent(customer ->
+            notificationService.send(customer.getId(), NotificationType.BOOKING_CONFIRMED,
+                "Booking Confirmed",
+                provider.getFirstName() + " confirmed your booking for " + confirmedBooking.getServiceTitle(),
+                confirmedBooking.getId()));
+
+        return toBookingResponse(confirmedBooking);
     }
 
     private BookingResponse doCancelBooking(Booking booking, boolean cancelledByCustomer) {
@@ -218,6 +234,10 @@ public class BookingService {
                     booking.getScheduledAt(),
                     booking.getId()
                 );
+                notificationService.send(provider.getId(), NotificationType.BOOKING_CANCELLED,
+                    "Booking Cancelled",
+                    customerName + " cancelled their booking for " + booking.getServiceTitle(),
+                    booking.getId());
             });
         } else {
             userRepository.findById(booking.getCustomerId()).ifPresent(customer -> {
@@ -232,6 +252,10 @@ public class BookingService {
                     booking.getScheduledAt(),
                     booking.getId()
                 );
+                notificationService.send(customer.getId(), NotificationType.BOOKING_CANCELLED,
+                    "Booking Cancelled",
+                    providerName + " cancelled your booking for " + booking.getServiceTitle(),
+                    booking.getId());
             });
         }
 
@@ -308,7 +332,14 @@ public class BookingService {
         booking.setReviewerName(getUserDisplayName(customer));
         booking.setReviewedAt(Instant.now());
 
-        return toBookingResponse(bookingRepository.save(booking));
+        Booking reviewed = bookingRepository.save(booking);
+
+        notificationService.send(reviewed.getProviderId(), NotificationType.REVIEW_RECEIVED,
+            "New Review Received",
+            getUserDisplayName(customer) + " left a " + request.getRating() + "-star review for " + reviewed.getServiceTitle(),
+            reviewed.getId());
+
+        return toBookingResponse(reviewed);
     }
 
     private User getCurrentUser(UserDetails userDetails) {

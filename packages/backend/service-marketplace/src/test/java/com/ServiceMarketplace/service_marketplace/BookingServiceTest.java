@@ -48,6 +48,7 @@ import com.ServiceMarketplace.service_marketplace.service.BookingTokenService;
 import com.ServiceMarketplace.service_marketplace.service.BookingTokenService.TokenPair;
 import com.ServiceMarketplace.service_marketplace.service.BookingTokenService.TokenResult;
 import com.ServiceMarketplace.service_marketplace.service.EmailService;
+import com.ServiceMarketplace.service_marketplace.service.NotificationService;
 import com.ServiceMarketplace.service_marketplace.service.PaymentService;
 
 @ExtendWith(MockitoExtension.class)
@@ -59,6 +60,7 @@ class BookingServiceTest {
     @Mock private PaymentService paymentService;
     @Mock private EmailService emailService;
     @Mock private BookingTokenService bookingTokenService;
+    @Mock private NotificationService notificationService;
     @Mock private UserDetails userDetails;
 
     @InjectMocks

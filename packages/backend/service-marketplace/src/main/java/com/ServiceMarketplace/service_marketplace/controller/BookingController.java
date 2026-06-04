@@ -20,7 +20,6 @@ import com.ServiceMarketplace.service_marketplace.dto.BookingResponse;
 import com.ServiceMarketplace.service_marketplace.dto.ConfirmBookingRequest;
 import com.ServiceMarketplace.service_marketplace.dto.CreateBookingRequest;
 import com.ServiceMarketplace.service_marketplace.dto.CreateBookingResponse;
-import com.ServiceMarketplace.service_marketplace.dto.CreateBookingRequest;
 import com.ServiceMarketplace.service_marketplace.dto.SubmitReviewRequest;
 import com.ServiceMarketplace.service_marketplace.exception.BookingStateException;
 import com.ServiceMarketplace.service_marketplace.exception.BookingTokenException;

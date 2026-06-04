@@ -23,6 +23,7 @@ import {
   SERVICE_TAG_MAX_LENGTH,
   SERVICE_TITLE_MAX_LENGTH,
   TOKEN_STORAGE_KEY,
+  USER_ID_KEY,
   emptyProfile
 } from "./profile/constants";
 import type {
@@ -881,7 +882,7 @@ function ProfilePage() {
 
       {showOwnReviews && (
         <ReviewsModal
-          providerId={localStorage.getItem("user_id") || ""}
+          providerId={localStorage.getItem(USER_ID_KEY) || ""}
           providerName={displayName}
           onClose={() => setShowOwnReviews(false)}
         />

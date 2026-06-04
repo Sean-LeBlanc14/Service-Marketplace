@@ -2,8 +2,13 @@ package com.ServiceMarketplace.service_marketplace.service;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
+import java.util.Set;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import org.springframework.security.access.AccessDeniedException;
@@ -64,26 +69,25 @@ public class ServiceService {
     }
 
     public List<ServiceDto> getAllServices() {
-        return serviceRepository.findAll()
+        List<Service> services = serviceRepository.findAll()
             .stream()
             .filter(service -> service.getIsAvailable() == null || service.getIsAvailable())
-            .map(this::toDto)
             .collect(Collectors.toList());
+
+        return toDtos(services);
     }
 
     public List<ServiceDto> getServicesByCategory(String category) {
-        return serviceRepository.findByCategory(category)
+        List<Service> services = serviceRepository.findByCategory(category)
             .stream()
             .filter(service -> service.getIsAvailable() == null || service.getIsAvailable())
-            .map(this::toDto)
             .collect(Collectors.toList());
+
+        return toDtos(services);
     }
 
     public List<ServiceDto> getServicesByUserId(String userId) {
-        return serviceRepository.findByUserId(userId)
-            .stream()
-            .map(this::toDto)
-            .collect(Collectors.toList());
+        return toDtos(serviceRepository.findByUserId(userId));
     }
 
     public ProviderRatingSummary getProviderRatingSummary(String userId) {
@@ -99,6 +103,75 @@ public class ServiceService {
             return new ProviderRatingSummary(null, 0);
         }
 
+        List<Integer> ratings = reviewedBookings.stream()
+            .map(Booking::getRating)
+            .filter(rating -> rating != null)
+            .toList();
+
+        if (ratings.isEmpty()) {
+            return new ProviderRatingSummary(null, 0);
+        }
+
+        double average = ratings.stream()
+            .mapToInt(Integer::intValue)
+            .average()
+            .orElse(0);
+
+        return new ProviderRatingSummary(Math.round(average * 10.0) / 10.0, ratings.size());
+    }
+
+    private List<ServiceDto> toDtos(List<Service> services) {
+        Set<String> providerIds = services.stream()
+            .map(service -> clean(service.getUserId()))
+            .filter(providerId -> !providerId.isBlank())
+            .collect(Collectors.toCollection(HashSet::new));
+
+        Map<String, User> providersById = providerIds.isEmpty()
+            ? Map.of()
+            : userRepository.findAllById(providerIds)
+                .stream()
+                .collect(Collectors.toMap(User::getId, Function.identity()));
+        Map<String, ProviderRatingSummary> ratingsByProviderId = getProviderRatingSummaries(providerIds);
+
+        return services.stream()
+            .map(service -> {
+                String providerId = clean(service.getUserId());
+                User provider = providersById.get(providerId);
+                String providerName = provider == null ? "Service creator" : getDisplayName(provider);
+                ProviderRatingSummary ratingSummary = ratingsByProviderId.getOrDefault(
+                    providerId,
+                    new ProviderRatingSummary(null, 0)
+                );
+
+                return toDto(service, providerName, ratingSummary);
+            })
+            .collect(Collectors.toList());
+    }
+
+    private Map<String, ProviderRatingSummary> getProviderRatingSummaries(Collection<String> providerIds) {
+        List<String> cleanProviderIds = providerIds.stream()
+            .map(this::clean)
+            .filter(providerId -> !providerId.isBlank())
+            .distinct()
+            .toList();
+
+        if (cleanProviderIds.isEmpty()) {
+            return Map.of();
+        }
+
+        return bookingRepository.findReviewedBookingsByProviderIdIn(cleanProviderIds)
+            .stream()
+            .filter(booking -> booking.getRating() != null)
+            .collect(Collectors.groupingBy(
+                Booking::getProviderId,
+                Collectors.collectingAndThen(
+                    Collectors.toList(),
+                    this::summarizeReviewedBookings
+                )
+            ));
+    }
+
+    private ProviderRatingSummary summarizeReviewedBookings(List<Booking> reviewedBookings) {
         List<Integer> ratings = reviewedBookings.stream()
             .map(Booking::getRating)
             .filter(rating -> rating != null)

@@ -7,6 +7,7 @@ import com.ServiceMarketplace.service_marketplace.dto.UserProfile;
 import com.ServiceMarketplace.service_marketplace.exception.EmailAlreadyExistsException;
 import com.ServiceMarketplace.service_marketplace.exception.RedundantChangeException;
 import com.ServiceMarketplace.service_marketplace.exception.InvalidEmailDomainException;
+import com.ServiceMarketplace.service_marketplace.exception.ResourceNotFoundException;
 import com.ServiceMarketplace.service_marketplace.model.User;
 import com.ServiceMarketplace.service_marketplace.repository.UserRepository;
 import com.ServiceMarketplace.service_marketplace.service.EmailService;
@@ -167,6 +168,17 @@ public class UserServiceTest {
 
         assertThrows(UsernameNotFoundException.class, () -> userService.changeUserPassword(userDetails, request));
         verify(userRepository, never()).save(any(User.class));
+    }
+
+    @Test
+    void getProviderProfile_suspendedUser_throwsResourceNotFound() {
+        User user = createProfileUser();
+        user.setRole("suspended");
+
+        when(userRepository.findById("user123")).thenReturn(Optional.of(user));
+
+        assertThrows(ResourceNotFoundException.class, () -> userService.getProviderProfile("user123"));
+        verifyNoInteractions(serviceService);
     }
 
     @Test

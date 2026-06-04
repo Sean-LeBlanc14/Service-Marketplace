@@ -7,6 +7,7 @@ import "./styles/ServiceDetailsModal.css";
 import { API_ENDPOINTS } from "../utils/api";
 import { toast } from "react-toastify";
 import { formatProviderRating } from "../utils/serviceFormatting";
+import { USER_ID_KEY } from "../pages/profile/constants";
 
 const TOKEN_STORAGE_KEY = "jwt_token";
 
@@ -80,7 +81,7 @@ function ServiceDetailsModal({
 }: ServiceDetailsModalProps) {
   const navigate = useNavigate();
   const [view, setView] = useState<ModalView>("details");
-  const currentUserId = localStorage.getItem("user_id");
+  const currentUserId = localStorage.getItem(USER_ID_KEY);
   const [showReportDialog, setShowReportDialog] =
     useState(false);
   const [reportReason, setReportReason] = useState(

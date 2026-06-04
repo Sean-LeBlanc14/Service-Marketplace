@@ -43,7 +43,7 @@ export function normalizeRatingValue(
 ) {
   const rating = Number(cleanNumberValue(value));
 
-  return Number.isFinite(rating) ? rating : null;
+  return Number.isFinite(rating) && rating > 0 ? rating : null;
 }
 
 export function normalizeReviewCount(

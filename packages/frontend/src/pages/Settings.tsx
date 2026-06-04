@@ -19,6 +19,7 @@ import Modal from "../components/Modal";
 import Footer from "../components/Footer";
 import MajorComboBox from "../components/MajorComboBox";
 import DropDown from "../components/DropDown";
+import { USER_ID_KEY } from "./profile/constants";
 
 export default function Settings() {
   const navigate = useNavigate();
@@ -77,14 +78,14 @@ export default function Settings() {
       if (response.ok) {
         localStorage.removeItem("jwt_token");
         localStorage.removeItem("user_role");
-        localStorage.removeItem("user_id");
+        localStorage.removeItem(USER_ID_KEY);
         toast.success("Successfully logged out");
         navigate("/login");
       } else if (response.status === 401) {
         // Backend sends a 401 if the user is not logged in to begin with
         localStorage.removeItem("jwt_token");
         localStorage.removeItem("user_role");
-        localStorage.removeItem("user_id");
+        localStorage.removeItem(USER_ID_KEY);
         navigate("/login");
       } else {
         toast.error("Could not logout, please try again.");
@@ -122,7 +123,7 @@ export default function Settings() {
       if (response.ok) {
         localStorage.removeItem("jwt_token");
         localStorage.removeItem("user_role");
-        localStorage.removeItem("user_id");
+        localStorage.removeItem(USER_ID_KEY);
         toast.success("Account successfully deleted");
         navigate("/");
       } else if (response.status === 401) {

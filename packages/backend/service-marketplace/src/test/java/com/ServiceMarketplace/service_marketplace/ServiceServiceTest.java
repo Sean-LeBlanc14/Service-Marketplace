@@ -66,7 +66,8 @@ public class ServiceServiceTest {
         user.setLastName("Chen");
 
         when(serviceRepository.findAll()).thenReturn(List.of(s1, s2));
-        when(userRepository.findById("user123")).thenReturn(Optional.of(user));
+        when(userRepository.findAllById(any())).thenReturn(List.of(user));
+        when(bookingRepository.findReviewedBookingsByProviderIdIn(any())).thenReturn(List.of());
 
         List<ServiceDto> result = serviceService.getAllServices();
 
@@ -99,7 +100,8 @@ public class ServiceServiceTest {
         secondReview.setRating(4);
 
         when(serviceRepository.findAll()).thenReturn(List.of(service));
-        when(bookingRepository.findReviewedBookingsByProviderId("user123"))
+        when(userRepository.findAllById(any())).thenReturn(List.of());
+        when(bookingRepository.findReviewedBookingsByProviderIdIn(any()))
             .thenReturn(List.of(firstReview, secondReview));
 
         List<ServiceDto> result = serviceService.getAllServices();
@@ -107,6 +109,7 @@ public class ServiceServiceTest {
         assertEquals(1, result.size());
         assertEquals(4.5, result.get(0).getProviderAverageRating());
         assertEquals(2, result.get(0).getProviderReviewCount());
+        verify(bookingRepository, never()).findReviewedBookingsByProviderId("user123");
     }
 
     @Test
@@ -114,6 +117,8 @@ public class ServiceServiceTest {
         Service s1 = createMockService("1", "tutoring");
 
         when(serviceRepository.findByCategory("tutoring")).thenReturn(List.of(s1));
+        when(userRepository.findAllById(any())).thenReturn(List.of());
+        when(bookingRepository.findReviewedBookingsByProviderIdIn(any())).thenReturn(List.of());
 
         List<ServiceDto> result = serviceService.getServicesByCategory("tutoring");
 
@@ -137,6 +142,8 @@ public class ServiceServiceTest {
         Service s1 = createMockService("1", "tutoring");
 
         when(serviceRepository.findByUserId("user123")).thenReturn(List.of(s1));
+        when(userRepository.findAllById(any())).thenReturn(List.of());
+        when(bookingRepository.findReviewedBookingsByProviderIdIn(any())).thenReturn(List.of());
 
         List<ServiceDto> result = serviceService.getServicesByUserId("user123");
 

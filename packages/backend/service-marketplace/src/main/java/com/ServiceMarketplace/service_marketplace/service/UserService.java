@@ -139,6 +139,10 @@ public class UserService {
     public ProviderProfile getProviderProfile(String userId) {
         User user = getUserById(userId);
 
+        if ("suspended".equalsIgnoreCase(clean(user.getRole()))) {
+            throw new ResourceNotFoundException("Provider", userId);
+        }
+
         var ratingSummary = serviceService.getProviderRatingSummary(user.getId());
 
         return new ProviderProfile(

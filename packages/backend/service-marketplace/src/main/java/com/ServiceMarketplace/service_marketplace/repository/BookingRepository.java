@@ -1,5 +1,6 @@
 package com.ServiceMarketplace.service_marketplace.repository;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
@@ -20,4 +21,7 @@ public interface BookingRepository extends MongoRepository<Booking, String> {
 
     @Query("{ 'providerId': ?0, 'rating': { $ne: null } }")
     List<Booking> findReviewedBookingsByProviderId(String providerId);
+
+    @Query("{ 'providerId': { $in: ?0 }, 'rating': { $ne: null } }")
+    List<Booking> findReviewedBookingsByProviderIdIn(Collection<String> providerIds);
 }

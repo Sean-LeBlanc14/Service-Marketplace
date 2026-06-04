@@ -98,6 +98,11 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
     }
 
+    @ExceptionHandler(ServiceUnavailableException.class)
+    public ResponseEntity<String> handleServiceUnavailable(ServiceUnavailableException e) {
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
+    }
+
     @ExceptionHandler(BookingTokenException.class)
     public ResponseEntity<String> handleBookingToken(BookingTokenException e) {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());

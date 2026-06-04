@@ -1,6 +1,7 @@
 import type { UserProfile } from "./types";
 
 export const TOKEN_STORAGE_KEY = "jwt_token";
+export const USER_ID_KEY = "user_id";
 
 export const SERVICE_CATEGORY_OPTIONS = [
   { value: "tutoring", label: "Tutoring" },

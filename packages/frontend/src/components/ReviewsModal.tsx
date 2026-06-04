@@ -4,11 +4,19 @@ import { formatDateTime } from "../pages/profile/utils";
 import "./styles/ReviewsModal.css";
 
 interface Review {
-  id: string;
   serviceTitle: string;
   rating: number;
   review: string;
-  reviewerName: string;
+  reviewerFirstName: string;
+  reviewedAt: string;
+}
+
+interface ProviderReviewResponse {
+  serviceTitle: string;
+  rating: number;
+  review: string;
+  reviewerFirstName?: string;
+  reviewerName?: string;
   reviewedAt: string;
 }
 
@@ -26,6 +34,20 @@ export function ReviewsModal({
   const [reviews, setReviews] = useState<Review[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+
+  useEffect(() => {
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        onClose();
+      }
+    }
+
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [onClose]);
 
   useEffect(() => {
     async function fetchReviews() {
@@ -46,23 +68,16 @@ export function ReviewsModal({
 
         const data = await response.json();
         setReviews(
-          data.map(
-            (booking: {
-              id: string;
-              serviceTitle: string;
-              rating: number;
-              review: string;
-              reviewerName: string;
-              reviewedAt: string;
-            }) => ({
-              id: booking.id,
-              serviceTitle: booking.serviceTitle,
-              rating: booking.rating,
-              review: booking.review,
-              reviewerName: booking.reviewerName,
-              reviewedAt: booking.reviewedAt
-            })
-          )
+          (data as ProviderReviewResponse[]).map((review) => ({
+            serviceTitle: review.serviceTitle,
+            rating: review.rating,
+            review: review.review,
+            reviewerFirstName:
+              review.reviewerFirstName ??
+              review.reviewerName ??
+              "Reviewer",
+            reviewedAt: review.reviewedAt
+          }))
         );
       } catch (err) {
         setError(
@@ -114,15 +129,15 @@ export function ReviewsModal({
             <p className="reviews-empty">No reviews yet.</p>
           ) : (
             <div className="reviews-list">
-              {reviews.map((review) => (
+              {reviews.map((review, index) => (
                 <article
-                  key={review.id}
+                  key={`${review.serviceTitle}-${review.reviewedAt}-${index}`}
                   className="review-item">
                   <div className="review-header">
                     <div>
                       <h3>{review.serviceTitle}</h3>
                       <p className="review-meta">
-                        By {review.reviewerName}
+                        By {review.reviewerFirstName}
                       </p>
                     </div>
                     <div className="review-rating">

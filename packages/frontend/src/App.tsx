@@ -19,7 +19,9 @@ import LandingPage from "./pages/LandingPage";
 import ServiceDashboard from "./pages/ServiceDashboard";
 import AdminDashboard from "./pages/AdminDashboard";
 import SuspendedPage from "./pages/SuspendedPage";
+import NotificationsPage from "./pages/NotificationsPage";
 import { API_ENDPOINTS } from "./utils/api";
+import { WebSocketProvider } from "./context/WebSocketContext";
 
 const TOKEN_STORAGE_KEY = "jwt_token";
 
@@ -101,6 +103,7 @@ function AppRoutes() {
           element={<ServiceDashboard />}
         />
         <Route path="inbox" element={<Inbox />} />
+        <Route path="notifications" element={<NotificationsPage />} />
         <Route path="admin" element={<AdminDashboard />} />
       </Route>
       <Route index element={<LandingPage />} />
@@ -115,12 +118,14 @@ function AppRoutes() {
 function App() {
   return (
     <BrowserRouter>
-      <AppRoutes />
-      <ToastContainer
-        position="top-right"
-        autoClose={3000}
-        theme="colored"
-      />
+      <WebSocketProvider>
+        <AppRoutes />
+        <ToastContainer
+          position="top-right"
+          autoClose={3000}
+          theme="colored"
+        />
+      </WebSocketProvider>
     </BrowserRouter>
   );
 }

@@ -5,12 +5,14 @@ interface NavigationButtonProps {
   to: string;
   label: string;
   icon: React.ReactNode;
+  badge?: number;
 }
 
 export default function NavigationButton({
   label,
   icon,
-  to
+  to,
+  badge
 }: NavigationButtonProps) {
   return (
     <NavLink
@@ -18,7 +20,12 @@ export default function NavigationButton({
       className={({ isActive }) =>
         isActive ? "icon-button selected" : "icon-button"
       }>
-      {icon}
+      <span className="nav-badge-wrapper">
+        {icon}
+        {badge != null && badge > 0 && (
+          <span className="nav-badge">{badge > 99 ? "99+" : badge}</span>
+        )}
+      </span>
       <span>{label}</span>
     </NavLink>
   );

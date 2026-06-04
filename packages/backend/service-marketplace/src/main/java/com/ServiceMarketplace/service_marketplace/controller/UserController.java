@@ -52,15 +52,15 @@ public class UserController {
     }
 
     @DeleteMapping("/delete")
-    public ResponseEntity deleteUser(@RequestBody DeleteAccountRequest request){
+    public ResponseEntity<Void> deleteUser(@RequestBody DeleteAccountRequest request){
 
         userService.deleteUserProfile(request);
-        
+
         return ResponseEntity.noContent().build();
-    }   
+    }
 
     @PatchMapping("/password")
-    public ResponseEntity changeUserPassword(@AuthenticationPrincipal UserDetails userDetails,@Valid @RequestBody ChangePasswordRequest request){
+    public ResponseEntity<Void> changeUserPassword(@AuthenticationPrincipal UserDetails userDetails,@Valid @RequestBody ChangePasswordRequest request){
 
         userService.changeUserPassword(userDetails, request);
 

@@ -96,7 +96,10 @@ function AppRoutes() {
         <Route path="homepage" element={<HomePage />} />
         <Route path="profile" element={<ProfilePage />} />
         <Route path="settings" element={<Settings />} />
-        <Route path="requests" element={<ServiceDashboard />} />
+        <Route
+          path="dashboard"
+          element={<ServiceDashboard />}
+        />
         <Route path="inbox" element={<Inbox />} />
         <Route path="admin" element={<AdminDashboard />} />
       </Route>

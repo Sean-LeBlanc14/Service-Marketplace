@@ -18,8 +18,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.ServiceMarketplace.service_marketplace.dto.BookingResponse;
 import com.ServiceMarketplace.service_marketplace.dto.ConfirmBookingRequest;
-import com.ServiceMarketplace.service_marketplace.dto.CreateBookingResponse;
 import com.ServiceMarketplace.service_marketplace.dto.CreateBookingRequest;
+import com.ServiceMarketplace.service_marketplace.dto.CreateBookingResponse;
 import com.ServiceMarketplace.service_marketplace.dto.SubmitReviewRequest;
 import com.ServiceMarketplace.service_marketplace.exception.BookingStateException;
 import com.ServiceMarketplace.service_marketplace.exception.BookingTokenException;
@@ -27,6 +27,7 @@ import com.ServiceMarketplace.service_marketplace.model.BookingTokenAction;
 import com.ServiceMarketplace.service_marketplace.service.BookingService;
 
 import jakarta.validation.Valid;
+
 
 @RestController
 @RequestMapping("/api/bookings")
@@ -100,7 +101,7 @@ public class BookingController {
                 .body(buildHtmlPage("Already Actioned", "This booking has already been confirmed or cancelled.", "#e65100"));
         }
     }
-
+    
     private String buildHtmlPage(String heading, String message, String headingColor) {
         return """
             <!DOCTYPE html>

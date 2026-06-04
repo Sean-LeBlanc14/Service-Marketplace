@@ -13,12 +13,16 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import com.ServiceMarketplace.service_marketplace.dto.AuthResponse;
+import com.ServiceMarketplace.service_marketplace.dto.ChangePasswordRequest;
+import com.ServiceMarketplace.service_marketplace.dto.DeleteAccountRequest;
 import com.ServiceMarketplace.service_marketplace.dto.LoginRequest;
 import com.ServiceMarketplace.service_marketplace.dto.RegisterRequest;
 import com.ServiceMarketplace.service_marketplace.dto.ServiceDto;
 import com.ServiceMarketplace.service_marketplace.dto.UpdateUserProfileRequest;
 import com.ServiceMarketplace.service_marketplace.dto.UserProfile;
 import com.ServiceMarketplace.service_marketplace.exception.EmailAlreadyExistsException;
+import com.ServiceMarketplace.service_marketplace.exception.FailedToDeleteUserException;
+import com.ServiceMarketplace.service_marketplace.exception.RedundantChangeException;
 import com.ServiceMarketplace.service_marketplace.exception.InvalidEmailDomainException;
 import com.ServiceMarketplace.service_marketplace.exception.ResourceNotFoundException;
 import com.ServiceMarketplace.service_marketplace.model.User;
@@ -40,10 +44,9 @@ public class UserService {
 
     private final ServiceService serviceService;
 
-
-    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder, EmailService emailService, 
-        VerificationService verificationService, AuthenticationManager authenticationManager, JwtService jwtService,
-        ServiceService serviceService) {
+    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder, EmailService emailService,
+            VerificationService verificationService, AuthenticationManager authenticationManager, JwtService jwtService,
+            ServiceService serviceService) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.emailService = emailService;
@@ -83,14 +86,14 @@ public class UserService {
         return new AuthResponse(saved.getId(), saved.getEmail(), jwtToken, saved.getRole());
     }
 
-    public AuthResponse loginUser(LoginRequest request){
-        
+    public AuthResponse loginUser(LoginRequest request) {
+
         try {
             authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(
-                    request.getEmail(), 
-                    request.getPassword()
-                )
+                    new UsernamePasswordAuthenticationToken(
+                            request.getEmail(),
+                            request.getPassword()
+                    )
             );
         } catch (BadCredentialsException | InternalAuthenticationServiceException e) {
             throw new BadCredentialsException("Invalid email or password.");
@@ -104,15 +107,50 @@ public class UserService {
 
     }
 
-    public UserProfile getUserProfile(UserDetails userDetails){
+    public void changeUserPassword(UserDetails userDetails, ChangePasswordRequest request) {
+
+
+        var user = userRepository.findByEmail(userDetails.getUsername())
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+
+
+        if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
+            throw new BadCredentialsException("Invalid Password");
+        }
+        
+        if (passwordEncoder.matches(request.getNewPassword(), user.getPassword())){
+            throw new RedundantChangeException("Your new password cannot be the same as your old password.");
+        }
+
+        user.setPassword(passwordEncoder.encode(request.getNewPassword()));
+        userRepository.save(user);
+
+    }
+
+    public UserProfile getUserProfile(UserDetails userDetails) {
 
         User user = getUserByEmail(userDetails.getUsername());
 
         return toUserProfile(user);
-        
+
     }
 
-    public UserProfile updateUserProfile(UserDetails userDetails, UpdateUserProfileRequest request){
+    public void deleteUserProfile(DeleteAccountRequest request) {
+
+        try{
+            authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(
+                    request.getEmail(), request.getPassword()));
+        }catch(BadCredentialsException | InternalAuthenticationServiceException e) {
+            throw new BadCredentialsException("Invalid email or password.");
+        }
+        
+        var user = userRepository.deleteByEmail(request.getEmail())
+                .orElseThrow(() -> new FailedToDeleteUserException("Could not delete the user: " + request.getEmail()));
+
+    }
+
+    public UserProfile updateUserProfile(UserDetails userDetails, UpdateUserProfileRequest request) {
 
         User user = getUserByEmail(userDetails.getUsername());
 
@@ -123,7 +161,27 @@ public class UserService {
         User saved = userRepository.save(user);
 
         return toUserProfile(saved);
+
+    }
+
+    public UserProfile changeUserMajor(UserDetails userDetails, String newMajor){
+        var user = userRepository.findByEmail(userDetails.getUsername())
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+
+        if (user.getMajor().equals(newMajor)) throw new RedundantChangeException("Your new major cannot be the same as your old major");
+        user.setMajor(newMajor);
+        userRepository.save(user);
+        return toUserProfile(user);
+    }
+
+    public UserProfile changeUserCampus(UserDetails userDetails, String newCampus){
+        var user = userRepository.findByEmail(userDetails.getUsername())
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
         
+                if (user.getCampus().equals(newCampus)) throw new RedundantChangeException("Your new campus cannot be the same as your old campus"); 
+        user.setCampus(newCampus);
+        userRepository.save(user);
+        return toUserProfile(user);
     }
 
     public User getUserById(String userId) {

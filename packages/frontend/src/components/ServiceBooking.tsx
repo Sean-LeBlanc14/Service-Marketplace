@@ -6,9 +6,9 @@ import { useState } from "react";
 
 interface ServiceBookingProps {
   booking: ApiBooking;
-  confirmBooking?: (booking: ApiBooking) => void;
-  rejectBooking?: (booking: ApiBooking) => void;
-  cancelBooking?: (booking: ApiBooking) => void;
+  confirmBooking?: (booking: ApiBooking) => Promise<boolean> | boolean;
+  rejectBooking?: (booking: ApiBooking) => Promise<boolean> | boolean;
+  cancelBooking?: (booking: ApiBooking) => Promise<boolean> | boolean;
 }
 
 function formatBookingTime(
@@ -111,9 +111,14 @@ function ServiceBooking({
                 type="button"
                 className="booking-action booking-action-primary"
                 disabled={isUpdating}
-                onClick={() => {
+                onClick={async () => {
                   setIsUpdating(true);
-                  confirmBooking?.(booking);
+                  const succeeded =
+                    (await confirmBooking?.(booking)) ?? false;
+
+                  if (!succeeded) {
+                    setIsUpdating(false);
+                  }
                 }}>
                 {isUpdating ? "Accepting..." : "Accept Booking"}
               </button>
@@ -122,9 +127,14 @@ function ServiceBooking({
                 type="button"
                 className="booking-action booking-action-secondary"
                 disabled={isRejecting}
-                onClick={() => {
+                onClick={async () => {
                   setIsRejecting(true);
-                  rejectBooking?.(booking);
+                  const succeeded =
+                    (await rejectBooking?.(booking)) ?? false;
+
+                  if (!succeeded) {
+                    setIsRejecting(false);
+                  }
                 }}>
                 {isRejecting
                   ? "Rejecting..."
@@ -138,9 +148,14 @@ function ServiceBooking({
               type="button"
               className="booking-action booking-action-primary"
               disabled={isUpdating}
-              onClick={() => {
+              onClick={async () => {
                 setIsUpdating(true);
-                cancelBooking?.(booking);
+                const succeeded =
+                  (await cancelBooking?.(booking)) ?? false;
+
+                if (!succeeded) {
+                  setIsUpdating(false);
+                }
               }}>
               {isUpdating ? "Canceling..." : "Cancel Booking"}
             </button>

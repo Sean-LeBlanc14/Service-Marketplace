@@ -112,12 +112,12 @@ export default function ServiceDashboard() {
     authToken
   ]);
 
-  async function confirmBooking(booking: ApiBooking) {
+  async function confirmBooking(booking: ApiBooking): Promise<boolean> {
 
     if (!authToken) {
       navigate("/login");
       toast.error("Please login");
-      return;
+      return false;
     }
 
     try {
@@ -144,21 +144,25 @@ export default function ServiceDashboard() {
             (request) => booking.id !== request.id
           )
         );
-        return;
+        return true;
       } else {
         toast.error("Something went wrong");
       }
     } catch {
-      //Fail silently
+      toast.warning(
+        "A network error occurred, please try again"
+      );
     }
+
+    return false;
   }
 
-  async function rejectBooking(booking: ApiBooking) {
+  async function rejectBooking(booking: ApiBooking): Promise<boolean> {
 
     if (!authToken) {
       navigate("/login");
       toast.error("Please login");
-      return;
+      return false;
     }
 
     try {
@@ -177,21 +181,25 @@ export default function ServiceDashboard() {
             (request) => request.id !== booking.id
           )
         );
-        return;
+        return true;
       } else {
         toast.error("Could not reject this booking.");
       }
     } catch {
-      //fail silently
+      toast.warning(
+        "A network error occurred, please try again"
+      );
     }
+
+    return false;
   }
 
-  async function cancelBooking(booking: ApiBooking) {
+  async function cancelBooking(booking: ApiBooking): Promise<boolean> {
 
     if (!authToken) {
       navigate("/login");
       toast.error("Please login");
-      return;
+      return false;
     }
 
     try {
@@ -213,7 +221,7 @@ export default function ServiceDashboard() {
             (appointment) => appointment.id !== booking.id
           )
         );
-        return;
+        return true;
       } else {
         toast.error("Something went wrong");
       }
@@ -223,6 +231,8 @@ export default function ServiceDashboard() {
       );
       console.error(e);
     }
+
+    return false;
   }
 
   const dashboardViews: Record<

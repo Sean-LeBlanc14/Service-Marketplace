@@ -46,6 +46,8 @@ public class CreateServiceRequest {
     @Size(max = MAX_TAG_COUNT, message = "Use no more than 5 tags")
     private List<@Size(max = MAX_TAG_LENGTH, message = "Tags must be 50 characters or fewer") String> tags;
 
+    private String postingType;
+
     @AssertTrue(message = "Price max must be greater than or equal to price min")
     public boolean isPriceRangeValid() {
         return priceMin == null || priceMax == null || priceMax.compareTo(priceMin) >= 0;

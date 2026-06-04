@@ -34,6 +34,7 @@ interface ServicesSectionProps {
   servicePrice: string;
   servicePriceUnit: string;
   servicePricingType: ServicePricingType;
+  servicePostingType: string;
   services: ServiceListing[];
   serviceTags: string;
   serviceTitle: string;
@@ -49,6 +50,7 @@ interface ServicesSectionProps {
   onServicePriceChange: (value: string) => void;
   onServicePriceUnitChange: (value: string) => void;
   onServicePricingTypeChange: (value: ServicePricingType) => void;
+  onServicePostingTypeChange: (value: string) => void;
   onServiceTagsChange: (value: string) => void;
   onServiceTitleChange: (value: string) => void;
   onSubmit: (event: FormEvent<HTMLFormElement>) => void;
@@ -69,6 +71,7 @@ export function ServicesSection({
   servicePrice,
   servicePriceUnit,
   servicePricingType,
+  servicePostingType,
   services,
   serviceTags,
   serviceTitle,
@@ -84,6 +87,7 @@ export function ServicesSection({
   onServicePriceChange,
   onServicePriceUnitChange,
   onServicePricingTypeChange,
+  onServicePostingTypeChange,
   onServiceTagsChange,
   onServiceTitleChange,
   onSubmit
@@ -331,6 +335,23 @@ export function ServicesSection({
               placeholder="e.g. Python, Data Science, Algorithms"
               rows={2}
             />
+          </label>
+
+          <label>
+            <span>Posting Type</span>
+            <select
+              value={servicePostingType}
+              onChange={(event) =>
+                onServicePostingTypeChange(event.target.value)
+              }
+              required>
+              <option value="continuous">
+                Continuous (stays available)
+              </option>
+              <option value="single">
+                Single (disappears when booked)
+              </option>
+            </select>
           </label>
 
           <div className="service-form-actions">

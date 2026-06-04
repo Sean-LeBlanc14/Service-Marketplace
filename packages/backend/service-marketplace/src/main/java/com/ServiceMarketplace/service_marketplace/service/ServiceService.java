@@ -66,6 +66,7 @@ public class ServiceService {
     public List<ServiceDto> getAllServices() {
         return serviceRepository.findAll()
             .stream()
+            .filter(service -> service.getIsAvailable() == null || service.getIsAvailable())
             .map(this::toDto)
             .collect(Collectors.toList());
     }
@@ -73,6 +74,7 @@ public class ServiceService {
     public List<ServiceDto> getServicesByCategory(String category) {
         return serviceRepository.findByCategory(category)
             .stream()
+            .filter(service -> service.getIsAvailable() == null || service.getIsAvailable())
             .map(this::toDto)
             .collect(Collectors.toList());
     }
@@ -127,9 +129,11 @@ public class ServiceService {
             request.getPriceUnit(),
             request.getCategory(),
             request.getLocation(),
-            request.getTags()
+            request.getTags(),
+            request.getPostingType()
         );
         service.setUserId(user.getId());
+        service.setIsAvailable(true);
         service.setCreatedAt(Instant.now());
 
         return toDto(serviceRepository.save(service), user);
@@ -148,7 +152,8 @@ public class ServiceService {
             request.getPriceUnit(),
             request.getCategory(),
             request.getLocation(),
-            request.getTags()
+            request.getTags(),
+            request.getPostingType()
         );
 
         return toDto(serviceRepository.save(service), user);
@@ -170,7 +175,8 @@ public class ServiceService {
         String priceUnit,
         String category,
         String location,
-        List<String> tags) {
+        List<String> tags,
+        String postingType) {
         service.setTitle(clean(title));
         service.setDescription(clean(description));
         service.setPriceMin(priceMin);
@@ -179,6 +185,7 @@ public class ServiceService {
         service.setCategory(clean(category));
         service.setLocation(clean(location));
         service.setTags(normalizeTags(tags));
+        service.setPostingType(clean(postingType));
     }
 
     private User getCurrentUser(UserDetails userDetails) {

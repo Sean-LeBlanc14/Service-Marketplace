@@ -96,6 +96,8 @@ function ProfilePage() {
   const [servicePriceUnit, setServicePriceUnit] = useState("");
   const [serviceLocation, setServiceLocation] = useState("");
   const [serviceTags, setServiceTags] = useState("");
+  const [servicePostingType, setServicePostingType] =
+    useState("continuous");
   const navigate = useNavigate();
   const [connectStatus, setConnectStatus] =
     useState<ConnectStatus | null>(null);
@@ -398,7 +400,8 @@ function ProfilePage() {
             : normalizePriceUnit(servicePriceUnit),
         description: descriptionText,
         location: locationText,
-        tags: tags
+        tags: tags,
+        postingType: servicePostingType
       };
 
       setIsCreatingService(true);
@@ -474,6 +477,7 @@ function ProfilePage() {
     setServicePriceUnit("");
     setServiceLocation("");
     setServiceTags("");
+    setServicePostingType("continuous");
     setEditingServiceId(null);
   }
 
@@ -787,6 +791,7 @@ function ProfilePage() {
           servicePrice={servicePrice}
           servicePriceUnit={servicePriceUnit}
           servicePricingType={servicePricingType}
+          servicePostingType={servicePostingType}
           services={profile.services}
           serviceTags={serviceTags}
           serviceTitle={serviceTitle}
@@ -830,6 +835,10 @@ function ProfilePage() {
           }}
           onServicePricingTypeChange={(value) => {
             setServicePricingType(value);
+            setServiceMessage("");
+          }}
+          onServicePostingTypeChange={(value) => {
+            setServicePostingType(value);
             setServiceMessage("");
           }}
           onServiceTagsChange={(value) => {

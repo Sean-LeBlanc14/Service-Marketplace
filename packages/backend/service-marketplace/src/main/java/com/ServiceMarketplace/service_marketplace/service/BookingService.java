@@ -92,6 +92,11 @@ public class BookingService {
 
         Booking saved = bookingRepository.save(booking);
 
+        if ("single".equalsIgnoreCase(service.getPostingType())) {
+            service.setIsAvailable(false);
+            serviceRepository.save(service);
+        }
+
         emailService.sendBookingRequestedCustomerEmail(
             customer.getEmail(),
             customer.getFirstName(),

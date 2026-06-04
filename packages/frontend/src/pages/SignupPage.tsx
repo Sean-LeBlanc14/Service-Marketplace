@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import InputField from "../components/InputField";
 import MajorComboBox from "../components/MajorComboBox";
 import NavLink from "../components/NavLink";
@@ -154,10 +154,19 @@ function SignupPage() {
           label={"Sign Up"}
           onClick={handleSubmit}
         />
-        link=<NavLink
-          to="/login"
-          label="Already have an account?"
-        />
+        link={
+          <>
+            <p className="signup-consent">
+              By signing up, you agree to our{" "}
+              <Link to="/terms">Terms of Service</Link> and{" "}
+              <Link to="/privacy">Privacy Policy</Link>.
+            </p>
+            <NavLink
+              to="/login"
+              label="Already have an account?"
+            />
+          </>
+        }
       />
 
       <InformationSection />

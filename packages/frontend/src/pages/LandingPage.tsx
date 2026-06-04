@@ -1,4 +1,4 @@
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import SubmitButton from "../components/SubmitButton";
 import "../styles/LandingPage.css";
 
@@ -71,7 +71,16 @@ function LandingPage() {
         </main>
 
         <footer className="landing-footer">
-          <p>© 2026 PolyServices, Inc. All Rights Reserved.</p>
+          <p>
+            © 2026 PolyServices, Inc. All Rights Reserved.{" "}
+            <Link to="/terms" className="landing-footer-link">
+              Terms of Service
+            </Link>{" "}
+            ·{" "}
+            <Link to="/privacy" className="landing-footer-link">
+              Privacy Policy
+            </Link>
+          </p>
         </footer>
       </div>
     </div>

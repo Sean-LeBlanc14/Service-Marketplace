@@ -21,6 +21,8 @@ import ServiceDashboard from "./pages/ServiceDashboard";
 import AdminDashboard from "./pages/AdminDashboard";
 import SuspendedPage from "./pages/SuspendedPage";
 import NotificationsPage from "./pages/NotificationsPage";
+import TermsOfService from "./pages/TermsOfService";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
 import { API_ENDPOINTS } from "./utils/api";
 import { WebSocketProvider } from "./context/WebSocketContext";
 import Calendar from "./pages/Calendar";
@@ -121,6 +123,8 @@ function AppRoutes() {
       <Route path="signup" element={<SignupPage />} />
       <Route path="login" element={<LoginPage />} />
       <Route path="suspended" element={<SuspendedPage />} />
+      <Route path="terms" element={<TermsOfService />} />
+      <Route path="privacy" element={<PrivacyPolicy />} />
     </Routes>
   );
 }

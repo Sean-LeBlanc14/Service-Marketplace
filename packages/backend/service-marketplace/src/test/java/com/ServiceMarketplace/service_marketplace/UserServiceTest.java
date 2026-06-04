@@ -1,24 +1,22 @@
 package com.ServiceMarketplace.service_marketplace;
 
-import com.ServiceMarketplace.service_marketplace.dto.AuthResponse;
-import com.ServiceMarketplace.service_marketplace.dto.ChangePasswordRequest;
-import com.ServiceMarketplace.service_marketplace.dto.RegisterRequest;
-import com.ServiceMarketplace.service_marketplace.dto.UserProfile;
-import com.ServiceMarketplace.service_marketplace.exception.EmailAlreadyExistsException;
-import com.ServiceMarketplace.service_marketplace.exception.RedundantChangeException;
-import com.ServiceMarketplace.service_marketplace.exception.InvalidEmailDomainException;
+import java.util.List;
+import java.util.Optional;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+
 import com.ServiceMarketplace.service_marketplace.exception.ResourceNotFoundException;
-import com.ServiceMarketplace.service_marketplace.model.User;
-import com.ServiceMarketplace.service_marketplace.repository.UserRepository;
-import com.ServiceMarketplace.service_marketplace.service.EmailService;
-import com.ServiceMarketplace.service_marketplace.service.JwtService;
-import com.ServiceMarketplace.service_marketplace.service.ServiceService;
-import com.ServiceMarketplace.service_marketplace.service.UserService;
-import com.ServiceMarketplace.service_marketplace.service.VerificationService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import static org.mockito.ArgumentMatchers.any;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.when;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -26,12 +24,20 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
-import java.util.List;
-import java.util.Optional;
-
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
+import com.ServiceMarketplace.service_marketplace.dto.AuthResponse;
+import com.ServiceMarketplace.service_marketplace.dto.ChangePasswordRequest;
+import com.ServiceMarketplace.service_marketplace.dto.RegisterRequest;
+import com.ServiceMarketplace.service_marketplace.dto.UserProfile;
+import com.ServiceMarketplace.service_marketplace.exception.EmailAlreadyExistsException;
+import com.ServiceMarketplace.service_marketplace.exception.InvalidEmailDomainException;
+import com.ServiceMarketplace.service_marketplace.exception.RedundantChangeException;
+import com.ServiceMarketplace.service_marketplace.model.User;
+import com.ServiceMarketplace.service_marketplace.repository.UserRepository;
+import com.ServiceMarketplace.service_marketplace.service.EmailService;
+import com.ServiceMarketplace.service_marketplace.service.JwtService;
+import com.ServiceMarketplace.service_marketplace.service.ServiceService;
+import com.ServiceMarketplace.service_marketplace.service.UserService;
+import com.ServiceMarketplace.service_marketplace.service.VerificationService;
 
 @ExtendWith(MockitoExtension.class)
 public class UserServiceTest {

@@ -119,6 +119,18 @@ public class EmailService {
             ));
     }
 
+    public void sendBookingRejectedCustomerEmail(String toEmail, String customerName, String providerName,
+            String serviceTitle, Instant scheduledAt, String bookingId) {
+        sendTemplatedEmail(toEmail, "Booking rejected - " + serviceTitle, "bookingRejectedCustomer",
+            Map.of(
+                "customerName", customerName,
+                "providerName", providerName,
+                "serviceTitle", serviceTitle,
+                "scheduledAt", DATE_FORMATTER.format(scheduledAt),
+                "bookingId", bookingId
+            ));
+    }
+
     private void sendTemplatedEmail(String toEmail, String subject, String templateName, Map<String, Object> variables) {
         Context context = new Context();
         variables.forEach(context::setVariable);

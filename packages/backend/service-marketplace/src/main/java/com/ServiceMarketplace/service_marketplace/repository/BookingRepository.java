@@ -15,6 +15,8 @@ import com.ServiceMarketplace.service_marketplace.model.BookingStatus;
 public interface BookingRepository extends MongoRepository<Booking, String> {
     Optional<Booking> findByStripePaymentIntentId(String stripePaymentIntentId);
 
+    List<Booking> findByProviderIdAndStatusOrderByCreatedAtDesc(String providerId, BookingStatus status);
+
     List<Booking> findByCustomerIdOrderByCreatedAtDesc(String customerId);
 
     List<Booking> findByStatusOrderByCreatedAtDesc(BookingStatus status);

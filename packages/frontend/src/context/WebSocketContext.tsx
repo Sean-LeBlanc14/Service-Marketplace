@@ -6,7 +6,7 @@ import {
   useRef,
   useState
 } from "react";
-import { Client } from "@stomp/stompjs";
+import { Client, type IMessage } from "@stomp/stompjs";
 import type {
   ApiMessage,
   ApiNotification,
@@ -86,18 +86,21 @@ export function WebSocketProvider({
       connectHeaders: { Authorization: `Bearer ${token}` },
       reconnectDelay: 5000,
       onConnect: () => {
-        client.subscribe("/user/queue/messages", (frame) => {
-          const msg = JSON.parse(frame.body) as ApiMessage;
-          setLatestMessage(msg);
-          setUnreadCounts((prev) => ({
-            ...prev,
-            messages: prev.messages + 1
-          }));
-        });
+        client.subscribe(
+          "/user/queue/messages",
+          (frame: IMessage) => {
+            const msg = JSON.parse(frame.body) as ApiMessage;
+            setLatestMessage(msg);
+            setUnreadCounts((prev) => ({
+              ...prev,
+              messages: prev.messages + 1
+            }));
+          }
+        );
 
         client.subscribe(
           "/user/queue/notifications",
-          (frame) => {
+          (frame: IMessage) => {
             const notif = JSON.parse(
               frame.body
             ) as ApiNotification;

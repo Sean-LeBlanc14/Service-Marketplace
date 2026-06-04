@@ -16,7 +16,6 @@ import {
 } from "react-icons/fa";
 import { BsBoxArrowUpRight } from "react-icons/bs";
 import Modal from "../components/Modal";
-import Footer from "../components/Footer";
 import MajorComboBox from "../components/MajorComboBox";
 import DropDown from "../components/DropDown";
 import { USER_ID_KEY } from "./profile/constants";
@@ -554,12 +553,12 @@ export default function Settings() {
             <BsBoxArrowUpRight />
           </button>
 
-          <button>
+          <button onClick={() => navigate("/terms")}>
             <span>Terms of Service</span>
             <BsBoxArrowUpRight />
           </button>
 
-          <button>
+          <button onClick={() => navigate("/privacy")}>
             <span>Privacy Policy</span>
             <BsBoxArrowUpRight />
           </button>
@@ -585,7 +584,6 @@ export default function Settings() {
         </div>
       </div>
 
-      <Footer />
     </div>
   );
 }

@@ -115,6 +115,15 @@
   margin-top: 2rem;
 }
 
+.landing-footer-link {
+  color: #666666;
+  text-decoration: underline;
+}
+
+.landing-footer-link:hover {
+  color: var(--cp-green);
+}
+
 @media (max-width: 768px) {
   .feature-grid {
     grid-template-columns: 1fr;

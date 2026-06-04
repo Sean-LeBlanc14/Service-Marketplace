@@ -25,6 +25,7 @@ import com.ServiceMarketplace.service_marketplace.exception.BookingStateExceptio
 import com.ServiceMarketplace.service_marketplace.exception.InvalidBookingReviewException;
 import com.ServiceMarketplace.service_marketplace.exception.InvalidPriceException;
 import com.ServiceMarketplace.service_marketplace.exception.ResourceNotFoundException;
+import com.ServiceMarketplace.service_marketplace.exception.UnauthorizedBookingRejectionException;
 import com.ServiceMarketplace.service_marketplace.model.Booking;
 import com.ServiceMarketplace.service_marketplace.model.BookingStatus;
 import com.ServiceMarketplace.service_marketplace.model.BookingTokenAction;
@@ -296,8 +297,12 @@ public class BookingService {
         var rejectedBooking = bookingRepository.findById(bookingId)
             .orElseThrow(() -> new ResourceNotFoundException("Booking", bookingId));
 
-        bookingRepository.delete(rejectedBooking);
+        if (!provider.getId().equals(rejectedBooking.getProviderId()) && !rejectedBooking.getStatus().equals(BookingStatus.AWAITING_PROVIDER_CONFIRMATION)){
+            throw new UnauthorizedBookingRejectionException("You are not the provider for this booking");
+        }
 
+        rejectedBooking.setStatus(BookingStatus.REJECTED);
+        bookingRepository.save(rejectedBooking);
         
         userRepository.findById(rejectedBooking.getCustomerId()).ifPresent(customer -> {
                 String providerName = provider.getFirstName() + " " + provider.getLastName();

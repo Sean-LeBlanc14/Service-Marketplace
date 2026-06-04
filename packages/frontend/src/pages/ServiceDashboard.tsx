@@ -14,13 +14,13 @@ export default function ServiceDashboard() {
   const navigate = useNavigate();
 
   const [bookingRequests, setBookingRequests] =
-    useState<ApiBooking[]>() || [];
+    useState<ApiBooking[]>([]);
 
   const [serviceHistory, setServiceHistory] =
-    useState<ApiBooking[]>() || [];
+    useState<ApiBooking[]>([]);
 
   const [upcomingBookings, setUpcomingBookings] =
-    useState<ApiBooking[]>() || [];
+    useState<ApiBooking[]>([]);
 
   const [selectedView, setSelectedView] =
     useState<DashboardView>("requests");
@@ -31,6 +31,7 @@ export default function ServiceDashboard() {
     if (!authToken) {
       navigate("/login");
       toast.error("Please login");
+      return;
     }
 
     //Will pull up all bookings
@@ -42,7 +43,7 @@ export default function ServiceDashboard() {
           {
             headers: {
               Authorization: `Bearer ${authToken}`,
-              Accepted: "application/json"
+              Accept: "application/json"
             }
           }
         );
@@ -112,6 +113,13 @@ export default function ServiceDashboard() {
   ]);
 
   async function confirmBooking(booking: ApiBooking) {
+
+    if (!authToken) {
+      navigate("/login");
+      toast.error("Please login");
+      return;
+    }
+
     try {
       const confirmResponse = await fetch(
         API_ENDPOINTS.bookings.confirm(booking.id as string),
@@ -129,7 +137,7 @@ export default function ServiceDashboard() {
 
       if (confirmResponse.ok) {
         toast.success(
-          "Booking accepted, you will recieve payment shortly!"
+          "Booking accepted, you will receive payment shortly!"
         );
         setBookingRequests(
           bookingRequests?.filter(
@@ -146,6 +154,13 @@ export default function ServiceDashboard() {
   }
 
   async function rejectBooking(booking: ApiBooking) {
+
+    if (!authToken) {
+      navigate("/login");
+      toast.error("Please login");
+      return;
+    }
+
     try {
       const rejectionResponse = await fetch(
         API_ENDPOINTS.bookings.reject(booking.id as string),
@@ -172,6 +187,13 @@ export default function ServiceDashboard() {
   }
 
   async function cancelBooking(booking: ApiBooking) {
+
+    if (!authToken) {
+      navigate("/login");
+      toast.error("Please login");
+      return;
+    }
+
     try {
       const cancelResponse = await fetch(
         API_ENDPOINTS.bookings.cancel(booking.id as string),

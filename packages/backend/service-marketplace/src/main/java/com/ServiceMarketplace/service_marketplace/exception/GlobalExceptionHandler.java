@@ -155,4 +155,9 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
     }
 
+    @ExceptionHandler(UnauthorizedBookingRejectionException.class)
+    public ResponseEntity<String> handdleUnauthorizedBookingRejection(UnauthorizedBookingRejectionException e){
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(e.getMessage());
+    }
+
 }

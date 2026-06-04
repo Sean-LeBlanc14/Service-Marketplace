@@ -8,5 +8,6 @@ public enum NotificationType {
     BOOKING_REQUESTED,
     BOOKING_CONFIRMED,
     BOOKING_CANCELLED,
+    BOOKING_REJECTED,
     REVIEW_RECEIVED
 }

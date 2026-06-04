@@ -5,6 +5,7 @@ import { toast } from "react-toastify";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "../styles/ServiceDashboard.css";
+import { getToken } from "../utils/helper";
 
 export default function ServiceDashboard() {
 
@@ -16,7 +17,7 @@ export default function ServiceDashboard() {
 
   const [ upcomingBookings, setUpcomingBookings ] = useState<ApiBooking[]>() || [];
 
-  const authToken = window.localStorage.getItem("jwt_token")
+  const authToken = getToken();
 
   useEffect(()=> {
 
@@ -30,7 +31,7 @@ export default function ServiceDashboard() {
         try{
 
           //Pulls all the requested bookings aka bookings with status AWAITING_PROVIDER_CONFIRMATION
-          const bookingRequestResponse = await fetch(API_ENDPOINTS.bookings.getRequests, {
+          const bookingRequestResponse = await fetch(API_ENDPOINTS.bookings.getProviderRequests, {
           headers: {
             'Authorization': `Bearer ${authToken}`,
             'Accepted': 'application/json'
@@ -45,7 +46,7 @@ export default function ServiceDashboard() {
           }
 
           //Completed bookings with status completed
-          const serviceHistoryResponse = await fetch(API_ENDPOINTS.bookings.getCompleted, {
+          const serviceHistoryResponse = await fetch(API_ENDPOINTS.bookings.getProviderCompleted, {
             headers: {
               'Authorization' : `Bearer ${authToken}`,
               'Accept': 'application/json'
@@ -60,7 +61,7 @@ export default function ServiceDashboard() {
           }
 
           //Scheduled bookings with status CONFIRMED
-          const scheduledBookingsResponse = await fetch(API_ENDPOINTS.bookings.getScheduled, {
+          const scheduledBookingsResponse = await fetch(API_ENDPOINTS.bookings.getProviderScheduled, {
              headers: {
               'Authorization' : `Bearer ${authToken}`,
               'Accept': 'application/json'
@@ -104,19 +105,37 @@ export default function ServiceDashboard() {
       } else {
         toast.error("Something went wrong");
       }
-    } catch (e) {
-      console.error(e);
-      toast.warning(
-        "A network error occurred when confirming this booking, please try again."
-      );
+    } catch {
+      //Fail silently
     } 
+  }
+
+  async function rejectBooking(booking: ApiBooking) {
+
+    try{
+      const rejectionResponse = await fetch(API_ENDPOINTS.bookings.reject(booking.id), {
+        method: "DELETE",
+      headers: {Authorization: `Bearer ${authToken}`,}
+    });
+
+    if (rejectionResponse.ok){
+      toast.success("Booking successfully rejected.");
+      setBookingRequests(bookingRequests?.filter((request) => request.id !== booking.id));
+      return;
+    }else{
+      toast.error("Could not reject this booking.");
+    }
+    }catch{
+      //fail silently
+    }
+
   }
 
   async function cancelBooking(booking: ApiBooking) {
 
     try {
       const cancelResponse = await fetch(
-        API_ENDPOINTS.bookings.cancel(booking.id),
+        API_ENDPOINTS.bookings.cancel(booking.id as string),
         {
           method: "PUT",
           headers: {
@@ -139,15 +158,17 @@ export default function ServiceDashboard() {
     } 
   }
 
+
   return (
     <div className="serviceDashboard-wrapper">
+      <h2>Your Service Provider Dashboard</h2>
 
       <section>
         <h2>Your Service Requests</h2>
 
         <div className="booking-container">
           {bookingRequests && bookingRequests.length > 0 ? ( bookingRequests.map((booking: ApiBooking) => (
-              <ServiceBooking key={booking.id} booking={booking} confirmBooking={confirmBooking}/>
+              <ServiceBooking key={booking.id} booking={booking} confirmBooking={confirmBooking} rejectBooking={rejectBooking}/>
             ))
           ) : (
             "No incoming requests"
@@ -163,7 +184,7 @@ export default function ServiceDashboard() {
               <ServiceBooking key={booking.id} booking={booking} cancelBooking={cancelBooking}/>
             ))
           ) : (
-            "No incoming requests"
+            "No upcoming bookings"
           )}
         </div>
       </section>
@@ -176,7 +197,7 @@ export default function ServiceDashboard() {
               <ServiceBooking key={booking.id} booking={booking}/>
             ))
           ) : (
-            "No incoming requests"
+            "No past bookings"
           )}
         </div>
       </section>

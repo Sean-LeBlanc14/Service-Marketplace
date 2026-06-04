@@ -7,6 +7,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -46,10 +47,31 @@ public class BookingController {
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
 
-    @GetMapping("/me")
+    @GetMapping("/customer/me")
     public ResponseEntity<List<BookingResponse>> getCustomerBookings(
             @AuthenticationPrincipal UserDetails userDetails) {
         List<BookingResponse> response = bookingService.getCustomerBookings(userDetails);
+        return ResponseEntity.status(HttpStatus.OK).body(response);
+    }
+
+    @GetMapping("/provider/requests/me")
+    public ResponseEntity<List<BookingResponse>> getProviderBookingRequests(@AuthenticationPrincipal UserDetails userDetails){
+        List<BookingResponse> response = bookingService.getProviderBookingRequests(userDetails);
+
+        return ResponseEntity.status(HttpStatus.OK).body(response);
+    }
+
+    @GetMapping("/provider/scheduled/me")
+    public ResponseEntity<List<BookingResponse>> getProviderScheduledBookings(@AuthenticationPrincipal UserDetails userDetails){
+        List<BookingResponse> response = bookingService.getProviderScheduledBookings(userDetails);
+
+        return ResponseEntity.status(HttpStatus.OK).body(response);
+    }
+
+    @GetMapping("/provider/completed/me")
+    public ResponseEntity<List<BookingResponse>> getProviderCompletedBookings(@AuthenticationPrincipal UserDetails userDetails){
+        List<BookingResponse> response = bookingService.getProviderCompletedBookings(userDetails);
+
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 
@@ -77,6 +99,14 @@ public class BookingController {
             @AuthenticationPrincipal UserDetails userDetails) {
         BookingResponse response = bookingService.cancelBooking(id, userDetails);
         return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    @DeleteMapping("/{id}/reject")
+    public ResponseEntity<Void> rejectBooking(@PathVariable String id, @AuthenticationPrincipal UserDetails userDetails){
+        
+        bookingService.rejectBooking(id, userDetails);
+
+        return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/action")

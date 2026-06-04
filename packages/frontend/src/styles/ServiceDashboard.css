@@ -7,11 +7,13 @@
   min-width: 0;
   max-width: 100%;
   overflow-x: hidden;
+  padding: 10px;
 }
 
 .serviceDashboard-wrapper section {
   width: 100%;
   min-width: 0;
+  min-height: 400px;
   box-sizing: border-box;
   border-bottom: 2px solid #333;
   display: flex;
@@ -23,11 +25,6 @@
   scroll-behavior: smooth;
   scrollbar-gutter: stable;
 }
-
-.serviceDashboard-wrapper section.bottom{
-  border: transparent;
-}
-
 
 .booking-container{
   display: flex;

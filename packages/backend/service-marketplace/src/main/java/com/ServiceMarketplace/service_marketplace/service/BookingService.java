@@ -262,42 +262,74 @@ public class BookingService {
         return toBookingResponse(booking);
     }
 
-    //Gets all pending bookings for a provider
-    public List<BookingResponse> getUserBookingRequests(UserDetails userDetails){
+    public List<BookingResponse> getProviderBookingRequests(UserDetails userDetails){
+        var user = getUserByEmail(userDetails.getUsername());
 
-        var user = userRepository.findByEmail(userDetails.getUsername()).orElseThrow(() -> new UsernameNotFoundException("user not found"));
+        List<Booking> bookingRequests = bookingRepository.findByProviderIdAndStatusOrderByCreatedAtDesc(
+            user.getId(), BookingStatus.AWAITING_PROVIDER_CONFIRMATION);
+        
+        var userIds = getUsersById(bookingRequests);
 
-        List<Booking> bookingRequests = bookingRepository.findByProviderIdAndStatus(user.getId(), BookingStatus.AWAITING_PROVIDER_CONFIRMATION);
-
-        List<BookingResponse> response = bookingRequests.stream()
-            .map(this::toBookingResponse)
+        return bookingRequests.stream()
+            .map(booking -> toBookingResponse(booking, userIds))
             .toList();
-        
-        return response;
-        
     }   
 
-    //Gets all completed services/bookings for a provider
-    public List<BookingResponse> getUserCompletedBookings(UserDetails userDetails){
-        
-        var user = userRepository.findByEmail(userDetails.getUsername()).orElseThrow(() -> new UsernameNotFoundException("user not found"));
-        
-        List<Booking> bookings = bookingRepository.findByProviderIdAndStatus(user.getId(), BookingStatus.COMPLETED);
+    //Gets all scheduled services/bookings for a provider
+    public List<BookingResponse> getProviderScheduledBookings(UserDetails userDetails){
+        var user = getUserByEmail(userDetails.getUsername());
 
-        List<BookingResponse> response = bookings.stream().map(this::toBookingResponse).toList();
+        List<Booking> bookingRequests = bookingRepository.findByProviderIdAndStatusOrderByCreatedAtDesc(
+            user.getId(), BookingStatus.CONFIRMED);
+        
+        var userIds = getUsersById(bookingRequests);
 
-        return response;
+        return bookingRequests.stream()
+            .map(booking -> toBookingResponse(booking, userIds))
+            .toList();
     }
 
-    //Gets all upcoming bookings for a provider
-    public List<BookingResponse> getUserScheduledBookings(UserDetails userDetails){
-        var user = userRepository.findByEmail(userDetails.getUsername()).orElseThrow(() -> new UsernameNotFoundException("User not found"));
+    public void rejectBooking(String bookingId, UserDetails userDetails){
 
-        List<Booking> bookings = bookingRepository.findByProviderIdAndStatus(user.getId(), BookingStatus.CONFIRMED);
+        var provider = getUserByEmail(userDetails.getUsername());
 
-        List<BookingResponse> response = bookings.stream().map(this::toBookingResponse).toList();
+        var rejectedBooking = bookingRepository.findById(bookingId)
+            .orElseThrow(() -> new ResourceNotFoundException("Booking", bookingId));
 
-        return response;
+        bookingRepository.delete(rejectedBooking);
+
+        
+        userRepository.findById(rejectedBooking.getCustomerId()).ifPresent(customer -> {
+                String providerName = provider.getFirstName() + " " + provider.getLastName();
+
+                emailService.sendBookingRejectedCustomerEmail(
+                    customer.getEmail(),
+                    customer.getFirstName(),
+                    providerName,
+                    rejectedBooking.getServiceTitle(),
+                    rejectedBooking.getScheduledAt(),
+                    rejectedBooking.getId()
+                );
+                notificationService.send(customer.getId(), NotificationType.BOOKING_REJECTED,
+                    "Booking Cancelled",
+                    providerName + " cancelled your booking for " + rejectedBooking.getServiceTitle(),
+                    rejectedBooking.getId());
+            });
+        
+    }
+
+    //Gets all completed bookings for a provider
+    public List<BookingResponse> getProviderCompletedBookings(UserDetails userDetails){
+        var user = getUserByEmail(userDetails.getUsername());
+
+        List<Booking> bookingRequests = bookingRepository.findByProviderIdAndStatusOrderByCreatedAtDesc(
+            user.getId(), BookingStatus.COMPLETED);
+        
+        var userIds = getUsersById(bookingRequests);
+
+        return bookingRequests.stream()
+            .map(booking -> toBookingResponse(booking, userIds))
+            .toList();
     }
 
     public List<BookingResponse> getCustomerBookings(UserDetails userDetails) {
@@ -465,5 +497,10 @@ public class BookingService {
     private String getReviewerName(Booking booking, Map<String, User> usersById) {
         String reviewerName = clean(booking.getReviewerName());
         return reviewerName.isBlank() ? getUserDisplayName(booking.getCustomerId(), usersById) : reviewerName;
+    }
+
+    private User getUserByEmail(String email){
+        return userRepository.findByEmail(email)
+            .orElseThrow(() -> new UsernameNotFoundException("User not found"));
     }
 }

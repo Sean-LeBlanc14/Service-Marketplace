@@ -15,7 +15,7 @@ public interface BookingRepository extends MongoRepository<Booking, String> {
 
     List<Booking> findByProviderId(String providerId);
 
-    List<Booking> findByProviderIdAndStatus(String providerId, BookingStatus status);
+    List<Booking> findByProviderIdAndStatusOrderByCreatedAtDesc(String providerId, BookingStatus status);
 
     List<Booking> findByCustomerIdOrderByCreatedAtDesc(String customerId);
 }

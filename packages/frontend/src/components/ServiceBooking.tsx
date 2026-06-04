@@ -6,9 +6,15 @@ import { useState } from "react";
 
 interface ServiceBookingProps {
   booking: ApiBooking;
-  confirmBooking?: (booking: ApiBooking) => Promise<boolean> | boolean;
-  rejectBooking?: (booking: ApiBooking) => Promise<boolean> | boolean;
-  cancelBooking?: (booking: ApiBooking) => Promise<boolean> | boolean;
+  confirmBooking?: (
+    booking: ApiBooking
+  ) => Promise<boolean> | boolean;
+  rejectBooking?: (
+    booking: ApiBooking
+  ) => Promise<boolean> | boolean;
+  cancelBooking?: (
+    booking: ApiBooking
+  ) => Promise<boolean> | boolean;
 }
 
 function formatBookingTime(

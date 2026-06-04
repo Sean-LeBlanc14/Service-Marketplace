@@ -13,14 +13,17 @@ type DashboardView = "requests" | "upcoming" | "completed";
 export default function ServiceDashboard() {
   const navigate = useNavigate();
 
-  const [bookingRequests, setBookingRequests] =
-    useState<ApiBooking[]>([]);
+  const [bookingRequests, setBookingRequests] = useState<
+    ApiBooking[]
+  >([]);
 
-  const [serviceHistory, setServiceHistory] =
-    useState<ApiBooking[]>([]);
+  const [serviceHistory, setServiceHistory] = useState<
+    ApiBooking[]
+  >([]);
 
-  const [upcomingBookings, setUpcomingBookings] =
-    useState<ApiBooking[]>([]);
+  const [upcomingBookings, setUpcomingBookings] = useState<
+    ApiBooking[]
+  >([]);
 
   const [selectedView, setSelectedView] =
     useState<DashboardView>("requests");
@@ -112,8 +115,9 @@ export default function ServiceDashboard() {
     authToken
   ]);
 
-  async function confirmBooking(booking: ApiBooking): Promise<boolean> {
-
+  async function confirmBooking(
+    booking: ApiBooking
+  ): Promise<boolean> {
     if (!authToken) {
       navigate("/login");
       toast.error("Please login");
@@ -157,8 +161,9 @@ export default function ServiceDashboard() {
     return false;
   }
 
-  async function rejectBooking(booking: ApiBooking): Promise<boolean> {
-
+  async function rejectBooking(
+    booking: ApiBooking
+  ): Promise<boolean> {
     if (!authToken) {
       navigate("/login");
       toast.error("Please login");
@@ -194,8 +199,9 @@ export default function ServiceDashboard() {
     return false;
   }
 
-  async function cancelBooking(booking: ApiBooking): Promise<boolean> {
-
+  async function cancelBooking(
+    booking: ApiBooking
+  ): Promise<boolean> {
     if (!authToken) {
       navigate("/login");
       toast.error("Please login");

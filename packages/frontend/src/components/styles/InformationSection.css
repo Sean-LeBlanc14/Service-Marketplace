@@ -1,21 +1,78 @@
 .info-container {
-  flex: 1;
-  background-color: #f4f4f4;
-  padding: 60px;
+  flex: 0 0 auto;
+  width: 100%;
+  box-sizing: border-box;
+  border-top: 1px solid #e4e3d3;
+  padding: 18px 24px 22px;
+  background-color: transparent;
 }
 
 .info-section {
-  flex: 1;
-  display: flex;
-  flex-direction: row;
-  justify-content: center;
-  align-items: center;
-  gap: 40px;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  align-items: start;
+  gap: 24px;
+  width: min(960px, 100%);
   margin: 0 auto;
 }
 
 .info-column {
-  flex: 1;
   text-align: center;
-  max-width: 300px;
+  min-width: 0;
+}
+
+.info-column h2 {
+  margin: 0 0 6px;
+  color: var(--cp-green);
+  font-family: var(--font-heading);
+  font-size: var(--card-title-size);
+  font-weight: var(--heading-weight);
+}
+
+.info-column p {
+  margin: 0;
+  color: #536171;
+  font-size: var(--muted-copy-size);
+  line-height: 1.45;
+}
+
+@media (max-width: 720px) {
+  .info-container {
+    padding: 14px 16px 18px;
+  }
+
+  .info-section {
+    gap: 12px;
+  }
+
+  .info-column h2 {
+    font-size: 0.9rem;
+  }
+
+  .info-column p {
+    font-size: 0.78rem;
+    line-height: 1.35;
+  }
+}
+
+.login-container .info-container {
+  padding-bottom: 0;
+}
+
+.signup-container .info-container {
+  padding: 8px 20px 10px;
+}
+
+.signup-container .info-section {
+  gap: 14px;
+}
+
+.signup-container .info-column h2 {
+  margin-bottom: 3px;
+  font-size: 0.9rem;
+}
+
+.signup-container .info-column p {
+  font-size: 0.75rem;
+  line-height: 1.25;
 }

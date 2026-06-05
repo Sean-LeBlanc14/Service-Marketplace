@@ -10,7 +10,6 @@ import { toast } from "react-toastify";
 import "../styles/SignupPage.css";
 import { API_ENDPOINTS } from "../utils/api";
 import { USER_ID_KEY } from "./profile/constants";
-import InformationSection from "../components/InformationSection";
 
 function SignupPage() {
   const [email, setEmail] = useState("");
@@ -168,8 +167,6 @@ function SignupPage() {
           </>
         }
       />
-
-      <InformationSection/>
 
     </div>
   );

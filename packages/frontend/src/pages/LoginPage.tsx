@@ -8,7 +8,6 @@ import { toast } from "react-toastify";
 import "../styles/LoginPage.css";
 import { API_ENDPOINTS } from "../utils/api";
 import { USER_ID_KEY } from "./profile/constants";
-import InformationSection from "../components/InformationSection";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -84,9 +83,6 @@ export default function LoginPage() {
         />
         link=<NavLink to="/signup" label="Create Account" />
       />
-
-      <InformationSection/>
-
     </div>
   );
 }

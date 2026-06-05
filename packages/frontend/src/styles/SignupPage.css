@@ -5,6 +5,12 @@
   max-height: 100vh;
 }
 
+.signup-container .form-heading {
+  color: var(--cp-green);
+  font-size: 3rem;
+  white-space: nowrap;
+}
+
 .field-container {
   display: flex;
   flex-direction: row;

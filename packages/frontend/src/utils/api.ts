@@ -50,6 +50,8 @@ export const API_ENDPOINTS = {
       `${API_ROUTE}/bookings/${encodeURIComponent(bookingId)}/confirm`,
     cancel: (bookingId: string) =>
       `${API_ROUTE}/bookings/${encodeURIComponent(bookingId)}/cancel`,
+    complete: (bookingId: string) =>
+      `${API_ROUTE}/bookings/${encodeURIComponent(bookingId)}/complete`,
     providerReviews: (providerId: string) =>
       `${API_ROUTE}/bookings/provider/${encodeURIComponent(providerId)}/reviews`,
     reject: (bookingId: string) =>

@@ -3,7 +3,6 @@
   min-height: 100svh;
   width: 100%;
   padding: 32px;
-  background: #f6f3ee;
   color: #161616;
   text-align: left;
 }
@@ -19,9 +18,10 @@
 
 .profile-screen h1 {
   margin: 0;
-  color: #161616;
-  font-size: 40px;
-  font-weight: 500;
+  color: var(--heading-color);
+  font-family: var(--font-heading);
+  font-size: var(--page-title-size);
+  font-weight: var(--heading-weight);
   letter-spacing: 0;
 }
 
@@ -36,10 +36,12 @@
   background: transparent;
   padding: 0;
   cursor: pointer;
+  transition: var(--button-transition);
 }
 
 .profile-rating-button:hover .profile-rating-summary {
-  text-decoration: underline;
+  opacity: var(--button-hover-opacity);
+  transform: scale(var(--button-hover-scale));
 }
 
 .profile-header-stats {
@@ -56,7 +58,7 @@
 }
 
 .profile-rating-summary span {
-  color: #d8a20b;
+  color: var(--cp-gold);
 }
 
 .profile-section {
@@ -68,14 +70,15 @@
 
 .profile-section h2 {
   margin: 18px 0 0;
-  color: #161616;
-  font-size: 20px;
-  font-weight: 400;
+  color: var(--heading-color);
+  font-family: var(--font-heading);
+  font-size: var(--section-title-size);
+  font-weight: var(--heading-weight);
   letter-spacing: 0;
 }
 
 .profile-bio h2 {
-  color: #5b5b5b;
+  color: var(--heading-color);
 }
 
 .profile-bio p {
@@ -104,7 +107,7 @@
 .section-action-button {
   flex: 0 0 auto;
   border: none;
-  border-radius: 8px;
+  border-radius: var(--button-radius);
   margin-top: 18px;
   padding: 12px 18px;
   background: var(--cp-green);
@@ -112,6 +115,7 @@
   font: inherit;
   font-weight: 700;
   cursor: pointer;
+  transition: var(--button-transition);
 }
 
 .bio-form {
@@ -145,13 +149,22 @@
 
 .primary-button {
   border: none;
-  border-radius: 8px;
+  border-radius: var(--button-radius);
   padding: 12px 18px;
   background: var(--cp-green);
   color: #ffffff;
   font: inherit;
   font-weight: 700;
   cursor: pointer;
+  transition: var(--button-transition);
+}
+
+.section-action-button:hover,
+.section-action-button:focus-visible,
+.primary-button:hover:not(:disabled),
+.primary-button:focus-visible:not(:disabled) {
+  opacity: var(--button-hover-opacity);
+  transform: scale(var(--button-hover-scale));
 }
 
 .primary-button:disabled {
@@ -178,8 +191,9 @@
 .service-form-header h3 {
   margin: 0;
   color: #161616;
-  font-size: 18px;
-  font-weight: 800;
+  font-family: var(--font-heading);
+  font-size: var(--subsection-title-size);
+  font-weight: var(--heading-weight);
   letter-spacing: 0;
 }
 
@@ -284,6 +298,7 @@
   font: inherit;
   font-weight: 700;
   cursor: pointer;
+  transition: var(--button-transition);
 }
 
 .pricing-toggle button:last-child {
@@ -293,6 +308,11 @@
 .pricing-toggle button.active {
   background: var(--cp-green);
   color: #ffffff;
+}
+
+.pricing-toggle button:hover,
+.pricing-toggle button:focus-visible {
+  opacity: var(--button-hover-opacity);
 }
 
 .service-price-grid {
@@ -312,19 +332,26 @@
 .service-form-actions button {
   justify-self: start;
   border: none;
-  border-radius: 8px;
+  border-radius: var(--button-radius);
   padding: 12px 18px;
   background: var(--cp-green);
   color: #ffffff;
   font: inherit;
   font-weight: 700;
   cursor: pointer;
+  transition: var(--button-transition);
 }
 
 .service-form-actions .secondary-button {
-  border: 1px solid #b8b8b8;
+  border: 1px solid var(--button-secondary-border);
   background: #ffffff;
-  color: #161616;
+  color: var(--button-secondary-text);
+}
+
+.service-form-actions button:hover:not(:disabled),
+.service-form-actions button:focus-visible:not(:disabled) {
+  opacity: var(--button-hover-opacity);
+  transform: scale(var(--button-hover-scale));
 }
 
 .service-form-actions button:disabled {
@@ -385,16 +412,17 @@
 
 .booking-card-heading h3 {
   margin: 0;
-  color: #071b2d;
-  font-size: 20px;
-  font-weight: 800;
+  color: var(--heading-color);
+  font-family: var(--font-heading);
+  font-size: var(--subsection-title-size);
+  font-weight: var(--heading-weight);
   letter-spacing: 0;
 }
 
 .booking-card-heading strong {
   flex: 0 0 auto;
-  color: #c89418;
-  font-size: 22px;
+  color: var(--cp-gold);
+  font-size: 1.25rem;
   line-height: 1;
 }
 
@@ -416,13 +444,20 @@
 .add-review-button {
   justify-self: end;
   border: none;
-  border-radius: 8px;
+  border-radius: var(--button-radius);
   padding: 12px 18px;
   background: var(--cp-green);
   color: #ffffff;
   font: inherit;
   font-weight: 700;
   cursor: pointer;
+  transition: var(--button-transition);
+}
+
+.add-review-button:hover:not(:disabled),
+.add-review-button:focus-visible:not(:disabled) {
+  opacity: var(--button-hover-opacity);
+  transform: scale(var(--button-hover-scale));
 }
 
 .add-review-button:disabled {
@@ -499,13 +534,20 @@
 .review-form button {
   justify-self: start;
   border: none;
-  border-radius: 8px;
+  border-radius: var(--button-radius);
   padding: 12px 18px;
   background: var(--cp-green);
   color: #ffffff;
   font: inherit;
   font-weight: 700;
   cursor: pointer;
+  transition: var(--button-transition);
+}
+
+.review-form button:hover:not(:disabled),
+.review-form button:focus-visible:not(:disabled) {
+  opacity: var(--button-hover-opacity);
+  transform: scale(var(--button-hover-scale));
 }
 
 .review-form button:disabled {
@@ -553,9 +595,10 @@
 
 .listing-card h3 {
   margin: 0;
-  color: #071b2d;
-  font-size: 20px;
-  font-weight: 800;
+  color: var(--heading-color);
+  font-family: var(--font-heading);
+  font-size: var(--subsection-title-size);
+  font-weight: var(--heading-weight);
   letter-spacing: 0;
 }
 
@@ -569,21 +612,28 @@
 
 .listing-card-actions button {
   min-height: 36px;
-  border: 1px solid #b8c2cc;
-  border-radius: 8px;
+  border: 1px solid var(--button-secondary-border);
+  border-radius: var(--button-radius);
   padding: 8px 12px;
   background: #ffffff;
-  color: #25364a;
+  color: var(--button-secondary-text);
   font: inherit;
   font-size: 14px;
   font-weight: 800;
   line-height: 1;
   cursor: pointer;
+  transition: var(--button-transition);
 }
 
 .listing-card-actions .danger-button {
   border-color: #d8a9b2;
   color: #9b1c31;
+}
+
+.listing-card-actions button:hover:not(:disabled),
+.listing-card-actions button:focus-visible:not(:disabled) {
+  opacity: var(--button-hover-opacity);
+  transform: scale(var(--button-hover-scale));
 }
 
 .listing-card-actions button:disabled {
@@ -649,7 +699,7 @@
   background: #f3f5f7;
   color: #334155;
   font-size: 14px;
-  font-weight: 500;
+  font-weight: 600;
   line-height: 1.2;
 }
 
@@ -661,8 +711,8 @@
 }
 
 .listing-card-footer strong {
-  color: #c89418;
-  font-size: 26px;
+  color: var(--cp-gold);
+  font-size: 1.35rem;
   line-height: 1;
 }
 
@@ -693,9 +743,10 @@
 
 .profile-confirm-modal h2 {
   margin: 0;
-  color: #161616;
-  font-size: 22px;
-  font-weight: 800;
+  color: var(--heading-color);
+  font-family: var(--font-heading);
+  font-size: var(--section-title-size);
+  font-weight: var(--heading-weight);
   letter-spacing: 0;
 }
 
@@ -715,11 +766,12 @@
 
 .profile-confirm-actions button {
   min-height: 42px;
-  border-radius: 8px;
+  border-radius: var(--button-radius);
   padding: 10px 16px;
   font: inherit;
   font-weight: 800;
   cursor: pointer;
+  transition: var(--button-transition);
 }
 
 .profile-confirm-danger {
@@ -729,9 +781,15 @@
 }
 
 .profile-confirm-cancel {
-  border: 1px solid #b8b8b8;
+  border: 1px solid var(--button-secondary-border);
   background: #ffffff;
-  color: #161616;
+  color: var(--button-secondary-text);
+}
+
+.profile-confirm-actions button:hover:not(:disabled),
+.profile-confirm-actions button:focus-visible:not(:disabled) {
+  opacity: var(--button-hover-opacity);
+  transform: scale(var(--button-hover-scale));
 }
 
 .profile-confirm-actions button:disabled {
@@ -766,7 +824,7 @@
   }
 
   .profile-screen h1 {
-    font-size: 34px;
+    font-size: 2rem;
   }
 
   .listing-grid {

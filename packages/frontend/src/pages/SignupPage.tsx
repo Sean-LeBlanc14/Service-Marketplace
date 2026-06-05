@@ -3,7 +3,6 @@ import { Link, useNavigate } from "react-router-dom";
 import InputField from "../components/InputField";
 import MajorComboBox from "../components/MajorComboBox";
 import NavLink from "../components/NavLink";
-import InformationSection from "../components/InformationSection";
 import FormContainer from "../components/FormContainer";
 import SubmitButton from "../components/SubmitButton";
 import DropDown from "../components/DropDown";
@@ -168,8 +167,6 @@ function SignupPage() {
           </>
         }
       />
-
-      <InformationSection />
     </div>
   );
 }

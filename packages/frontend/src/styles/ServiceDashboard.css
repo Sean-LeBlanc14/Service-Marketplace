@@ -6,6 +6,22 @@
   height: 100vh;
 }
 
+.serviceDashboard-wrapper h1 {
+  margin: 0;
+  color: var(--heading-color);
+  font-family: var(--font-heading);
+  font-size: var(--page-title-size);
+  font-weight: var(--heading-weight);
+}
+
+.serviceDashboard-wrapper section h2 {
+  margin: 0;
+  color: var(--heading-color);
+  font-family: var(--font-heading);
+  font-size: var(--section-title-size);
+  font-weight: var(--heading-weight);
+}
+
 .service-dashboard-filter {
   width: min(320px, 100%);
   margin: 8px 0 12px;
@@ -31,14 +47,16 @@
 
 .dashboard-review-modal h2 {
   margin: 0 32px 8px 0;
-  color: var(--cp-green);
-  font-size: 1.35rem;
+  color: var(--heading-color);
+  font-family: var(--font-heading);
+  font-size: var(--section-title-size);
+  font-weight: var(--heading-weight);
 }
 
 .dashboard-review-eyebrow {
   margin: 0 0 6px;
   color: var(--cp-gold);
-  font-size: 0.78rem;
+  font-size: var(--eyebrow-size);
   font-weight: 800;
   text-transform: uppercase;
 }
@@ -80,12 +98,19 @@
 .dashboard-review-form button {
   justify-self: end;
   border: 0;
-  border-radius: 8px;
+  border-radius: var(--button-radius);
   background: var(--cp-green);
   color: #ffffff;
   cursor: pointer;
   font-weight: 700;
   padding: 10px 14px;
+  transition: var(--button-transition);
+}
+
+.dashboard-review-form button:hover:not(:disabled),
+.dashboard-review-form button:focus-visible:not(:disabled) {
+  opacity: var(--button-hover-opacity);
+  transform: scale(var(--button-hover-scale));
 }
 
 .dashboard-review-form button:disabled {

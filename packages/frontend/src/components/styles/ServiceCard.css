@@ -30,17 +30,18 @@
 }
 
 .service-card-title {
-  font-size: 1.15rem;
+  color: var(--heading-color);
+  font-family: var(--font-heading);
+  font-size: var(--card-title-size);
   font-weight: 800;
   margin-bottom: 0;
-  color: #071b2d;
   line-height: 1.2;
 }
 
 .service-provider-avatar {
   font-size: 0.85rem;
   font-weight: 700;
-  color: #1f4a3f;
+  color: var(--cp-green);
 }
 
 .service-description {
@@ -58,7 +59,7 @@
 }
 
 .rating-star {
-  color: #d8a20b;
+  color: var(--cp-gold);
 }
 
 .rating-value {
@@ -105,7 +106,7 @@
 .service-tag {
   background-color: #f3f5f7;
   color: #334155;
-  font-weight: 500;
+  font-weight: 600;
   font-size: 0.8rem;
   border-radius: 8px;
   padding: 6px 12px;
@@ -123,20 +124,18 @@
 .service-price {
   font-size: 1.35rem;
   font-weight: 800;
-  color: #c89418;
+  color: var(--cp-gold);
 }
 
 .btn-view-details {
-  background-color: #1f4a3f;
+  background-color: var(--cp-green);
   color: #ffffff;
   border: none;
-  border-radius: 8px;
+  border-radius: var(--button-radius);
   padding: 10px 18px;
   font-weight: 700;
   cursor: pointer;
-  transition:
-    transform 0.2s ease,
-    opacity 0.2s ease;
+  transition: var(--button-transition);
 }
 
 .btn-view-details:hover,

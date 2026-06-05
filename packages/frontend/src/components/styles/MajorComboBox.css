@@ -19,6 +19,7 @@
   padding: 4px 10px;
   font-size: 0.85rem;
   cursor: pointer;
+  transition: opacity 0.18s ease;
 }
 
 .major-combobox-option:hover {

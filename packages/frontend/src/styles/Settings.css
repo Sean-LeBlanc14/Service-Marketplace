@@ -1,10 +1,15 @@
 .settings-wrapper {
+  box-sizing: border-box;
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 20px;
+  padding: 20px 20px 72px;
   gap: 20px;
-  height: 100vh;
+  min-height: 100vh;
+}
+
+.settings-wrapper .app-footer {
+  bottom: 24px;
 }
 
 .settings-title {
@@ -13,6 +18,22 @@
   align-items: flex-start;
   justify-content: flex-start;
   min-width: 50%;
+}
+
+.settings-title h1 {
+  margin: 0;
+  color: var(--heading-color);
+  font-family: var(--font-heading);
+  font-size: var(--page-title-size);
+  font-weight: var(--heading-weight);
+}
+
+.setting-section h3 {
+  margin: 0 0 10px;
+  color: var(--heading-color);
+  font-family: var(--font-heading);
+  font-size: var(--section-title-size);
+  font-weight: var(--heading-weight);
 }
 
 .setting-section {
@@ -37,13 +58,13 @@
   border: none;
   border-bottom: 1px solid #333;
   cursor: pointer;
-  font-size: large;
+  font-size: var(--body-copy-size);
   display: flex;
   align-items: center;
   gap: 10px;
   padding: 10px 15px;
   text-decoration: none;
-  transition: all 0.2s ease;
+  transition: var(--button-transition);
   justify-content: space-between;
 }
 
@@ -79,7 +100,10 @@
 }
 
 .modal-title {
-  color: var(--cp-green);
+  color: var(--heading-color);
+  font-family: var(--font-heading);
+  font-size: var(--section-title-size);
+  font-weight: var(--heading-weight);
 }
 
 .modal-input {

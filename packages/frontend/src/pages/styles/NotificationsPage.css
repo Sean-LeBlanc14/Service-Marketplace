@@ -13,16 +13,17 @@
 
 .notif-title {
   margin: 0;
-  font-size: 28px;
-  font-weight: 800;
-  color: #071b2d;
+  color: var(--heading-color);
+  font-family: var(--font-heading);
+  font-size: var(--page-title-size);
+  font-weight: var(--heading-weight);
 }
 
 .notif-mark-all {
   border: none;
   padding: 0;
   background: transparent;
-  color: #1f4a3f;
+  color: var(--cp-green);
   font: inherit;
   font-size: 14px;
   font-weight: 700;
@@ -54,12 +55,12 @@
   background: transparent;
   text-align: left;
   cursor: pointer;
-  transition: background 0.15s;
+  transition: background 0.18s ease;
   position: relative;
 }
 
 .notif-item:hover {
-  background: #f3f5f7;
+  background: #f8f9fa;
 }
 
 .notif-item.unread {
@@ -67,7 +68,7 @@
 }
 
 .notif-item.unread:hover {
-  background: #e0ede5;
+  background: #e5efe9;
 }
 
 .notif-icon {
@@ -83,7 +84,7 @@
 }
 
 .notif-icon-default {
-  color: #1f4a3f;
+  color: var(--cp-green);
 }
 
 .notif-icon-message {
@@ -139,6 +140,6 @@
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: #1f4a3f;
+  background: var(--cp-green);
   margin-top: 6px;
 }

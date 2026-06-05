@@ -22,14 +22,15 @@
 .calendar-header h1 {
   margin: 0;
   font-family: var(--font-heading);
-  font-size: 1.7rem;
-  color: var(--cp-green);
+  font-size: var(--page-title-size);
+  font-weight: var(--heading-weight);
+  color: var(--heading-color);
 }
 
 .calendar-header p {
   margin: 2px 0 0;
   color: #666666;
-  font-size: 0.9rem;
+  font-size: var(--muted-copy-size);
 }
 
 .calendar-view-control {
@@ -46,23 +47,26 @@
 
 .calendar-month-bar h2 {
   margin: 0;
-  font-size: 1.1rem;
-  color: var(--cp-green);
+  color: var(--heading-color);
+  font-family: var(--font-heading);
+  font-size: var(--section-title-size);
+  font-weight: var(--heading-weight);
 }
 
 .calendar-month-bar button {
   border: 1px solid var(--cp-green);
-  border-radius: 8px;
+  border-radius: var(--button-radius);
   background: #ffffff;
   color: var(--cp-green);
   cursor: pointer;
   font-weight: 600;
   padding: 7px 12px;
+  transition: var(--button-transition);
 }
 
 .calendar-month-bar button:hover {
-  background: var(--cp-green);
-  color: #ffffff;
+  opacity: var(--button-hover-opacity);
+  transform: scale(var(--button-hover-scale));
 }
 
 .calendar-grid {
@@ -140,6 +144,7 @@
   line-height: 1.12;
   padding: 4px 6px;
   text-align: left;
+  transition: var(--button-transition);
 }
 
 .calendar-booking-tag span {
@@ -165,7 +170,8 @@
 }
 
 .calendar-booking-tag:hover {
-  background: #e8f1eb;
+  opacity: var(--button-hover-opacity);
+  transform: scale(var(--button-hover-scale));
 }
 
 .calendar-booking-tag:focus-visible {
@@ -187,15 +193,17 @@
 .calendar-modal-eyebrow {
   margin: 0 0 6px;
   color: var(--cp-gold);
-  font-size: 0.78rem;
+  font-size: var(--eyebrow-size);
   font-weight: 800;
   text-transform: uppercase;
 }
 
 .calendar-booking-modal h2 {
   margin: 0 32px 18px 0;
-  color: var(--cp-green);
-  font-size: 1.45rem;
+  color: var(--heading-color);
+  font-family: var(--font-heading);
+  font-size: var(--section-title-size);
+  font-weight: var(--heading-weight);
 }
 
 .calendar-modal-details {
@@ -223,24 +231,41 @@
 
 .calendar-modal-actions {
   display: flex;
+  gap: 10px;
   justify-content: flex-end;
   margin-top: 20px;
 }
 
+.calendar-modal-complete,
 .calendar-modal-cancel {
   border: 0;
-  border-radius: 8px;
-  background: #b42318;
+  border-radius: var(--button-radius);
   color: #ffffff;
   cursor: pointer;
   font-weight: 700;
   padding: 10px 14px;
+  transition: var(--button-transition);
+}
+
+.calendar-modal-complete {
+  background: var(--cp-green);
+}
+
+.calendar-modal-complete:hover:not(:disabled) {
+  opacity: var(--button-hover-opacity);
+  transform: scale(var(--button-hover-scale));
+}
+
+.calendar-modal-cancel {
+  background: var(--cp-gold);
 }
 
 .calendar-modal-cancel:hover:not(:disabled) {
-  background: #8f1d14;
+  opacity: var(--button-hover-opacity);
+  transform: scale(var(--button-hover-scale));
 }
 
+.calendar-modal-complete:disabled,
 .calendar-modal-cancel:disabled {
   cursor: not-allowed;
   opacity: 0.7;

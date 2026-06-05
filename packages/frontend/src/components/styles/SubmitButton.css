@@ -4,13 +4,13 @@
   background-color: var(--cp-green);
   color: white;
   border: none;
-  border-radius: 8px;
+  border-radius: var(--button-radius);
   cursor: pointer;
   font-weight: bold;
-  transition: all 0.2s ease;
+  transition: var(--button-transition);
 }
 
 .button:hover {
-  transform: scale(1.01);
-  opacity: 0.92;
+  transform: scale(var(--button-hover-scale));
+  opacity: var(--button-hover-opacity);
 }

@@ -1,7 +1,6 @@
 import { useState } from "react";
 import InputField from "../components/InputField";
 import NavLink from "../components/NavLink";
-import InformationSection from "../components/InformationSection";
 import FormContainer from "../components/FormContainer";
 import SubmitButton from "../components/SubmitButton";
 import { useNavigate } from "react-router-dom";
@@ -84,8 +83,6 @@ export default function LoginPage() {
         />
         link=<NavLink to="/signup" label="Create Account" />
       />
-
-      <InformationSection />
     </div>
   );
 }

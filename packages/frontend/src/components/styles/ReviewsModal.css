@@ -33,9 +33,10 @@
 
 .reviews-modal-header h2 {
   margin: 0;
-  color: #071b2d;
-  font-size: 24px;
-  font-weight: 800;
+  color: var(--heading-color);
+  font-family: var(--font-heading);
+  font-size: var(--section-title-size);
+  font-weight: var(--heading-weight);
 }
 
 .reviews-modal-close {
@@ -47,6 +48,11 @@
   font-size: 34px;
   line-height: 0.8;
   cursor: pointer;
+}
+
+.reviews-modal-close:hover,
+.reviews-modal-close:focus-visible {
+  color: red;
 }
 
 .reviews-modal-content {
@@ -77,9 +83,10 @@
 
 .review-header h3 {
   margin: 0;
-  color: #071b2d;
-  font-size: 18px;
-  font-weight: 800;
+  color: var(--heading-color);
+  font-family: var(--font-heading);
+  font-size: var(--subsection-title-size);
+  font-weight: var(--heading-weight);
 }
 
 .review-meta {
@@ -93,7 +100,7 @@
   align-items: center;
   gap: 6px;
   flex: 0 0 auto;
-  color: #d8a20b;
+  color: var(--cp-gold);
   font-size: 18px;
 }
 

@@ -8,7 +8,7 @@
   background: url("https://www.calpoly.edu/sites/default/files/2020-01/about-calpoly-aerial.jpg")
     no-repeat center center/cover;
   background-attachment: fixed;
-  font-family: "Public Sans", sans-serif;
+  font-family: var(--font-body);
   color: var(--text-primary);
   overflow-x: hidden;
 }
@@ -42,17 +42,17 @@
 
 .main-hero {
   max-width: 800px;
-  margin: auto 0;
+  margin: auto 0 4.75rem;
 }
 
 .main-title {
   padding-top: 10px;
-  font-family: "Utopia", "Georgia", serif;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
+  font-family: var(--font-heading);
+  font-weight: var(--heading-weight);
+  text-transform: none;
+  letter-spacing: 0;
   color: var(--cp-green);
-  font-size: clamp(2.5rem, 6vw, 4.5rem);
+  font-size: 4rem;
   line-height: 1.1;
   margin: 0 0 1.5rem 0;
 }
@@ -62,7 +62,7 @@
 }
 
 .subtitle {
-  font-size: clamp(1rem, 2vw, 1.15rem);
+  font-size: 1.1rem;
   line-height: 1.6;
   color: var(--text-primary);
   max-width: 650px;
@@ -84,11 +84,11 @@
 }
 
 .feature-title {
-  font-family: "Utopia", "Georgia", serif;
-  font-size: 1.3rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.03em;
+  font-family: var(--font-heading);
+  font-size: var(--section-title-size);
+  font-weight: var(--heading-weight);
+  text-transform: none;
+  letter-spacing: 0;
   margin: 0 0 0.5rem 0;
   color: var(--cp-green);
 }
@@ -109,10 +109,10 @@
   background-color: var(--cp-gold) !important;
 }
 
-.landing-footer {
-  font-size: 0.85rem;
-  color: #666666;
-  margin-top: 2rem;
+.landing-container .app-footer {
+  bottom: 1.5rem;
+  left: 5%;
+  z-index: 3;
 }
 
 .landing-footer-link {
@@ -125,6 +125,14 @@
 }
 
 @media (max-width: 768px) {
+  .main-title {
+    font-size: 2.5rem;
+  }
+
+  .subtitle {
+    font-size: 1rem;
+  }
+
   .feature-grid {
     grid-template-columns: 1fr;
     gap: 1.5rem;
@@ -137,5 +145,14 @@
 
   .action-buttons button {
     width: 100%;
+  }
+
+  .main-hero {
+    margin: auto 0 4rem;
+  }
+
+  .landing-container .app-footer {
+    bottom: 1rem;
+    left: 5%;
   }
 }

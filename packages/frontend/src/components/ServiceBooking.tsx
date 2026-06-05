@@ -18,6 +18,9 @@ interface ServiceBookingProps {
   cancelBooking?: (
     booking: ApiBooking
   ) => Promise<boolean> | boolean;
+  completeBooking?: (
+    booking: ApiBooking
+  ) => Promise<boolean> | boolean;
 }
 
 function formatBookingTime(
@@ -61,10 +64,12 @@ function ServiceBooking({
   onReviewBooking,
   confirmBooking,
   cancelBooking,
+  completeBooking,
   rejectBooking
 }: ServiceBookingProps) {
   const [isUpdating, setIsUpdating] = useState(false);
   const [isRejecting, setIsRejecting] = useState(false);
+  const [isCompleting, setIsCompleting] = useState(false);
   const hasReview =
     booking.rating !== null &&
     booking.rating !== undefined &&
@@ -75,7 +80,7 @@ function ServiceBooking({
         confirmBooking || rejectBooking || cancelBooking
       )) ||
     (booking.status === "CONFIRMED" &&
-      Boolean(cancelBooking)) ||
+      Boolean(cancelBooking || completeBooking)) ||
     (booking.status === "COMPLETED" &&
       Boolean(onReviewBooking) &&
       !hasReview);
@@ -196,23 +201,52 @@ function ServiceBooking({
               </button>
             )}
 
-          {booking.status === "CONFIRMED" && cancelBooking && (
-            <button
-              type="button"
-              className="booking-action booking-action-primary"
-              disabled={isUpdating}
-              onClick={async () => {
-                setIsUpdating(true);
-                const succeeded =
-                  (await cancelBooking?.(booking)) ?? false;
+          {booking.status === "CONFIRMED" &&
+            (cancelBooking || completeBooking) && (
+              <div className="booking-action-container">
+                {completeBooking && (
+                  <button
+                    type="button"
+                    className="booking-action booking-action-primary"
+                    disabled={isCompleting}
+                    onClick={async () => {
+                      setIsCompleting(true);
+                      const succeeded =
+                        (await completeBooking(booking)) ??
+                        false;
 
-                if (!succeeded) {
-                  setIsUpdating(false);
-                }
-              }}>
-              {isUpdating ? "Canceling..." : "Cancel Booking"}
-            </button>
-          )}
+                      if (!succeeded) {
+                        setIsCompleting(false);
+                      }
+                    }}>
+                    {isCompleting
+                      ? "Completing..."
+                      : "Mark Complete"}
+                  </button>
+                )}
+
+                {cancelBooking && (
+                  <button
+                    type="button"
+                    className="booking-action booking-action-secondary"
+                    disabled={isUpdating}
+                    onClick={async () => {
+                      setIsUpdating(true);
+                      const succeeded =
+                        (await cancelBooking?.(booking)) ??
+                        false;
+
+                      if (!succeeded) {
+                        setIsUpdating(false);
+                      }
+                    }}>
+                    {isUpdating
+                      ? "Canceling..."
+                      : "Cancel Booking"}
+                  </button>
+                )}
+              </div>
+            )}
 
           {booking.status === "COMPLETED" &&
             onReviewBooking &&

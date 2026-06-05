@@ -3,7 +3,7 @@
   color: var(--text-primary);
   border: none;
   cursor: pointer;
-  font-size: large;
+  font-size: var(--body-copy-size);
   display: flex;
   align-items: center;
   gap: 10px;
@@ -11,7 +11,7 @@
   width: 100%;
   border-radius: 8px;
   text-decoration: none;
-  transition: all 0.2s ease;
+  transition: var(--button-transition);
   min-width: fit-content;
 }
 
@@ -22,9 +22,9 @@
 
 .icon-button.selected {
   background-color: #e9f0eb;
-  color: #2a6a3b;
-  font-weight: bold;
-  border-left: 4px solid #2a6a3b;
+  color: var(--cp-green);
+  font-weight: 700;
+  border-left: 4px solid var(--cp-green);
   border-top-left-radius: 0;
   border-bottom-left-radius: 0;
 }

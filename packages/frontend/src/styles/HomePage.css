@@ -1,5 +1,4 @@
 .homepage-wrapper {
-  background-color: #f4f4f4;
   min-height: 100vh;
   padding: 40px 0;
 }
@@ -12,20 +11,29 @@
 }
 
 .heading {
-  font-weight: 700;
-  font-size: 1.8rem;
   margin: 0;
+  color: var(--heading-color);
+  font-family: var(--font-heading);
+  font-size: var(--page-title-size);
+  font-weight: var(--heading-weight);
 }
 
 .homepage-list-service-button {
-  background-color: #003831;
+  background-color: var(--cp-green);
   color: white;
   border: none;
-  border-radius: 8px;
+  border-radius: var(--button-radius);
   padding: 10px 20px;
-  font-weight: 600;
+  font-weight: 700;
   cursor: pointer;
   font-size: 0.95rem;
+  transition: var(--button-transition);
+}
+
+.homepage-list-service-button:hover,
+.homepage-list-service-button:focus-visible {
+  opacity: var(--button-hover-opacity);
+  transform: scale(var(--button-hover-scale));
 }
 
 .homepage-search {
@@ -62,17 +70,24 @@
   gap: 6px;
   padding: 6px 16px;
   border-radius: 20px;
-  border: 1px solid #003831;
+  border: 1px solid var(--cp-green);
   background-color: white;
-  color: #003831;
-  font-weight: 500;
+  color: var(--cp-green);
+  font-weight: 700;
   cursor: pointer;
   font-size: 0.85rem;
+  transition: var(--button-transition);
 }
 
 .homepage-category-button-selected {
-  background-color: #003831;
+  background-color: var(--cp-green);
   color: white;
+}
+
+.homepage-category-button:hover,
+.homepage-category-button:focus-visible {
+  opacity: var(--button-hover-opacity);
+  transform: scale(var(--button-hover-scale));
 }
 
 .status-message {
@@ -85,7 +100,7 @@
 }
 
 .login-link {
-  color: #003831;
+  color: var(--cp-green);
   font-weight: 700;
 }
 

@@ -141,7 +141,11 @@ public class PaymentService {
             }
 
             PaymentIntent paymentIntent = PaymentIntent.create(paramsBuilder.build());
-            return new PaymentIntentResult(paymentIntent.getClientSecret(), paymentIntent.getId());
+            return new PaymentIntentResult(
+                paymentIntent.getClientSecret(),
+                paymentIntent.getId(),
+                paymentIntent.getStatus()
+            );
         } catch (StripeException e) {
             log.error("Stripe payment processing failed for service {} and customer {}", serviceId, customerId, e);
             throw new PaymentProcessingException("Failed to process payment. Please try again later.");
@@ -273,6 +277,10 @@ public class PaymentService {
     private void updateBookingStatus(String paymentIntentId, BookingStatus status) {
         Booking booking = bookingRepository.findByStripePaymentIntentId(paymentIntentId)
             .orElseThrow(() -> new ResourceNotFoundException("Booking", paymentIntentId));
+        if (booking.getStatus() == status) {
+            return;
+        }
+
         booking.setStatus(status);
         bookingRepository.save(booking);
 

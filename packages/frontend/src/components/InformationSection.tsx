@@ -6,24 +6,25 @@ export default function InformationSection() {
     <div className="info-container">
       <section className="info-section">
         <Col className="info-column">
-          <h2> Verified Students </h2>
+          <h2>VERIFIED STUDENTS</h2>
           <p>
             Exclusive to the Mustang community. Secure,
-            student-only access.
+            student-only access via your university credentials.
           </p>
         </Col>
         <Col className="info-column">
-          <h2> On Campus </h2>
+          <h2>ON CAMPUS</h2>
           <p>
-            Your campus, your marketplace. Find specialized help
-            and gear just a short walk from your dorm.
+            Find specialized help, textbooks, and gear just a
+            short walk from your dorm or library.
           </p>
         </Col>
         <Col className="info-column">
-          <h2> n Categories </h2>
+          <h2>TAILORED CATEGORIES</h2>
           <p>
-            Built for student life. Specialized categories
-            tailored to your major and dorm needs.
+            Built specifically for student life. Categories
+            tailored directly to your major and dorm living
+            needs.
           </p>
         </Col>
       </section>

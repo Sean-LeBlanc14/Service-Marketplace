@@ -59,6 +59,7 @@ function getNotificationIcon(type: NotificationType): IconType {
     case "BOOKING_REQUESTED":
       return FaClipboardList;
     case "BOOKING_CONFIRMED":
+    case "BOOKING_COMPLETED":
       return FaCalendarCheck;
     case "BOOKING_CANCELLED":
     case "BOOKING_REJECTED":
@@ -80,6 +81,7 @@ function getNotificationIconClass(
       return "notif-icon-danger";
     case "PRICE_OFFER_ACCEPTED":
     case "BOOKING_CONFIRMED":
+    case "BOOKING_COMPLETED":
       return "notif-icon-success";
     case "PRICE_OFFER_RECEIVED":
       return "notif-icon-money";

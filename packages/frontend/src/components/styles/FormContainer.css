@@ -22,9 +22,10 @@
 
 .form-heading {
   padding-top: 10px;
-  font-family: "Utopia", "Georgia", serif;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: #1e4d2b;
+  color: var(--heading-color);
+  font-family: var(--font-heading);
+  font-size: var(--page-title-size);
+  font-weight: var(--heading-weight);
+  letter-spacing: 0;
+  text-transform: none;
 }

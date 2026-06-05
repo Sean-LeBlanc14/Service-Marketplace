@@ -1,5 +1,11 @@
 .resend-button {
   cursor: pointer;
+  transition: var(--button-transition);
+}
+
+.resend-button:hover:not(.disabled-timer):not(.loading) {
+  opacity: var(--button-hover-opacity);
+  transform: scale(var(--button-hover-scale));
 }
 
 .resend-button.disabled-timer {

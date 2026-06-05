@@ -118,6 +118,14 @@ public class BookingController {
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
+    @PutMapping("/{id}/complete")
+    public ResponseEntity<BookingResponse> completeBooking(
+            @PathVariable String id,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        BookingResponse response = bookingService.completeBooking(id, userDetails);
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
     @DeleteMapping("/{id}/reject")
     public ResponseEntity<BookingResponse> rejectBooking(@PathVariable String id, @AuthenticationPrincipal UserDetails userDetails){
         

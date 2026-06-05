@@ -1,6 +1,50 @@
 .login-container {
   display: flex;
   flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
   background-color: #fff;
   min-height: 100vh;
+  padding: 48px 20px;
+}
+
+.login-container .form-section {
+  width: min(620px, 100%);
+  padding: 0;
+}
+
+.login-container .form-heading {
+  margin: 0;
+  color: var(--cp-green);
+  padding-top: 0;
+  font-size: 3rem;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.login-container .form-field {
+  width: 100%;
+  max-width: none;
+  margin: 24px auto 0;
+  padding: 2.75rem;
+}
+
+.login-container .button {
+  margin-top: 6px;
+  padding: 14px;
+}
+
+@media (max-width: 640px) {
+  .login-container {
+    padding: 28px 16px;
+  }
+
+  .login-container .form-heading {
+    font-size: 2rem;
+  }
+
+  .login-container .form-field {
+    padding: 1.5rem;
+  }
 }

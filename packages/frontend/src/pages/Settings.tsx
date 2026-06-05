@@ -585,7 +585,7 @@ export default function Settings() {
         </div>
       </div>
 
-      <Footer/>
+      <Footer />
     </div>
   );
 }

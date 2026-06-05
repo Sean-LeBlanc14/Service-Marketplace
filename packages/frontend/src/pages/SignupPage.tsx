@@ -167,7 +167,6 @@ function SignupPage() {
           </>
         }
       />
-
     </div>
   );
 }

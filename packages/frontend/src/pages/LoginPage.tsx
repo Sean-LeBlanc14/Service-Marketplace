@@ -8,6 +8,7 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import "../styles/LoginPage.css";
 import { API_ENDPOINTS } from "../utils/api";
+import { USER_ID_KEY } from "./profile/constants";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -35,13 +36,13 @@ export default function LoginPage() {
         localStorage.setItem("user_role", data.role);
         if (data.role === "suspended") {
           localStorage.removeItem("jwt_token");
-          localStorage.removeItem("user_id");
+          localStorage.removeItem(USER_ID_KEY);
           toast.error("Your account has been suspended");
           return;
         }
 
         localStorage.setItem("jwt_token", data.token);
-        localStorage.setItem("user_id", data.id);
+        localStorage.setItem(USER_ID_KEY, data.id);
         navigate("/homepage");
       } else if (response.status === 401) {
         toast.error("Invalid Email or Password!");

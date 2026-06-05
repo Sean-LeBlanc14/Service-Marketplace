@@ -6,6 +6,8 @@ import lombok.Value;
 
 @Value
 public class UserProfile {
+
+    private String id;
     
     private String email;
 
@@ -20,6 +22,12 @@ public class UserProfile {
     private String bio;
 
     private boolean isVerified;
+
+    private String role;
+
+    private Double averageRating;
+
+    private int reviewCount;
 
     private List<ServiceDto> services;
 }

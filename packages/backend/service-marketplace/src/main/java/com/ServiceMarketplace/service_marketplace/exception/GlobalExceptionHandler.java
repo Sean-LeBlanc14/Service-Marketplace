@@ -1,5 +1,8 @@
 package com.ServiceMarketplace.service_marketplace.exception;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.dao.IncorrectResultSizeDataAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
@@ -11,14 +14,20 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import com.stripe.exception.StripeException;
 
 import io.jsonwebtoken.JwtException;
-import org.springframework.dao.IncorrectResultSizeDataAccessException;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
+    private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
     
     @ExceptionHandler(EmailAlreadyExistsException.class)
     public ResponseEntity<String> handleEmailAlreadyExists(EmailAlreadyExistsException e) {
         return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
+    }
+
+    @ExceptionHandler(InvalidEmailDomainException.class)
+    public ResponseEntity<String> handleInvalidEmailDomain(InvalidEmailDomainException e) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
     }
 
     @ExceptionHandler(VerificationCodeExpired.class)
@@ -65,6 +74,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(EmailSendException.class)
     public ResponseEntity<String> handleEmailSendException(EmailSendException e) {
+        log.error("EmailSendException: {}", e.getMessage(), e);
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
     }
 
@@ -78,8 +88,18 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
     }
 
+    @ExceptionHandler(InvalidBookingReviewException.class)
+    public ResponseEntity<String> handleInvalidBookingReview(InvalidBookingReviewException e) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+    }
+
     @ExceptionHandler(BookingStateException.class)
     public ResponseEntity<String> handleBookingState(BookingStateException e) {
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
+    }
+
+    @ExceptionHandler(ServiceUnavailableException.class)
+    public ResponseEntity<String> handleServiceUnavailable(ServiceUnavailableException e) {
         return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
     }
 
@@ -90,11 +110,14 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(StripeException.class)
     public ResponseEntity<String> handleStripeException(com.stripe.exception.StripeException e) {
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
+        log.error("Unhandled StripeException", e);
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+            .body("Payment provider request failed. Please try again later.");
     }
 
     @ExceptionHandler(PaymentProcessingException.class)
     public ResponseEntity<String> handlePaymentProcessingException(PaymentProcessingException e) {
+        log.error("PaymentProcessingException: {}", e.getMessage(), e);
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
     }
 
@@ -105,12 +128,43 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(WebhookProcessingException.class)
     public ResponseEntity<String> handleWebhookProcessing(WebhookProcessingException e) {
+        log.error("WebhookProcessingException: {}", e.getMessage(), e);
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
     }
 
     @ExceptionHandler(StripeConnectException.class)
     public ResponseEntity<String> handleStripeConnect(StripeConnectException e) {
         return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(e.getMessage());
+    }
+
+    @ExceptionHandler(RedundantChangeException.class)
+    public ResponseEntity<String> handleSamePassword(RedundantChangeException e){
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
+    }
+
+    @ExceptionHandler(FailedToDeleteUserException.class)
+    public ResponseEntity<String> handleFailedDelete(FailedToDeleteUserException e){
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+    }
+
+    @ExceptionHandler(ConversationNotFoundException.class)
+    public ResponseEntity<String> handleConversationNotFound(ConversationNotFoundException e) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+    }
+
+    @ExceptionHandler(UnauthorizedChatAccessException.class)
+    public ResponseEntity<String> handleUnauthorizedChatAccess(UnauthorizedChatAccessException e) {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(e.getMessage());
+    }
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<String> handleIllegalArgument(IllegalArgumentException e) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+    }
+
+    @ExceptionHandler(UnauthorizedBookingRejectionException.class)
+    public ResponseEntity<String> handdleUnauthorizedBookingRejection(UnauthorizedBookingRejectionException e){
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(e.getMessage());
     }
 
 }

@@ -20,7 +20,7 @@ import type {
   ApiUserProfile,
   ApiService
 } from "../utils/types";
-import { normalizePriceUnit } from "../utils/pricing";
+import { normalizeService } from "../utils/serviceFormatting";
 
 const CATEGORIES = [
   { value: "All", label: "All Services", icon: LayoutGrid },
@@ -37,75 +37,6 @@ const CATEGORIES = [
 ];
 
 const TOKEN_STORAGE_KEY = "jwt_token";
-
-function cleanText(value?: string | null) {
-  return value?.trim() ?? "";
-}
-
-function cleanPriceValue(value?: number | string | null) {
-  return value == null ? "" : String(value).trim();
-}
-
-function formatCurrency(value: string) {
-  const amount = Number(value);
-
-  if (!Number.isFinite(amount)) {
-    return "$0";
-  }
-
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-    maximumFractionDigits: Number.isInteger(amount) ? 0 : 2
-  }).format(amount);
-}
-
-function formatPrice(service: ApiService) {
-  const minPrice = cleanPriceValue(service.priceMin);
-  const maxPrice = cleanPriceValue(service.priceMax);
-  const displayPrice =
-    minPrice && maxPrice && minPrice !== maxPrice
-      ? `${formatCurrency(minPrice)} - ${formatCurrency(maxPrice)}`
-      : formatCurrency(minPrice || maxPrice);
-  const priceUnit = normalizePriceUnit(service.priceUnit);
-
-  return priceUnit
-    ? `${displayPrice}/${priceUnit}`
-    : displayPrice;
-}
-
-function normalizeService(
-  service: ApiService,
-  index: number
-): Service {
-  const tags = Array.isArray(service.tags)
-    ? service.tags.map(cleanText).filter(Boolean)
-    : [];
-  const id = cleanText(service.id) || `service-${index}`;
-  const priceMin = Number(
-    cleanPriceValue(service.priceMin) || 0
-  );
-  const priceMax = Number(
-    cleanPriceValue(service.priceMax) || priceMin
-  );
-  const priceUnit = cleanText(service.priceUnit) || null;
-
-  const normalizedService = {
-    id,
-    title: cleanText(service.title) || "Untitled service",
-    category: cleanText(service.category) || "general",
-    userId: cleanText(service.userId),
-    price: formatPrice(service),
-    priceMin,
-    priceMax,
-    priceUnit,
-    description: cleanText(service.description),
-    location: cleanText(service.location) || "Campus",
-    tags
-  };
-
-  return normalizedService;
-}
 
 function HomePage() {
   const [services, setServices] = useState<Service[]>([]);

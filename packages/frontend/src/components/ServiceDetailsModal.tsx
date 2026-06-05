@@ -1,16 +1,22 @@
 import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import InputField from "./InputField";
 import SubmitButton from "./SubmitButton";
 import PaymentForm from "./PaymentForm";
 import "./styles/ServiceDetailsModal.css";
 import { API_ENDPOINTS } from "../utils/api";
 import { toast } from "react-toastify";
+import { formatProviderRating } from "../utils/serviceFormatting";
+import { USER_ID_KEY } from "../pages/profile/constants";
 
 const TOKEN_STORAGE_KEY = "jwt_token";
 
 interface ServiceDetails {
   id: string;
   userId: string;
+  providerName: string;
+  providerAverageRating: number | null;
+  providerReviewCount: number;
   title: string;
   price: string;
   priceMin: number;
@@ -49,6 +55,17 @@ function MessageIcon() {
   );
 }
 
+function getProviderInitials(providerName: string) {
+  const initials = providerName
+    .trim()
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((namePart) => namePart[0]?.toUpperCase() ?? "")
+    .join("");
+
+  return initials || "SP";
+}
+
 type ModalView = "details" | "booking" | "payment" | "success";
 
 interface BookingFormState {
@@ -62,13 +79,16 @@ function ServiceDetailsModal({
   service,
   onClose
 }: ServiceDetailsModalProps) {
+  const navigate = useNavigate();
   const [view, setView] = useState<ModalView>("details");
-  const currentUserId = localStorage.getItem("user_id");
+  const currentUserId = localStorage.getItem(USER_ID_KEY);
   const [showReportDialog, setShowReportDialog] =
     useState(false);
   const [reportReason, setReportReason] = useState(
     "Inappropriate content"
   );
+  const [otherReportReason, setOtherReportReason] =
+    useState("");
   const [isReporting, setIsReporting] = useState(false);
   const [setupClientSecret, setSetupClientSecret] =
     useState("");
@@ -78,6 +98,10 @@ function ServiceDetailsModal({
     error: "",
     isLoading: false
   });
+  const ratingText = formatProviderRating(
+    service.providerAverageRating,
+    service.providerReviewCount
+  );
 
   async function handleBookingSubmit() {
     const price = Number(form.agreedPrice);
@@ -144,7 +168,48 @@ function ServiceDetailsModal({
     }
   }
 
+  async function handleMessageProvider() {
+    const token = localStorage.getItem(TOKEN_STORAGE_KEY);
+    try {
+      const res = await fetch(
+        API_ENDPOINTS.conversations.start,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`
+          },
+          body: JSON.stringify({ serviceId: service.id })
+        }
+      );
+      if (res.ok) {
+        const conversation = (await res.json()) as {
+          id: string;
+        };
+        onClose();
+        navigate("/inbox", {
+          state: { conversationId: conversation.id }
+        });
+      } else {
+        toast.error("Could not open conversation.");
+      }
+    } catch {
+      toast.error("Could not open conversation.");
+    }
+  }
+
   async function handleReportSubmit() {
+    const trimmedOtherReason = otherReportReason.trim();
+    const submittedReason =
+      reportReason === "Other"
+        ? `Other: ${trimmedOtherReason}`
+        : reportReason;
+
+    if (reportReason === "Other" && !trimmedOtherReason) {
+      toast.error("Please add details for Other.");
+      return;
+    }
+
     setIsReporting(true);
     try {
       const token = localStorage.getItem("jwt_token");
@@ -159,7 +224,7 @@ function ServiceDetailsModal({
           body: JSON.stringify({
             listingId: service.id,
             providerId: service.userId,
-            reason: reportReason
+            reason: submittedReason
           })
         }
       );
@@ -167,6 +232,8 @@ function ServiceDetailsModal({
       if (response.ok) {
         toast.success("Report submitted successfully");
         setShowReportDialog(false);
+        setReportReason("Inappropriate content");
+        setOtherReportReason("");
       } else {
         toast.error("Failed to submit report");
       }
@@ -212,6 +279,32 @@ function ServiceDetailsModal({
 
         {view === "details" && (
           <>
+            <div className="service-details-provider">
+              <div className="service-details-avatar">
+                {getProviderInitials(service.providerName)}
+              </div>
+              <div className="service-details-provider-copy">
+                <p className="service-details-provider-name">
+                  {service.providerName}
+                </p>
+                <p className="service-details-rating">
+                  <span
+                    className="service-details-star"
+                    aria-hidden="true">
+                    {"\u2605"}
+                  </span>
+                  <span>{ratingText}</span>
+                </p>
+              </div>
+              {service.userId && (
+                <Link
+                  to={`/providers/${encodeURIComponent(service.userId)}`}
+                  className="service-details-profile-link">
+                  View profile
+                </Link>
+              )}
+            </div>
+
             <div className="service-details-location">
               <PinIcon />
               <span>{service.location}</span>
@@ -241,15 +334,24 @@ function ServiceDetailsModal({
               <button
                 type="button"
                 className="service-details-book"
-                onClick={() => setView("booking")}>
+                onClick={() => setView("booking")}
+                disabled={currentUserId === service.userId}
+                title={
+                  currentUserId === service.userId
+                    ? "You cannot book your own service"
+                    : ""
+                }>
                 Book Now
               </button>
-              <button
-                type="button"
-                className="service-details-message">
-                <MessageIcon />
-                Message
-              </button>
+              {currentUserId !== service.userId && (
+                <button
+                  type="button"
+                  className="service-details-message"
+                  onClick={() => void handleMessageProvider()}>
+                  <MessageIcon />
+                  Message
+                </button>
+              )}
             </div>
 
             {currentUserId !== service.userId && (
@@ -275,6 +377,18 @@ function ServiceDetailsModal({
                       <option>Harassment</option>
                       <option>Other</option>
                     </select>
+                    {reportReason === "Other" && (
+                      <textarea
+                        className="report-other-input"
+                        value={otherReportReason}
+                        onChange={(e) =>
+                          setOtherReportReason(e.target.value)
+                        }
+                        rows={3}
+                        maxLength={250}
+                        placeholder="Add details"
+                      />
+                    )}
                     <div className="report-dialog-actions">
                       <button
                         type="button"

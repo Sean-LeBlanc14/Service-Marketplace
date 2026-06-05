@@ -3,6 +3,7 @@ import { Badge, Card } from "react-bootstrap";
 import ServiceDetailsModal, {
   type ServiceDetails
 } from "./ServiceDetailsModal";
+import { formatProviderRating } from "../utils/serviceFormatting";
 import "./styles/ServiceCard.css";
 
 interface Service {
@@ -10,6 +11,10 @@ interface Service {
   title: string;
   category: string;
   userId: string;
+  providerName: string;
+  providerAverageRating: number | null;
+  providerReviewCount: number;
+  price: string;
   priceMin: number;
   priceMax: number;
   priceUnit: string | null;
@@ -22,30 +27,19 @@ interface ServiceCardProps {
   service: Service;
 }
 
-function formatPrice(
-  priceMin: number,
-  priceMax: number,
-  priceUnit: string | null
-): string {
-  const unit = priceUnit ? `/${priceUnit}` : "";
-
-  if (priceMin === priceMax) {
-    return `$${priceMin}${unit}`;
-  }
-
-  return `$${priceMin}-$${priceMax}${unit}`;
-}
-
 function ServiceCard({ service }: ServiceCardProps) {
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
-  const price = formatPrice(
-    service.priceMin,
-    service.priceMax,
-    service.priceUnit
+  const price = service.price;
+  const ratingText = formatProviderRating(
+    service.providerAverageRating,
+    service.providerReviewCount
   );
   const modalService: ServiceDetails = {
     id: service.id,
     userId: service.userId,
+    providerName: service.providerName,
+    providerAverageRating: service.providerAverageRating,
+    providerReviewCount: service.providerReviewCount,
     title: service.title,
     price,
     priceMin: service.priceMin,
@@ -71,6 +65,16 @@ function ServiceCard({ service }: ServiceCardProps) {
           <Card.Text className="service-description">
             {service.description}
           </Card.Text>
+
+          <div className="service-provider-info">
+            <span>{service.providerName}</span>
+            <span>
+              <span className="rating-star" aria-hidden="true">
+                {"\u2605"}
+              </span>{" "}
+              <span className="rating-value">{ratingText}</span>
+            </span>
+          </div>
 
           <div className="service-location">
             <span

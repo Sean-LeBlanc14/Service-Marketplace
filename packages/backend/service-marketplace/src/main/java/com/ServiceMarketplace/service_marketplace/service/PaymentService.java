@@ -3,6 +3,8 @@ package com.ServiceMarketplace.service_marketplace.service;
 import java.math.BigDecimal;
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -31,6 +33,7 @@ import com.stripe.model.Event;
 import com.stripe.model.PaymentIntent;
 import com.stripe.model.PaymentMethod;
 import com.stripe.model.PaymentMethodCollection;
+import com.stripe.model.Refund;
 import com.stripe.model.SetupIntent;
 import com.stripe.model.StripeObject;
 import com.stripe.net.Webhook;
@@ -39,10 +42,13 @@ import com.stripe.param.AccountLinkCreateParams;
 import com.stripe.param.CustomerCreateParams;
 import com.stripe.param.PaymentIntentCreateParams;
 import com.stripe.param.PaymentMethodListParams;
+import com.stripe.param.RefundCreateParams;
 import com.stripe.param.SetupIntentCreateParams;
 
 @Service
 public class PaymentService {
+
+    private static final Logger log = LoggerFactory.getLogger(PaymentService.class);
 
     @Value("${stripe.secret-key}")
     private String STRIPE_SECRET_KEY;
@@ -88,7 +94,8 @@ public class PaymentService {
 
             return new SetupIntentResult(setupIntent.getClientSecret(), customer.getId(), setupIntent.getId());
         } catch (StripeException e) {
-            throw new PaymentProcessingException("Failed to create setup intent: " + e.getMessage());
+            log.error("Stripe setup intent creation failed for customer email {}", customerEmail, e);
+            throw new PaymentProcessingException("Failed to create setup intent. Please try again later.");
         }
     }
 
@@ -136,7 +143,8 @@ public class PaymentService {
             PaymentIntent paymentIntent = PaymentIntent.create(paramsBuilder.build());
             return new PaymentIntentResult(paymentIntent.getClientSecret(), paymentIntent.getId());
         } catch (StripeException e) {
-            throw new PaymentProcessingException("Failed to process payment: " + e.getMessage());
+            log.error("Stripe payment processing failed for service {} and customer {}", serviceId, customerId, e);
+            throw new PaymentProcessingException("Failed to process payment. Please try again later.");
         }
     }
 
@@ -148,6 +156,27 @@ public class PaymentService {
             customer.delete();
         } catch (StripeException ignored) {
             // cleanup failure should not block the cancellation flow
+        }
+    }
+
+    public void refundPaymentIntent(String stripePaymentIntentId, boolean reverseTransfer) {
+        if (stripePaymentIntentId == null || stripePaymentIntentId.isBlank()) return;
+        Stripe.apiKey = STRIPE_SECRET_KEY;
+
+        try {
+            RefundCreateParams.Builder paramsBuilder = RefundCreateParams.builder()
+                .setPaymentIntent(stripePaymentIntentId);
+
+            if (reverseTransfer) {
+                paramsBuilder
+                    .setReverseTransfer(true)
+                    .setRefundApplicationFee(true);
+            }
+
+            Refund.create(paramsBuilder.build());
+        } catch (StripeException e) {
+            log.error("Stripe refund failed for payment intent {}", stripePaymentIntentId, e);
+            throw new PaymentProcessingException("Failed to refund payment. Please try again later.");
         }
     }
 
@@ -181,7 +210,8 @@ public class PaymentService {
             AccountLink accountLink = AccountLink.create(linkParams);
             return new ConnectOnboardingResponse(accountId, accountLink.getUrl());
         } catch (StripeException e) {
-            throw new StripeConnectException("Failed to initiate Stripe Connect onboarding: " + e.getMessage());
+            log.error("Stripe Connect onboarding failed for user {}", user.getId(), e);
+            throw new StripeConnectException("Failed to initiate Stripe Connect onboarding. Please try again later.");
         }
     }
 
@@ -206,7 +236,8 @@ public class PaymentService {
                 account.getPayoutsEnabled()
             );
         } catch (StripeException e) {
-            throw new StripeConnectException("Failed to retrieve Stripe Connect status: " + e.getMessage());
+            log.error("Stripe Connect status retrieval failed for user {} and account {}", user.getId(), accountId, e);
+            throw new StripeConnectException("Failed to retrieve Stripe Connect status. Please try again later.");
         }
     }
 
@@ -219,9 +250,12 @@ public class PaymentService {
             throw new InvalidWebhookSignatureException("Invalid webhook signature: " + e.getMessage());
         }
 
-        StripeObject stripeObject = event.getDataObjectDeserializer()
-            .getObject()
-            .orElseThrow(() -> new WebhookProcessingException("Failed to deserialize webhook event"));
+        StripeObject stripeObject;
+        try {
+            stripeObject = event.getDataObjectDeserializer().deserializeUnsafe();
+        } catch (Exception e) {
+            throw new WebhookProcessingException("Failed to deserialize webhook event");
+        }
 
         switch (event.getType()) {
             case "payment_intent.succeeded" -> {

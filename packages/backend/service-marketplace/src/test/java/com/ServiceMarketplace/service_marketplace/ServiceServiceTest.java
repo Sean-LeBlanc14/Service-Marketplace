@@ -83,6 +83,40 @@ public class ServiceServiceTest {
     }
 
     @Test
+    void getAllServices_filtersUnavailableServices() {
+        Service available = createMockService("available", "tutoring");
+        available.setIsAvailable(true);
+        Service unspecified = createMockService("unspecified", "tutoring");
+        unspecified.setIsAvailable(null);
+        Service unavailable = createMockService("unavailable", "tutoring");
+        unavailable.setIsAvailable(false);
+
+        when(serviceRepository.findAll()).thenReturn(List.of(available, unspecified, unavailable));
+        when(userRepository.findAllById(any())).thenReturn(List.of());
+        when(bookingRepository.findReviewedBookingsByProviderIdIn(any())).thenReturn(List.of());
+
+        List<ServiceDto> result = serviceService.getAllServices();
+
+        assertEquals(2, result.size());
+        assertEquals(List.of("available", "unspecified"), result.stream().map(ServiceDto::getId).toList());
+    }
+
+    @Test
+    void getAllServices_blankProviderId_usesFallbackProviderName() {
+        Service service = createMockService("blank-provider", "tutoring");
+        service.setUserId(" ");
+
+        when(serviceRepository.findAll()).thenReturn(List.of(service));
+
+        List<ServiceDto> result = serviceService.getAllServices();
+
+        assertEquals(1, result.size());
+        assertEquals("Service creator", result.get(0).getProviderName());
+        verify(userRepository, never()).findAllById(any());
+        verify(bookingRepository, never()).findReviewedBookingsByProviderIdIn(any());
+    }
+
+    @Test
     void getAllServices_emptyList_returnsEmpty() {
         when(serviceRepository.findAll()).thenReturn(List.of());
 
@@ -128,6 +162,23 @@ public class ServiceServiceTest {
         assertEquals(1, result.size());
         assertEquals("tutoring", result.get(0).getCategory());
         verify(serviceRepository).findByCategory("tutoring");
+    }
+
+    @Test
+    void getServicesByCategory_filtersUnavailableServices() {
+        Service available = createMockService("available", "tutoring");
+        available.setIsAvailable(true);
+        Service unavailable = createMockService("unavailable", "tutoring");
+        unavailable.setIsAvailable(false);
+
+        when(serviceRepository.findByCategory("tutoring")).thenReturn(List.of(available, unavailable));
+        when(userRepository.findAllById(any())).thenReturn(List.of());
+        when(bookingRepository.findReviewedBookingsByProviderIdIn(any())).thenReturn(List.of());
+
+        List<ServiceDto> result = serviceService.getServicesByCategory("tutoring");
+
+        assertEquals(1, result.size());
+        assertEquals("available", result.get(0).getId());
     }
 
     @Test
@@ -368,6 +419,16 @@ public class ServiceServiceTest {
     }
 
     @Test
+    void getProviderRatingSummary_nullRepositoryResult_returnsNoRating() {
+        when(bookingRepository.findReviewedBookingsByProviderId("user123")).thenReturn(null);
+
+        ServiceService.ProviderRatingSummary summary = serviceService.getProviderRatingSummary("user123");
+
+        assertNull(summary.averageRating());
+        assertEquals(0, summary.reviewCount());
+    }
+
+    @Test
     void getProviderRatingSummary_ratedBookings_returnsRoundedAverage() {
         Booking firstReview = new Booking();
         firstReview.setProviderId("user123");
@@ -446,5 +507,34 @@ public class ServiceServiceTest {
         );
 
         assertEquals(Map.of(), result);
+    }
+
+    @Test
+    void getProviderRatingSummaries_ignoresUnratedBookings() {
+        Booking ratedBooking = new Booking();
+        ratedBooking.setProviderId("user123");
+        ratedBooking.setRating(5);
+        Booking unratedBooking = new Booking();
+        unratedBooking.setProviderId("user123");
+        unratedBooking.setRating(null);
+
+        when(bookingRepository.findReviewedBookingsByProviderIdIn(any()))
+            .thenReturn(List.of(ratedBooking, unratedBooking));
+
+        Map<String, ServiceService.ProviderRatingSummary> result = ReflectionTestUtils.invokeMethod(
+            serviceService,
+            "getProviderRatingSummaries",
+            List.of("user123")
+        );
+
+        assertEquals(1, result.get("user123").reviewCount());
+        assertEquals(5.0, result.get("user123").averageRating());
+    }
+
+    @Test
+    void normalizeTag_startingWithNumberPreservesNumberAndCapitalizesNextWord() {
+        String result = ReflectionTestUtils.invokeMethod(serviceService, "normalizeTag", "101 tutoring");
+
+        assertEquals("101 Tutoring", result);
     }
 }

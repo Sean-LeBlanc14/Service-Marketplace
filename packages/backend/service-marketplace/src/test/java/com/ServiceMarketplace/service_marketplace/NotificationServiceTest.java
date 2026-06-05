@@ -104,6 +104,14 @@ class NotificationServiceTest {
         assertThat(result.get(1).isRead()).isTrue();
     }
 
+    @Test
+    void getNotifications_missingUser_throwsUsernameNotFoundException() {
+        when(userRepository.findByEmail("user@calpoly.edu")).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> notificationService.getNotifications(userDetails))
+                .isInstanceOf(org.springframework.security.core.userdetails.UsernameNotFoundException.class);
+    }
+
     // --- markRead ---
 
     @Test

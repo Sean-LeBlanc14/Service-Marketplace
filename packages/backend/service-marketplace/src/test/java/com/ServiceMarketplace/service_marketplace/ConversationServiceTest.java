@@ -23,6 +23,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import com.ServiceMarketplace.service_marketplace.dto.ConversationResponse;
 import com.ServiceMarketplace.service_marketplace.dto.MessageResponse;
@@ -154,6 +155,55 @@ class ConversationServiceTest {
                 .hasMessageContaining("own service");
     }
 
+    @Test
+    void startConversation_missingService_throwsResourceNotFoundException() {
+        StartConversationRequest request = new StartConversationRequest();
+        request.setServiceId("missing-svc");
+
+        when(userRepository.findByEmail("customer@calpoly.edu")).thenReturn(Optional.of(customer));
+        when(serviceRepository.findById("missing-svc")).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> conversationService.startConversation(request, userDetails))
+                .isInstanceOf(com.ServiceMarketplace.service_marketplace.exception.ResourceNotFoundException.class);
+    }
+
+    @Test
+    void startConversation_missingProvider_throwsResourceNotFoundException() {
+        StartConversationRequest request = new StartConversationRequest();
+        request.setServiceId("svc-1");
+
+        when(userRepository.findByEmail("customer@calpoly.edu")).thenReturn(Optional.of(customer));
+        when(serviceRepository.findById("svc-1")).thenReturn(Optional.of(service));
+        when(conversationRepository.findByServiceIdAndCustomerIdAndProviderId("svc-1", "cust-1", "prov-1"))
+                .thenReturn(Optional.empty());
+        when(userRepository.findById("prov-1")).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> conversationService.startConversation(request, userDetails))
+                .isInstanceOf(com.ServiceMarketplace.service_marketplace.exception.ResourceNotFoundException.class);
+    }
+
+    @Test
+    void startConversation_blankNames_usesEmailDisplayNames() {
+        StartConversationRequest request = new StartConversationRequest();
+        request.setServiceId("svc-1");
+        customer.setFirstName(" ");
+        customer.setLastName(" ");
+        provider.setFirstName(" ");
+        provider.setLastName(" ");
+
+        when(userRepository.findByEmail("customer@calpoly.edu")).thenReturn(Optional.of(customer));
+        when(serviceRepository.findById("svc-1")).thenReturn(Optional.of(service));
+        when(conversationRepository.findByServiceIdAndCustomerIdAndProviderId("svc-1", "cust-1", "prov-1"))
+                .thenReturn(Optional.empty());
+        when(userRepository.findById("prov-1")).thenReturn(Optional.of(provider));
+        when(conversationRepository.save(any(Conversation.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        ConversationResponse result = conversationService.startConversation(request, userDetails);
+
+        assertThat(result.getCustomerName()).isEqualTo("customer@calpoly.edu");
+        assertThat(result.getProviderName()).isEqualTo("provider@calpoly.edu");
+    }
+
     // --- getConversations ---
 
     @Test
@@ -171,6 +221,23 @@ class ConversationServiceTest {
         assertThat(result).hasSize(1);
         assertThat(result.get(0).getId()).isEqualTo("conv-1");
         assertThat(result.get(0).getUnreadCount()).isEqualTo(2L);
+    }
+
+    @Test
+    void getConversations_missingUsers_usesIdFallbackNames() {
+        when(userRepository.findByEmail("customer@calpoly.edu")).thenReturn(Optional.of(customer));
+        when(conversationRepository.findByCustomerIdOrProviderIdOrderByLastMessageAtDesc("cust-1", "cust-1"))
+                .thenReturn(List.of(conversation));
+        when(userRepository.findById("cust-1")).thenReturn(Optional.empty());
+        when(userRepository.findById("prov-1")).thenReturn(Optional.empty());
+        when(messageRepository.countByConversationIdAndSenderIdNotAndReadFalse("conv-1", "cust-1"))
+                .thenReturn(0L);
+
+        List<ConversationResponse> result = conversationService.getConversations(userDetails);
+
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).getCustomerName()).isEqualTo("cust-1");
+        assertThat(result.get(0).getProviderName()).isEqualTo("prov-1");
     }
 
     // --- getMessages ---
@@ -198,6 +265,28 @@ class ConversationServiceTest {
         assertThat(result).hasSize(1);
         assertThat(unread.isRead()).isTrue();
         verify(messageRepository).saveAll(any());
+    }
+
+    @Test
+    void getMessages_noUnreadMessages_doesNotMarkAnythingRead() {
+        Message existing = new Message();
+        existing.setId("msg-1");
+        existing.setConversationId("conv-1");
+        existing.setSenderId("prov-1");
+        existing.setType(MessageType.TEXT);
+        existing.setContent("Hello");
+
+        when(userRepository.findByEmail("customer@calpoly.edu")).thenReturn(Optional.of(customer));
+        when(conversationRepository.findById("conv-1")).thenReturn(Optional.of(conversation));
+        when(messageRepository.findByConversationIdAndSenderIdNotAndReadFalse("conv-1", "cust-1"))
+                .thenReturn(List.of());
+        when(messageRepository.findByConversationIdOrderByCreatedAtAsc("conv-1"))
+                .thenReturn(List.of(existing));
+
+        List<MessageResponse> result = conversationService.getMessages("conv-1", userDetails);
+
+        assertThat(result).hasSize(1);
+        verify(messageRepository, never()).saveAll(any());
     }
 
     @Test
@@ -294,6 +383,47 @@ class ConversationServiceTest {
                 .hasMessageContaining("empty");
     }
 
+    @Test
+    void sendMessage_nullText_throwsIllegalArgumentException() {
+        SendMessageRequest request = new SendMessageRequest();
+        request.setType(MessageType.TEXT);
+        request.setContent(null);
+
+        when(userRepository.findByEmail("customer@calpoly.edu")).thenReturn(Optional.of(customer));
+        when(conversationRepository.findById("conv-1")).thenReturn(Optional.of(conversation));
+
+        assertThatThrownBy(() -> conversationService.sendMessage("conv-1", request, userDetails))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("empty");
+    }
+
+    @Test
+    void sendMessage_longText_truncatesNotificationBody() {
+        SendMessageRequest request = new SendMessageRequest();
+        request.setType(MessageType.TEXT);
+        request.setContent("This is a deliberately long message that should be truncated before it is sent as a notification body.");
+
+        Message saved = new Message();
+        saved.setId("msg-long");
+        saved.setConversationId("conv-1");
+        saved.setSenderId("cust-1");
+        saved.setSenderName("Alice Student");
+        saved.setType(MessageType.TEXT);
+        saved.setContent(request.getContent());
+
+        when(userRepository.findByEmail("customer@calpoly.edu")).thenReturn(Optional.of(customer));
+        when(conversationRepository.findById("conv-1")).thenReturn(Optional.of(conversation));
+        when(messageRepository.save(any(Message.class))).thenReturn(saved);
+        when(conversationRepository.save(any(Conversation.class))).thenReturn(conversation);
+        when(userRepository.findById("prov-1")).thenReturn(Optional.of(provider));
+
+        conversationService.sendMessage("conv-1", request, userDetails);
+
+        verify(notificationService).send(eq("prov-1"), any(), anyString(),
+                eq("This is a deliberately long message that should be truncated before it is sent a..."),
+                eq("conv-1"));
+    }
+
     // --- sendMessage PRICE_OFFER ---
 
     @Test
@@ -342,6 +472,20 @@ class ConversationServiceTest {
         SendMessageRequest request = new SendMessageRequest();
         request.setType(MessageType.PRICE_OFFER);
         request.setOfferedPrice(new BigDecimal("-10.00"));
+
+        when(userRepository.findByEmail("customer@calpoly.edu")).thenReturn(Optional.of(customer));
+        when(conversationRepository.findById("conv-1")).thenReturn(Optional.of(conversation));
+
+        assertThatThrownBy(() -> conversationService.sendMessage("conv-1", request, userDetails))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("positive");
+    }
+
+    @Test
+    void sendMessage_priceOfferWithoutPrice_throwsIllegalArgumentException() {
+        SendMessageRequest request = new SendMessageRequest();
+        request.setType(MessageType.PRICE_OFFER);
+        request.setOfferedPrice(null);
 
         when(userRepository.findByEmail("customer@calpoly.edu")).thenReturn(Optional.of(customer));
         when(conversationRepository.findById("conv-1")).thenReturn(Optional.of(conversation));
@@ -471,6 +615,17 @@ class ConversationServiceTest {
                 .hasMessageContaining("does not belong");
     }
 
+    @Test
+    void acceptOffer_missingOffer_throwsResourceNotFoundException() {
+        when(userDetails.getUsername()).thenReturn("provider@calpoly.edu");
+        when(userRepository.findByEmail("provider@calpoly.edu")).thenReturn(Optional.of(provider));
+        when(conversationRepository.findById("conv-1")).thenReturn(Optional.of(conversation));
+        when(messageRepository.findById("missing-offer")).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> conversationService.acceptOffer("conv-1", "missing-offer", userDetails))
+                .isInstanceOf(com.ServiceMarketplace.service_marketplace.exception.ResourceNotFoundException.class);
+    }
+
     // --- rejectOffer ---
 
     @Test
@@ -535,5 +690,20 @@ class ConversationServiceTest {
         long count = conversationService.getUnreadMessageCount(userDetails);
 
         assertThat(count).isEqualTo(3L);
+    }
+
+    @Test
+    void getUnreadMessageCount_missingUser_throwsUsernameNotFoundException() {
+        when(userRepository.findByEmail("customer@calpoly.edu")).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> conversationService.getUnreadMessageCount(userDetails))
+                .isInstanceOf(org.springframework.security.core.userdetails.UsernameNotFoundException.class);
+    }
+
+    @Test
+    void truncate_nullText_returnsEmptyString() {
+        String result = ReflectionTestUtils.invokeMethod(conversationService, "truncate", (String) null, 80);
+
+        assertThat(result).isEmpty();
     }
 }

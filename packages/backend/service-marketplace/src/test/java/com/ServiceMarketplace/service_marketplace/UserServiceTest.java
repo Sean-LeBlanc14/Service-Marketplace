@@ -24,6 +24,7 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import com.ServiceMarketplace.service_marketplace.dto.AuthResponse;
 import com.ServiceMarketplace.service_marketplace.dto.ChangePasswordRequest;
@@ -402,6 +403,24 @@ public class UserServiceTest {
     }
 
     @Test
+    void updateUserProfile_nullBioLeavesExistingValueAndReturnsBlankProfileBio() {
+        User user = createProfileUser();
+        UserDetails userDetails = mockUserDetails();
+        UpdateUserProfileRequest request = new UpdateUserProfileRequest();
+        request.setBio(null);
+
+        when(userRepository.findByEmail("student@example.com")).thenReturn(Optional.of(user));
+        when(userRepository.save(user)).thenReturn(user);
+        when(serviceService.getProviderRatingSummary("user123"))
+            .thenReturn(new ServiceService.ProviderRatingSummary(null, 0));
+        when(serviceService.getServicesByUserId("user123")).thenReturn(List.of());
+
+        UserProfile profile = userService.updateUserProfile(userDetails, request);
+
+        assertEquals("", profile.getBio());
+    }
+
+    @Test
     void getUserByEmail_success_returnsUser() {
         User user = createProfileUser();
         when(userRepository.findByEmail("student@example.com")).thenReturn(Optional.of(user));
@@ -414,6 +433,20 @@ public class UserServiceTest {
         when(userRepository.findByEmail("missing@example.com")).thenReturn(Optional.empty());
 
         assertThrows(UsernameNotFoundException.class, () -> userService.getUserByEmail("missing@example.com"));
+    }
+
+    @Test
+    void getUserById_missing_throwsResourceNotFoundException() {
+        when(userRepository.findById("missing-user")).thenReturn(Optional.empty());
+
+        assertThrows(ResourceNotFoundException.class, () -> userService.getUserById("missing-user"));
+    }
+
+    @Test
+    void clean_nullValue_returnsEmptyString() {
+        String result = ReflectionTestUtils.invokeMethod(userService, "clean", (String) null);
+
+        assertEquals("", result);
     }
 
     @Test

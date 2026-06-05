@@ -71,7 +71,9 @@ function ServiceBooking({
     Boolean(booking.review?.trim());
   const hasBookingActions =
     (booking.status === "AWAITING_PROVIDER_CONFIRMATION" &&
-      Boolean(confirmBooking || rejectBooking)) ||
+      Boolean(
+        confirmBooking || rejectBooking || cancelBooking
+      )) ||
     (booking.status === "CONFIRMED" &&
       Boolean(cancelBooking)) ||
     (booking.status === "COMPLETED" &&
@@ -170,6 +172,28 @@ function ServiceBooking({
                   </button>
                 )}
               </div>
+            )}
+
+          {booking.status ===
+            "AWAITING_PROVIDER_CONFIRMATION" &&
+            cancelBooking &&
+            !confirmBooking &&
+            !rejectBooking && (
+              <button
+                type="button"
+                className="booking-action booking-action-secondary"
+                disabled={isUpdating}
+                onClick={async () => {
+                  setIsUpdating(true);
+                  const succeeded =
+                    (await cancelBooking(booking)) ?? false;
+
+                  if (!succeeded) {
+                    setIsUpdating(false);
+                  }
+                }}>
+                {isUpdating ? "Canceling..." : "Cancel Request"}
+              </button>
             )}
 
           {booking.status === "CONFIRMED" && cancelBooking && (

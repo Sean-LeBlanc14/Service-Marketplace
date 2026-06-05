@@ -110,7 +110,7 @@ function AppRoutes() {
           path="dashboard"
           element={<ServiceDashboard />}
         />
-        <Route path="/calendar" element={<Calendar />} />
+        <Route path="calendar" element={<Calendar />} />
         <Route path="inbox" element={<Inbox />} />
         <Route
           path="notifications"

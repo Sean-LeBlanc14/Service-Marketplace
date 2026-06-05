@@ -138,8 +138,7 @@ export default function ServiceDashboard() {
         } else {
           toast.warning("Could not get your customer bookings");
         }
-      } catch (e) {
-        console.error(e);
+      } catch {
         toast.warning(
           "A network error occurred, please reload the page."
         );
@@ -276,11 +275,10 @@ export default function ServiceDashboard() {
       } else {
         toast.error("Something went wrong");
       }
-    } catch (e) {
+    } catch {
       toast.warning(
         "A network error occurred, please try again"
       );
-      console.error(e);
     }
 
     return false;
@@ -452,6 +450,20 @@ export default function ServiceDashboard() {
     }
 
     if (selectedView === "upcoming") {
+      return (
+        <ServiceBooking
+          key={booking.id}
+          booking={booking}
+          {...participantProps}
+          cancelBooking={cancelBooking}
+        />
+      );
+    }
+
+    if (
+      activeView.viewAs === "customer" &&
+      booking.status === "AWAITING_PROVIDER_CONFIRMATION"
+    ) {
       return (
         <ServiceBooking
           key={booking.id}

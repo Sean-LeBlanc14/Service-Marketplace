@@ -123,7 +123,6 @@ export default function Calendar() {
   const [visibleMonth, setVisibleMonth] = useState(
     () => new Date()
   );
-  const [isLoading, setIsLoading] = useState(true);
   const [selectedBooking, setSelectedBooking] =
     useState<ApiBooking | null>(null);
   const [isCancelling, setIsCancelling] = useState(false);
@@ -131,11 +130,8 @@ export default function Calendar() {
   useEffect(() => {
     async function getUserBookings() {
       if (!authToken) {
-        setIsLoading(false);
         return;
       }
-
-      setIsLoading(true);
 
       try {
         const [providerResponse, customerResponse] =
@@ -165,8 +161,6 @@ export default function Calendar() {
         }
       } catch {
         toast.warning("A network error occurred");
-      } finally {
-        setIsLoading(false);
       }
     }
 
@@ -176,16 +170,19 @@ export default function Calendar() {
   const calendarViews: Record<
     CalendarView,
     { heading: string; bookings: ApiBooking[] }
-  > = {
-    provider: {
-      heading: "Provider Calendar",
-      bookings: scheduledProviderBookings
-    },
-    customer: {
-      heading: "Customer Calendar",
-      bookings: scheduledCustomerBookings
-    }
-  };
+  > = useMemo(
+    () => ({
+      provider: {
+        heading: "Provider Calendar",
+        bookings: scheduledProviderBookings
+      },
+      customer: {
+        heading: "Customer Calendar",
+        bookings: scheduledCustomerBookings
+      }
+    }),
+    [scheduledProviderBookings, scheduledCustomerBookings]
+  );
 
   const selectedCalendar = calendarViews[selectedView];
   const days = useMemo(
@@ -406,12 +403,6 @@ export default function Calendar() {
           );
         })}
       </div>
-
-      {!isLoading && selectedCalendar.bookings.length === 0 && (
-        <p className="calendar-empty-message">
-          No scheduled bookings for this view.
-        </p>
-      )}
 
       <Modal
         isOpen={selectedBooking !== null}

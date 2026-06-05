@@ -8,7 +8,6 @@ import {
 } from "../utils/pricing";
 import { toast } from "react-toastify";
 import type {
-  ApiBooking,
   ApiUserProfile,
   ApiService
 } from "../utils/types";
@@ -16,8 +15,6 @@ import { formatProviderRating } from "../utils/serviceFormatting";
 import { useNavigate } from "react-router-dom";
 import {
   NO_PRICE_UNIT_VALUE,
-  REVIEWABLE_BOOKING_STATUS,
-  REVIEW_MAX_LENGTH,
   SERVICE_DESCRIPTION_MAX_LENGTH,
   SERVICE_TAG_MAX_COUNT,
   SERVICE_TAG_MAX_LENGTH,
@@ -28,24 +25,18 @@ import {
 } from "./profile/constants";
 import type {
   ConnectStatus,
-  CustomerBooking,
-  ReviewDraft,
   ServiceListing,
   ServicePricingType,
   UserProfile
 } from "./profile/types";
 import {
   isPriceInputValue,
-  normalizeBookings,
   normalizeProfile,
   normalizeServices,
   parseServiceTags
 } from "./profile/utils";
 import { BioSection } from "./profile/BioSection";
-import {
-  DeleteServiceModal,
-  ReviewModal
-} from "./profile/ProfileModals";
+import { DeleteServiceModal } from "./profile/ProfileModals";
 import { PaymentsSection } from "./profile/PaymentsSection";
 import { ProfileHeader } from "./profile/ProfileHeader";
 import { ServicesSection } from "./profile/ServicesSection";
@@ -70,19 +61,7 @@ function ProfilePage() {
   const [serviceDescription, setServiceDescription] =
     useState("");
   const [serviceMessage, setServiceMessage] = useState("");
-  const [customerBookings, setCustomerBookings] = useState<
-    CustomerBooking[]
-  >([]);
 
-  const [reviewDrafts, setReviewDrafts] = useState<
-    Record<string, ReviewDraft>
-  >({});
-  const [submittingReviewId, setSubmittingReviewId] = useState<
-    string | null
-  >(null);
-  const [reviewingBookingId, setReviewingBookingId] = useState<
-    string | null
-  >(null);
   const [serviceTitle, setServiceTitle] = useState("");
   const [serviceCategory, setServiceCategory] = useState("");
   const [servicePricingType, setServicePricingType] =
@@ -567,119 +546,6 @@ function ProfilePage() {
     }
   }
 
-  function updateReviewDraft(
-    bookingId: string,
-    nextDraft: Partial<ReviewDraft>
-  ) {
-    setReviewDrafts((currentDrafts) => {
-      const currentDraft = currentDrafts[bookingId] ?? {
-        rating: "5",
-        review: ""
-      };
-
-      return {
-        ...currentDrafts,
-        [bookingId]: {
-          ...currentDraft,
-          ...nextDraft
-        }
-      };
-    });
-  }
-
-  async function handleReviewSubmit(
-    event: FormEvent<HTMLFormElement>,
-    booking: CustomerBooking
-  ): Promise<boolean> {
-    event.preventDefault();
-
-    if (!authToken) {
-      toast.error("Log in to leave a review.");
-      return false;
-    }
-
-    if (booking.status !== REVIEWABLE_BOOKING_STATUS) {
-      toast.error("You can only review completed bookings.");
-      return false;
-    }
-
-    const draft = reviewDrafts[booking.id] ?? {
-      rating: "5",
-      review: ""
-    };
-    const rating = Number(draft.rating);
-    const review = draft.review.trim();
-
-    if (!Number.isInteger(rating) || rating < 1 || rating > 5) {
-      toast.error("Choose a rating from 1 to 5.");
-      return false;
-    }
-
-    if (!review) {
-      toast.error("Write a review before submitting.");
-      return false;
-    }
-
-    if (review.length > REVIEW_MAX_LENGTH) {
-      toast.error(
-        "Keep the review to 1000 characters or fewer."
-      );
-      return false;
-    }
-
-    setSubmittingReviewId(booking.id);
-
-    try {
-      const response = await fetch(
-        API_ENDPOINTS.bookings.review(booking.id),
-        {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${authToken}`,
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify({ rating, review })
-        }
-      );
-
-      if (!response.ok) {
-        const message = (await response.text()).trim();
-        throw new Error(message || "Could not submit review.");
-      }
-
-      const [updatedBooking] = normalizeBookings([
-        (await response.json()) as ApiBooking
-      ]);
-
-      if (updatedBooking) {
-        setCustomerBookings((currentBookings) =>
-          currentBookings.map((currentBooking) =>
-            currentBooking.id === updatedBooking.id
-              ? updatedBooking
-              : currentBooking
-          )
-        );
-      }
-
-      setReviewDrafts((currentDrafts) => {
-        const nextDrafts = { ...currentDrafts };
-        delete nextDrafts[booking.id];
-        return nextDrafts;
-      });
-      toast.success("Review submitted.");
-      return true;
-    } catch (reviewError) {
-      toast.error(
-        reviewError instanceof Error
-          ? reviewError.message
-          : "Could not submit review."
-      );
-      return false;
-    } finally {
-      setSubmittingReviewId(null);
-    }
-  }
-
   const displayName =
     `${profile.firstName} ${profile.lastName}`.trim() ||
     "Profile";
@@ -835,18 +701,6 @@ function ProfilePage() {
           onConfirm={(service) =>
             void handleDeleteService(service)
           }
-        />
-      )}
-
-      {reviewingBookingId && (
-        <ReviewModal
-          bookings={customerBookings}
-          reviewingBookingId={reviewingBookingId}
-          reviewDrafts={reviewDrafts}
-          submittingReviewId={submittingReviewId}
-          onClose={() => setReviewingBookingId(null)}
-          onSubmit={handleReviewSubmit}
-          onUpdateDraft={updateReviewDraft}
         />
       )}
 

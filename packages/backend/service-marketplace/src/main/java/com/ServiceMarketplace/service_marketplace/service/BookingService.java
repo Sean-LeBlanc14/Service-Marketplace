@@ -249,7 +249,14 @@ public class BookingService {
         if (booking.getStatus() == BookingStatus.CANCELLED) {
             throw new BookingStateException("Booking is already cancelled");
         }
+        if (booking.getStatus() == BookingStatus.REJECTED) {
+            throw new BookingStateException("Booking is already rejected");
+        }
+        if (booking.getStatus() == BookingStatus.COMPLETED) {
+            throw new BookingStateException("Completed bookings cannot be cancelled");
+        }
 
+        refundPaymentIfNeeded(booking);
         booking.setStatus(BookingStatus.CANCELLED);
         bookingRepository.save(booking);
         paymentService.cleanupStripeCustomer(booking.getStripeCustomerId());
@@ -295,6 +302,20 @@ public class BookingService {
         return toBookingResponse(booking);
     }
 
+    private void refundPaymentIfNeeded(Booking booking) {
+        String paymentIntentId = clean(booking.getStripePaymentIntentId());
+
+        if (paymentIntentId.isBlank()) {
+            return;
+        }
+
+        boolean reverseTransfer = userRepository.findById(booking.getProviderId())
+            .map(provider -> !clean(provider.getStripeAccountId()).isBlank())
+            .orElse(false);
+
+        paymentService.refundPaymentIntent(paymentIntentId, reverseTransfer);
+    }
+
     public List<BookingResponse> getProviderBookingRequests(UserDetails userDetails){
         var user = getUserByEmail(userDetails.getUsername());
 
@@ -322,22 +343,56 @@ public class BookingService {
             .toList();
     }
 
-    public void rejectBooking(String bookingId, UserDetails userDetails){
+    public BookingResponse rejectBooking(String bookingId, UserDetails userDetails){
 
-        var provider = getUserByEmail(userDetails.getUsername());
+        var user = getUserByEmail(userDetails.getUsername());
 
         var rejectedBooking = bookingRepository.findById(bookingId)
             .orElseThrow(() -> new ResourceNotFoundException("Booking", bookingId));
 
-        if (!provider.getId().equals(rejectedBooking.getProviderId()) && !rejectedBooking.getStatus().equals(BookingStatus.AWAITING_PROVIDER_CONFIRMATION)){
-            throw new UnauthorizedBookingRejectionException("You are not the provider for this booking");
+        boolean isCustomer = user.getId().equals(rejectedBooking.getCustomerId());
+        boolean isProvider = user.getId().equals(rejectedBooking.getProviderId());
+
+        if (!isCustomer && !isProvider){
+            throw new UnauthorizedBookingRejectionException("You are not authorized to reject this booking");
         }
 
+        if (rejectedBooking.getStatus() == BookingStatus.REJECTED) {
+            throw new BookingStateException("Booking is already rejected");
+        }
+        if (rejectedBooking.getStatus() == BookingStatus.CANCELLED) {
+            throw new BookingStateException("Booking is already cancelled");
+        }
+        if (rejectedBooking.getStatus() == BookingStatus.COMPLETED) {
+            throw new BookingStateException("Completed bookings cannot be rejected");
+        }
+
+        refundPaymentIfNeeded(rejectedBooking);
         rejectedBooking.setStatus(BookingStatus.REJECTED);
-        bookingRepository.save(rejectedBooking);
-        
-        userRepository.findById(rejectedBooking.getCustomerId()).ifPresent(customer -> {
-                String providerName = provider.getFirstName() + " " + provider.getLastName();
+        Booking saved = bookingRepository.save(rejectedBooking);
+
+        paymentService.cleanupStripeCustomer(rejectedBooking.getStripeCustomerId());
+
+        if (isCustomer) {
+            userRepository.findById(rejectedBooking.getProviderId()).ifPresent(provider -> {
+                String customerName = getUserDisplayName(user);
+
+                emailService.sendBookingCancelledProviderEmail(
+                    provider.getEmail(),
+                    provider.getFirstName(),
+                    customerName,
+                    rejectedBooking.getServiceTitle(),
+                    rejectedBooking.getScheduledAt(),
+                    rejectedBooking.getId()
+                );
+                notificationService.send(provider.getId(), NotificationType.BOOKING_REJECTED,
+                    "Booking Rejected",
+                    customerName + " rejected their booking for " + rejectedBooking.getServiceTitle(),
+                    rejectedBooking.getId());
+            });
+        } else {
+            userRepository.findById(rejectedBooking.getCustomerId()).ifPresent(customer -> {
+                String providerName = getUserDisplayName(user);
 
                 emailService.sendBookingRejectedCustomerEmail(
                     customer.getEmail(),
@@ -348,10 +403,13 @@ public class BookingService {
                     rejectedBooking.getId()
                 );
                 notificationService.send(customer.getId(), NotificationType.BOOKING_REJECTED,
-                    "Booking Cancelled",
-                    providerName + " cancelled your booking for " + rejectedBooking.getServiceTitle(),
+                    "Booking Rejected",
+                    providerName + " rejected your booking for " + rejectedBooking.getServiceTitle(),
                     rejectedBooking.getId());
             });
+        }
+
+        return toBookingResponse(saved);
         
     }
 

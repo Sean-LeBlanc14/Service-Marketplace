@@ -11,6 +11,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
@@ -33,8 +34,10 @@ import com.stripe.model.Customer;
 import com.stripe.model.Event;
 import com.stripe.model.EventDataObjectDeserializer;
 import com.stripe.model.PaymentIntent;
+import com.stripe.model.Refund;
 import com.stripe.model.StripeObject;
 import com.stripe.net.Webhook;
+import com.stripe.param.RefundCreateParams;
 
 @ExtendWith(MockitoExtension.class)
 class PaymentServiceTest {
@@ -148,6 +151,34 @@ class PaymentServiceTest {
 
             verify(bookingRepository, never()).findByStripePaymentIntentId(any());
             verify(bookingRepository, never()).save(any());
+        }
+    }
+
+    @Test
+    void refundPaymentIntent_withConnectedAccount_reversesTransferAndApplicationFee() throws Exception {
+        try (MockedStatic<Refund> refundMock = Mockito.mockStatic(Refund.class)) {
+            refundMock.when(() -> Refund.create(any(RefundCreateParams.class)))
+                .thenReturn(mock(Refund.class));
+
+            paymentService.refundPaymentIntent("pi_test_123", true);
+
+            ArgumentCaptor<RefundCreateParams> paramsCaptor =
+                ArgumentCaptor.forClass(RefundCreateParams.class);
+            refundMock.verify(() -> Refund.create(paramsCaptor.capture()));
+
+            RefundCreateParams params = paramsCaptor.getValue();
+            assertThat(params.getPaymentIntent()).isEqualTo("pi_test_123");
+            assertThat(params.getReverseTransfer()).isTrue();
+            assertThat(params.getRefundApplicationFee()).isTrue();
+        }
+    }
+
+    @Test
+    void refundPaymentIntent_withoutPaymentIntent_isNoop() throws Exception {
+        try (MockedStatic<Refund> refundMock = Mockito.mockStatic(Refund.class)) {
+            paymentService.refundPaymentIntent(" ", true);
+
+            refundMock.verifyNoInteractions();
         }
     }
 

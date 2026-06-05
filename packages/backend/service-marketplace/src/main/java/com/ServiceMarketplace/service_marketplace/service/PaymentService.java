@@ -31,6 +31,7 @@ import com.stripe.model.Event;
 import com.stripe.model.PaymentIntent;
 import com.stripe.model.PaymentMethod;
 import com.stripe.model.PaymentMethodCollection;
+import com.stripe.model.Refund;
 import com.stripe.model.SetupIntent;
 import com.stripe.model.StripeObject;
 import com.stripe.net.Webhook;
@@ -39,6 +40,7 @@ import com.stripe.param.AccountLinkCreateParams;
 import com.stripe.param.CustomerCreateParams;
 import com.stripe.param.PaymentIntentCreateParams;
 import com.stripe.param.PaymentMethodListParams;
+import com.stripe.param.RefundCreateParams;
 import com.stripe.param.SetupIntentCreateParams;
 
 @Service
@@ -148,6 +150,26 @@ public class PaymentService {
             customer.delete();
         } catch (StripeException ignored) {
             // cleanup failure should not block the cancellation flow
+        }
+    }
+
+    public void refundPaymentIntent(String stripePaymentIntentId, boolean reverseTransfer) {
+        if (stripePaymentIntentId == null || stripePaymentIntentId.isBlank()) return;
+        Stripe.apiKey = STRIPE_SECRET_KEY;
+
+        try {
+            RefundCreateParams.Builder paramsBuilder = RefundCreateParams.builder()
+                .setPaymentIntent(stripePaymentIntentId);
+
+            if (reverseTransfer) {
+                paramsBuilder
+                    .setReverseTransfer(true)
+                    .setRefundApplicationFee(true);
+            }
+
+            Refund.create(paramsBuilder.build());
+        } catch (StripeException e) {
+            throw new PaymentProcessingException("Failed to refund payment: " + e.getMessage());
         }
     }
 

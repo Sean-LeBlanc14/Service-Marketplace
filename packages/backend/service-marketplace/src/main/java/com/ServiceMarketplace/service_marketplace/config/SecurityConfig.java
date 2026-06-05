@@ -33,9 +33,9 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                .requestMatchers("/api/auth/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/bookings/action").permitAll()
-                .requestMatchers("/api/auth/register", "/api/auth/login", "/api/payments/webhook")
-                .permitAll()
+                .requestMatchers("/api/payments/webhook").permitAll()
                 .requestMatchers("/ws/**").permitAll()
                 .anyRequest().authenticated())
                 .sessionManagement(session -> session
@@ -47,7 +47,7 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(Arrays.asList("http://localhost:5173", "http://localhost:5174", "https://service-marketplace-silk.vercel.app"));
+        configuration.setAllowedOrigins(Arrays.asList("http://localhost:5173", "http://localhost:5174", "https://service-marketplace-silk.vercel.app", "https://polyservice-dsd9bcb8cqgsdxaj.westus3-01.azurewebsites.net"));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(Arrays.asList("*"));
         configuration.setAllowCredentials(true);

@@ -1,6 +1,15 @@
 # Service Marketplace
 
-PolyServices is a service marketplace platform built for Cal Poly students, allowing them to offer and book campus services such as tutoring, tech help, meal prep, photography, and more. Students can create listings, browse available services, book and pay through Stripe, leave reviews, and manage their accounts — all within a verified Cal Poly community. The platform includes an admin dashboard for moderation, a reporting system for guideline violations, and email notifications for bookings and account activity. For architecture and monorepo documentation, see [architecture.md](./docs/architecture.md).
+PolyServices is a service marketplace platform built for Cal
+Poly students, allowing them to offer and book campus services
+such as tutoring, tech help, meal prep, photography, and more.
+Students can create listings, browse available services, book
+and pay through Stripe, leave reviews, and manage their accounts
+— all within a verified Cal Poly community. The platform
+includes an admin dashboard for moderation, a reporting system
+for guideline violations, and email notifications for bookings
+and account activity. For architecture and monorepo
+documentation, see [architecture.md](./docs/architecture.md).
 
 ## Prerequisites
 

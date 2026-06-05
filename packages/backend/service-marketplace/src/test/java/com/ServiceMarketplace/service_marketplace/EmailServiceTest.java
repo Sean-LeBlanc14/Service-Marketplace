@@ -19,7 +19,6 @@ import org.mockito.Mockito;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -67,7 +66,7 @@ class EmailServiceTest {
     }
 
     @Test
-    void bookingEmailMethods_renderExpectedTemplatesAndSendMessages() {
+    void sendProviderBookingNotificationEmail_rendersTemplateAndSendsMessage() {
         Instant scheduledAt = Instant.parse("2026-06-04T18:00:00Z");
 
         emailService.sendProviderBookingNotificationEmail(
@@ -81,6 +80,14 @@ class EmailServiceTest {
             "https://example.test/confirm",
             "https://example.test/cancel"
         );
+
+        verifyTemplateRenderedAndMessageSent("providerBookingNotification");
+    }
+
+    @Test
+    void sendBookingRequestedCustomerEmail_rendersTemplateAndSendsMessage() {
+        Instant scheduledAt = Instant.parse("2026-06-04T18:00:00Z");
+
         emailService.sendBookingRequestedCustomerEmail(
             "student@calpoly.edu",
             "Alice",
@@ -90,6 +97,14 @@ class EmailServiceTest {
             scheduledAt,
             "booking-1"
         );
+
+        verifyTemplateRenderedAndMessageSent("bookingRequestedCustomer");
+    }
+
+    @Test
+    void sendBookingConfirmedCustomerEmail_rendersTemplateAndSendsMessage() {
+        Instant scheduledAt = Instant.parse("2026-06-04T18:00:00Z");
+
         emailService.sendBookingConfirmedCustomerEmail(
             "student@calpoly.edu",
             "Alice",
@@ -99,6 +114,14 @@ class EmailServiceTest {
             scheduledAt,
             "booking-1"
         );
+
+        verifyTemplateRenderedAndMessageSent("bookingConfirmedCustomer");
+    }
+
+    @Test
+    void sendBookingConfirmedProviderEmail_rendersTemplateAndSendsMessage() {
+        Instant scheduledAt = Instant.parse("2026-06-04T18:00:00Z");
+
         emailService.sendBookingConfirmedProviderEmail(
             "provider@calpoly.edu",
             "Bob",
@@ -108,6 +131,14 @@ class EmailServiceTest {
             scheduledAt,
             "booking-1"
         );
+
+        verifyTemplateRenderedAndMessageSent("bookingConfirmedProvider");
+    }
+
+    @Test
+    void sendBookingCancelledProviderEmail_rendersTemplateAndSendsMessage() {
+        Instant scheduledAt = Instant.parse("2026-06-04T18:00:00Z");
+
         emailService.sendBookingCancelledProviderEmail(
             "provider@calpoly.edu",
             "Bob",
@@ -116,6 +147,30 @@ class EmailServiceTest {
             scheduledAt,
             "booking-1"
         );
+
+        verifyTemplateRenderedAndMessageSent("bookingCancelledProvider");
+    }
+
+    @Test
+    void sendBookingRejectedProviderEmail_rendersTemplateAndSendsMessage() {
+        Instant scheduledAt = Instant.parse("2026-06-04T18:00:00Z");
+
+        emailService.sendBookingRejectedProviderEmail(
+            "provider@calpoly.edu",
+            "Bob",
+            "Alice",
+            "Math Tutoring",
+            scheduledAt,
+            "booking-1"
+        );
+
+        verifyTemplateRenderedAndMessageSent("bookingRejectedProvider");
+    }
+
+    @Test
+    void sendBookingCancelledCustomerEmail_rendersTemplateAndSendsMessage() {
+        Instant scheduledAt = Instant.parse("2026-06-04T18:00:00Z");
+
         emailService.sendBookingCancelledCustomerEmail(
             "student@calpoly.edu",
             "Alice",
@@ -124,6 +179,14 @@ class EmailServiceTest {
             scheduledAt,
             "booking-1"
         );
+
+        verifyTemplateRenderedAndMessageSent("bookingCancelledCustomer");
+    }
+
+    @Test
+    void sendBookingRejectedCustomerEmail_rendersTemplateAndSendsMessage() {
+        Instant scheduledAt = Instant.parse("2026-06-04T18:00:00Z");
+
         emailService.sendBookingRejectedCustomerEmail(
             "student@calpoly.edu",
             "Alice",
@@ -133,14 +196,7 @@ class EmailServiceTest {
             "booking-1"
         );
 
-        verify(templateEngine).process(eq("providerBookingNotification"), any(Context.class));
-        verify(templateEngine).process(eq("bookingRequestedCustomer"), any(Context.class));
-        verify(templateEngine).process(eq("bookingConfirmedCustomer"), any(Context.class));
-        verify(templateEngine).process(eq("bookingConfirmedProvider"), any(Context.class));
-        verify(templateEngine).process(eq("bookingCancelledProvider"), any(Context.class));
-        verify(templateEngine).process(eq("bookingCancelledCustomer"), any(Context.class));
-        verify(templateEngine).process(eq("bookingRejectedCustomer"), any(Context.class));
-        verify(mailSender, times(7)).send(any(MimeMessage.class));
+        verifyTemplateRenderedAndMessageSent("bookingRejectedCustomer");
     }
 
     @Test
@@ -167,5 +223,10 @@ class EmailServiceTest {
         ArgumentCaptor<Context> context = ArgumentCaptor.forClass(Context.class);
         verify(templateEngine).process(eq("verificationEmail"), context.capture());
         assertThat(context.getValue().getVariable("code")).isEqualTo("123456");
+    }
+
+    private void verifyTemplateRenderedAndMessageSent(String templateName) {
+        verify(templateEngine).process(eq(templateName), any(Context.class));
+        verify(mailSender).send(any(MimeMessage.class));
     }
 }

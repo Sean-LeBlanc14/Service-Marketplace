@@ -22,6 +22,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.test.util.ReflectionTestUtils;
 
@@ -67,6 +68,7 @@ class PaymentServiceTest {
     @Mock private BookingRepository bookingRepository;
     @Mock private UserRepository userRepository;
     @Mock private EmailService emailService;
+    @Mock private UserDetails userDetails;
 
     @InjectMocks
     private PaymentService paymentService;
@@ -206,6 +208,19 @@ class PaymentServiceTest {
     }
 
     @Test
+    void cleanupStripeCustomer_success_deletesCustomer() throws Exception {
+        try (MockedStatic<Customer> customerMock = Mockito.mockStatic(Customer.class)) {
+            Customer customer = mock(Customer.class);
+            customerMock.when(() -> Customer.retrieve("cus_test_123")).thenReturn(customer);
+
+            paymentService.cleanupStripeCustomer("cus_test_123");
+
+            customerMock.verify(() -> Customer.retrieve("cus_test_123"));
+            verify(customer).delete();
+        }
+    }
+
+    @Test
     void cleanupStripeCustomer_stripeFailureIsIgnored() throws Exception {
         try (MockedStatic<Customer> customerMock = Mockito.mockStatic(Customer.class)) {
             Customer customer = mock(Customer.class);
@@ -231,7 +246,6 @@ class PaymentServiceTest {
             accountLinkMock.when(() -> AccountLink.create(any(AccountLinkCreateParams.class))).thenReturn(accountLink);
             when(userRepository.findByEmail("tutor@calpoly.edu")).thenReturn(Optional.of(mockProvider));
 
-            org.springframework.security.core.userdetails.UserDetails userDetails = mock(org.springframework.security.core.userdetails.UserDetails.class);
             when(userDetails.getUsername()).thenReturn("tutor@calpoly.edu");
 
             ConnectOnboardingResponse result = paymentService.initiateOnboarding(userDetails);
@@ -244,7 +258,6 @@ class PaymentServiceTest {
 
     @Test
     void initiateOnboarding_missingUser_throwsUsernameNotFoundException() {
-        org.springframework.security.core.userdetails.UserDetails userDetails = mock(org.springframework.security.core.userdetails.UserDetails.class);
         when(userDetails.getUsername()).thenReturn("missing@calpoly.edu");
         when(userRepository.findByEmail("missing@calpoly.edu")).thenReturn(Optional.empty());
 
@@ -260,7 +273,6 @@ class PaymentServiceTest {
                 .thenThrow(mock(StripeException.class));
             when(userRepository.findByEmail("tutor@calpoly.edu")).thenReturn(Optional.of(mockProvider));
 
-            org.springframework.security.core.userdetails.UserDetails userDetails = mock(org.springframework.security.core.userdetails.UserDetails.class);
             when(userDetails.getUsername()).thenReturn("tutor@calpoly.edu");
 
             assertThatThrownBy(() -> paymentService.initiateOnboarding(userDetails))
@@ -273,7 +285,6 @@ class PaymentServiceTest {
     void getConnectStatus_withoutAccount_returnsDisconnectedStatus() {
         mockProvider.setStripeAccountId(null);
         when(userRepository.findByEmail("tutor@calpoly.edu")).thenReturn(Optional.of(mockProvider));
-        org.springframework.security.core.userdetails.UserDetails userDetails = mock(org.springframework.security.core.userdetails.UserDetails.class);
         when(userDetails.getUsername()).thenReturn("tutor@calpoly.edu");
 
         ConnectStatusResponse result = paymentService.getConnectStatus(userDetails);
@@ -294,7 +305,6 @@ class PaymentServiceTest {
             when(account.getPayoutsEnabled()).thenReturn(false);
             accountMock.when(() -> Account.retrieve("acct_test_provider")).thenReturn(account);
             when(userRepository.findByEmail("tutor@calpoly.edu")).thenReturn(Optional.of(mockProvider));
-            org.springframework.security.core.userdetails.UserDetails userDetails = mock(org.springframework.security.core.userdetails.UserDetails.class);
             when(userDetails.getUsername()).thenReturn("tutor@calpoly.edu");
 
             ConnectStatusResponse result = paymentService.getConnectStatus(userDetails);
@@ -313,7 +323,6 @@ class PaymentServiceTest {
             accountMock.when(() -> Account.retrieve("acct_test_provider"))
                 .thenThrow(mock(StripeException.class));
             when(userRepository.findByEmail("tutor@calpoly.edu")).thenReturn(Optional.of(mockProvider));
-            org.springframework.security.core.userdetails.UserDetails userDetails = mock(org.springframework.security.core.userdetails.UserDetails.class);
             when(userDetails.getUsername()).thenReturn("tutor@calpoly.edu");
 
             assertThatThrownBy(() -> paymentService.getConnectStatus(userDetails))

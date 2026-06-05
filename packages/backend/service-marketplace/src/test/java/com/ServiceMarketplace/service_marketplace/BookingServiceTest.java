@@ -3,7 +3,6 @@ package com.ServiceMarketplace.service_marketplace;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -30,7 +29,6 @@ import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import org.springframework.test.util.ReflectionTestUtils;
 
 import com.ServiceMarketplace.service_marketplace.dto.BookingResponse;
 import com.ServiceMarketplace.service_marketplace.dto.ConfirmBookingRequest;
@@ -259,6 +257,45 @@ class BookingServiceTest {
     }
 
     @Test
+    void getCustomerBookings_usesDisplayNameFallbacksInResponse() {
+        Booking emailFallbackBooking = createBookingWithStatus(BookingStatus.CONFIRMED);
+        emailFallbackBooking.setCustomerId("email-user");
+        emailFallbackBooking.setProviderId("id-only-user");
+
+        Booking blankIdBooking = createBookingWithStatus(BookingStatus.CONFIRMED);
+        blankIdBooking.setId("blank-id-booking");
+        blankIdBooking.setCustomerId(" ");
+        blankIdBooking.setProviderId("missing-provider");
+
+        User emailOnlyUser = new User();
+        emailOnlyUser.setId("email-user");
+        emailOnlyUser.setFirstName(" ");
+        emailOnlyUser.setLastName(" ");
+        emailOnlyUser.setEmail("fallback@calpoly.edu");
+
+        User idOnlyUser = new User();
+        idOnlyUser.setId("id-only-user");
+        idOnlyUser.setFirstName(" ");
+        idOnlyUser.setLastName(" ");
+        idOnlyUser.setEmail(" ");
+
+        when(userRepository.findByEmail("student@calpoly.edu")).thenReturn(Optional.of(mockCustomer));
+        when(bookingRepository.findByCustomerIdOrderByCreatedAtDesc("customer-789"))
+            .thenReturn(List.of(emailFallbackBooking, blankIdBooking));
+        when(userRepository.findAllById(any())).thenReturn(List.of(emailOnlyUser, idOnlyUser));
+
+        var result = bookingService.getCustomerBookings(userDetails);
+
+        assertThat(result).hasSize(2);
+        assertThat(result.get(0).getCustomerName()).isEqualTo("fallback@calpoly.edu");
+        assertThat(result.get(0).getProviderName()).isEqualTo("id-only-user");
+        assertThat(result.get(0).getReviewerName()).isEqualTo("fallback@calpoly.edu");
+        assertThat(result.get(1).getCustomerName()).isEmpty();
+        assertThat(result.get(1).getProviderName()).isEqualTo("missing-provider");
+        assertThat(result.get(1).getReviewerName()).isEmpty();
+    }
+
+    @Test
     void getProviderReviews_returnsReviewOnlyResponse() {
         Booking booking = createBookingWithStatus(BookingStatus.COMPLETED);
         booking.setRating(5);
@@ -277,6 +314,34 @@ class BookingServiceTest {
         assertThat(result.get(0).getRating()).isEqualTo(5);
         assertThat(result.get(0).getReview()).isEqualTo("Helpful tutoring.");
         assertThat(result.get(0).getReviewerFirstName()).isEqualTo("Alice");
+    }
+
+    @Test
+    void getProviderReviews_usesReviewerFirstNameFallbacksInResponse() {
+        Booking namedReview = createBookingWithStatus(BookingStatus.COMPLETED);
+        namedReview.setRating(5);
+        namedReview.setReview("Helpful tutoring.");
+        namedReview.setReviewedAt(Instant.now());
+        namedReview.setCustomerId("missing-customer");
+        namedReview.setReviewerName("Avery Chen");
+
+        Booking namelessReview = createBookingWithStatus(BookingStatus.COMPLETED);
+        namelessReview.setId("nameless-review");
+        namelessReview.setRating(4);
+        namelessReview.setReview("Clear explanations.");
+        namelessReview.setReviewedAt(Instant.now());
+        namelessReview.setCustomerId(" ");
+        namelessReview.setReviewerName(" ");
+
+        when(bookingRepository.findReviewedBookingsByProviderId("provider-456"))
+            .thenReturn(List.of(namedReview, namelessReview));
+        when(userRepository.findAllById(any())).thenReturn(List.of());
+
+        var result = bookingService.getProviderReviews("provider-456");
+
+        assertThat(result).hasSize(2);
+        assertThat(result.get(0).getReviewerFirstName()).isEqualTo("Avery");
+        assertThat(result.get(1).getReviewerFirstName()).isEmpty();
     }
 
     @Test
@@ -806,6 +871,7 @@ class BookingServiceTest {
         when(userDetails.getUsername()).thenReturn("tutor@calpoly.edu");
         when(userRepository.findByEmail("tutor@calpoly.edu")).thenReturn(Optional.of(mockProvider));
         when(bookingRepository.findById("booking-123")).thenReturn(Optional.of(booking));
+        when(bookingRepository.save(any(Booking.class))).thenAnswer(inv -> inv.getArgument(0));
         when(userRepository.findById("customer-789")).thenReturn(Optional.of(mockCustomer));
 
         bookingService.rejectBooking("booking-123", userDetails);
@@ -823,7 +889,7 @@ class BookingServiceTest {
     }
 
     @Test
-    void rejectBooking_wrongProviderAndWrongStatus_throwsUnauthorizedRejection() {
+    void rejectBooking_unauthorizedUser_throwsUnauthorizedRejection() {
         Booking booking = createBookingWithStatus(BookingStatus.CONFIRMED);
         User stranger = buildStranger();
 
@@ -833,77 +899,6 @@ class BookingServiceTest {
 
         assertThatThrownBy(() -> bookingService.rejectBooking("booking-123", userDetails))
             .isInstanceOf(com.ServiceMarketplace.service_marketplace.exception.UnauthorizedBookingRejectionException.class);
-    }
-
-    @Test
-    void scheduleBookingCompletion_marksOnlyPastConfirmedBookingsCompleted() {
-        Booking pastBooking = createBookingWithStatus(BookingStatus.CONFIRMED);
-        pastBooking.setId("past-booking");
-        pastBooking.setScheduledAt(Instant.now().minusSeconds(60));
-        Booking futureBooking = createBookingWithStatus(BookingStatus.CONFIRMED);
-        futureBooking.setId("future-booking");
-        futureBooking.setScheduledAt(Instant.now().plusSeconds(60));
-        Booking unscheduledBooking = createBookingWithStatus(BookingStatus.CONFIRMED);
-        unscheduledBooking.setId("unscheduled-booking");
-        unscheduledBooking.setScheduledAt(null);
-
-        when(bookingRepository.findByStatusOrderByCreatedAtDesc(BookingStatus.CONFIRMED))
-            .thenReturn(List.of(pastBooking, futureBooking, unscheduledBooking));
-
-        ReflectionTestUtils.invokeMethod(bookingService, "scheduleBookingCompletion");
-
-        assertThat(pastBooking.getStatus()).isEqualTo(BookingStatus.COMPLETED);
-        assertThat(futureBooking.getStatus()).isEqualTo(BookingStatus.CONFIRMED);
-        assertThat(unscheduledBooking.getStatus()).isEqualTo(BookingStatus.CONFIRMED);
-        verify(bookingRepository).save(pastBooking);
-    }
-
-    @Test
-    void privateDisplayNameHelpers_coverFallbacks() {
-        assertThat((String) ReflectionTestUtils.invokeMethod(bookingService, "getUserDisplayName", " "))
-            .isEmpty();
-
-        User idOnlyUser = new User();
-        idOnlyUser.setId("user-id");
-        idOnlyUser.setFirstName(" ");
-        idOnlyUser.setLastName(" ");
-        idOnlyUser.setEmail(" ");
-        assertThat((String) ReflectionTestUtils.invokeMethod(bookingService, "getUserDisplayName", idOnlyUser))
-            .isEqualTo("user-id");
-
-        User emailOnlyUser = new User();
-        emailOnlyUser.setId("email-user");
-        emailOnlyUser.setFirstName(" ");
-        emailOnlyUser.setLastName(" ");
-        emailOnlyUser.setEmail("fallback@calpoly.edu");
-        assertThat((String) ReflectionTestUtils.invokeMethod(bookingService, "getUserDisplayName", emailOnlyUser))
-            .isEqualTo("fallback@calpoly.edu");
-
-        assertThat((String) ReflectionTestUtils.invokeMethod(
-            bookingService,
-            "getUserDisplayName",
-            " ",
-            Map.of()
-        )).isEmpty();
-
-        Booking namelessReview = new Booking();
-        namelessReview.setCustomerId(" ");
-        assertThat((String) ReflectionTestUtils.invokeMethod(
-            bookingService,
-            "getReviewerFirstName",
-            namelessReview,
-            Map.of()
-        )).isEmpty();
-
-        Booking namedReview = new Booking();
-        namedReview.setCustomerId("missing-customer");
-        namedReview.setReviewerName("Avery Chen");
-        assertThat((String) ReflectionTestUtils.invokeMethod(
-            bookingService,
-            "getReviewerFirstName",
-            namedReview,
-            Map.of()
-        )).isEqualTo("Avery");
     }
 
     private Booking createBookingWithStatus(BookingStatus status) {

@@ -43,4 +43,15 @@ class JwtServiceTest {
 
         assertThat(jwtService.isTokenValid(token, "other@calpoly.edu")).isFalse();
     }
+
+    @Test
+    void isTokenValid_expiredToken_returnsFalse() {
+        JwtService spyJwtService = org.mockito.Mockito.spy(jwtService);
+        org.mockito.Mockito.doReturn("student@calpoly.edu")
+            .when(spyJwtService).extractEmail("expired-token");
+        org.mockito.Mockito.doReturn(true)
+            .when(spyJwtService).isTokenExpired("expired-token");
+
+        assertThat(spyJwtService.isTokenValid("expired-token", "student@calpoly.edu")).isFalse();
+    }
 }

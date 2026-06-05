@@ -136,6 +136,55 @@ class EmailServiceTest {
     }
 
     @Test
+    void bookingEmailMethods_renderMissingAndPresentPriceUnits() {
+        Instant scheduledAt = Instant.parse("2026-06-04T18:00:00Z");
+
+        emailService.sendProviderBookingNotificationEmail(
+            "provider@calpoly.edu",
+            "Bob",
+            "Alice",
+            "Math Tutoring",
+            new BigDecimal("50"),
+            "per hour",
+            scheduledAt,
+            "https://example.test/confirm",
+            "https://example.test/cancel"
+        );
+        emailService.sendBookingRequestedCustomerEmail(
+            "student@calpoly.edu",
+            "Alice",
+            "Math Tutoring",
+            new BigDecimal("50"),
+            null,
+            scheduledAt,
+            "booking-1"
+        );
+        emailService.sendBookingConfirmedCustomerEmail(
+            "student@calpoly.edu",
+            "Alice",
+            "Math Tutoring",
+            new BigDecimal("50"),
+            null,
+            scheduledAt,
+            "booking-1"
+        );
+        emailService.sendBookingConfirmedProviderEmail(
+            "provider@calpoly.edu",
+            "Bob",
+            "Math Tutoring",
+            new BigDecimal("50"),
+            null,
+            scheduledAt,
+            "booking-1"
+        );
+
+        verify(templateEngine).process(eq("providerBookingNotification"), any(Context.class));
+        verify(templateEngine).process(eq("bookingRequestedCustomer"), any(Context.class));
+        verify(templateEngine).process(eq("bookingConfirmedCustomer"), any(Context.class));
+        verify(templateEngine).process(eq("bookingConfirmedProvider"), any(Context.class));
+    }
+
+    @Test
     void sendBookingCancelledProviderEmail_rendersTemplateAndSendsMessage() {
         Instant scheduledAt = Instant.parse("2026-06-04T18:00:00Z");
 

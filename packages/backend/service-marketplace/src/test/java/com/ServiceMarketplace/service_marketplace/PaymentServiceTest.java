@@ -32,6 +32,7 @@ import com.ServiceMarketplace.service_marketplace.dto.PaymentIntentResult;
 import com.ServiceMarketplace.service_marketplace.dto.SetupIntentResult;
 import com.ServiceMarketplace.service_marketplace.exception.InvalidWebhookSignatureException;
 import com.ServiceMarketplace.service_marketplace.exception.PaymentProcessingException;
+import com.ServiceMarketplace.service_marketplace.exception.ResourceNotFoundException;
 import com.ServiceMarketplace.service_marketplace.exception.StripeConnectException;
 import com.ServiceMarketplace.service_marketplace.exception.WebhookProcessingException;
 import com.ServiceMarketplace.service_marketplace.model.Booking;
@@ -172,6 +173,36 @@ class PaymentServiceTest {
     }
 
     @Test
+    void createAndConfirmPaymentIntent_withoutProviderDestination_returnsPaymentIntentResult() {
+        try (MockedStatic<PaymentMethod> paymentMethodMock = Mockito.mockStatic(PaymentMethod.class);
+             MockedStatic<PaymentIntent> paymentIntentMock = Mockito.mockStatic(PaymentIntent.class)) {
+            PaymentMethod savedMethod = mock(PaymentMethod.class);
+            when(savedMethod.getId()).thenReturn("pm_test_123");
+            PaymentMethodCollection methodCollection = mock(PaymentMethodCollection.class);
+            when(methodCollection.getData()).thenReturn(List.of(savedMethod));
+            PaymentIntent paymentIntent = mock(PaymentIntent.class);
+            when(paymentIntent.getClientSecret()).thenReturn("pi_secret_test");
+            when(paymentIntent.getId()).thenReturn("pi_test_123");
+
+            paymentMethodMock.when(() -> PaymentMethod.list(any(PaymentMethodListParams.class)))
+                .thenReturn(methodCollection);
+            paymentIntentMock.when(() -> PaymentIntent.create(any(PaymentIntentCreateParams.class)))
+                .thenReturn(paymentIntent);
+
+            PaymentIntentResult result = paymentService.createAndConfirmPaymentIntent(
+                new BigDecimal("50.00"),
+                "cus_test_123",
+                "service-123",
+                "customer-789",
+                null
+            );
+
+            assertThat(result.getClientSecret()).isEqualTo("pi_secret_test");
+            assertThat(result.getPaymentIntentId()).isEqualTo("pi_test_123");
+        }
+    }
+
+    @Test
     void createAndConfirmPaymentIntent_noSavedPaymentMethod_throwsPaymentProcessingException() {
         try (MockedStatic<PaymentMethod> paymentMethodMock = Mockito.mockStatic(PaymentMethod.class)) {
             PaymentMethodCollection methodCollection = mock(PaymentMethodCollection.class);
@@ -221,6 +252,15 @@ class PaymentServiceTest {
     }
 
     @Test
+    void cleanupStripeCustomer_nullCustomerId_isNoop() {
+        try (MockedStatic<Customer> customerMock = Mockito.mockStatic(Customer.class)) {
+            paymentService.cleanupStripeCustomer(null);
+
+            customerMock.verifyNoInteractions();
+        }
+    }
+
+    @Test
     void cleanupStripeCustomer_stripeFailureIsIgnored() throws Exception {
         try (MockedStatic<Customer> customerMock = Mockito.mockStatic(Customer.class)) {
             Customer customer = mock(Customer.class);
@@ -253,6 +293,27 @@ class PaymentServiceTest {
             assertThat(result.getAccountId()).isEqualTo("acct_test_provider");
             assertThat(result.getOnboardingUrl()).isEqualTo("https://stripe.test/onboard");
             verify(userRepository).save(mockProvider);
+        }
+    }
+
+    @Test
+    void initiateOnboarding_existingUserStripeAccount_reusesAccountForAccountLink() {
+        try (MockedStatic<Account> accountMock = Mockito.mockStatic(Account.class);
+             MockedStatic<AccountLink> accountLinkMock = Mockito.mockStatic(AccountLink.class)) {
+            mockProvider.setStripeAccountId("acct_existing_provider");
+            AccountLink accountLink = mock(AccountLink.class);
+            when(accountLink.getUrl()).thenReturn("https://stripe.test/onboard");
+
+            accountLinkMock.when(() -> AccountLink.create(any(AccountLinkCreateParams.class))).thenReturn(accountLink);
+            when(userRepository.findByEmail("tutor@calpoly.edu")).thenReturn(Optional.of(mockProvider));
+            when(userDetails.getUsername()).thenReturn("tutor@calpoly.edu");
+
+            ConnectOnboardingResponse result = paymentService.initiateOnboarding(userDetails);
+
+            assertThat(result.getAccountId()).isEqualTo("acct_existing_provider");
+            assertThat(result.getOnboardingUrl()).isEqualTo("https://stripe.test/onboard");
+            accountMock.verifyNoInteractions();
+            verify(userRepository, never()).save(any(User.class));
         }
     }
 
@@ -293,6 +354,15 @@ class PaymentServiceTest {
         assertThat(result.isChargesEnabled()).isFalse();
         assertThat(result.isDetailsSubmitted()).isFalse();
         assertThat(result.isPayoutsEnabled()).isFalse();
+    }
+
+    @Test
+    void getConnectStatus_missingUser_throwsUsernameNotFoundException() {
+        when(userDetails.getUsername()).thenReturn("missing@calpoly.edu");
+        when(userRepository.findByEmail("missing@calpoly.edu")).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> paymentService.getConnectStatus(userDetails))
+            .isInstanceOf(UsernameNotFoundException.class);
     }
 
     @Test
@@ -383,6 +453,31 @@ class PaymentServiceTest {
     }
 
     @Test
+    void handleWebhook_missingBooking_throwsResourceNotFoundException() throws Exception {
+        Event mockEvent = buildMockEvent("payment_intent.succeeded", "pi_missing");
+        try (MockedStatic<Webhook> webhookMock = Mockito.mockStatic(Webhook.class)) {
+            webhookMock.when(() -> Webhook.constructEvent(any(), any(), any()))
+                .thenReturn(mockEvent);
+            when(bookingRepository.findByStripePaymentIntentId("pi_missing")).thenReturn(Optional.empty());
+
+            assertThatThrownBy(() -> paymentService.handleWebhook("payload", "sig-header"))
+                .isInstanceOf(ResourceNotFoundException.class);
+        }
+    }
+
+    @Test
+    void updateBookingStatus_pendingPaymentOnlySavesBooking() {
+        when(bookingRepository.findByStripePaymentIntentId("pi_test_123")).thenReturn(Optional.of(mockBooking));
+        when(bookingRepository.save(mockBooking)).thenReturn(mockBooking);
+
+        ReflectionTestUtils.invokeMethod(paymentService, "updateBookingStatus", "pi_test_123", BookingStatus.PENDING_PAYMENT);
+
+        assertThat(mockBooking.getStatus()).isEqualTo(BookingStatus.PENDING_PAYMENT);
+        verify(bookingRepository).save(mockBooking);
+        verify(emailService, never()).sendBookingConfirmedCustomerEmail(any(), any(), any(), any(), any(), any(), any());
+    }
+
+    @Test
     void handleWebhook_invalidSignature_throwsInvalidWebhookSignatureException() {
         try (MockedStatic<Webhook> webhookMock = Mockito.mockStatic(Webhook.class)) {
             webhookMock.when(() -> Webhook.constructEvent(any(), any(), any()))
@@ -440,6 +535,32 @@ class PaymentServiceTest {
             assertThat(params.getPaymentIntent()).isEqualTo("pi_test_123");
             assertThat(params.getReverseTransfer()).isTrue();
             assertThat(params.getRefundApplicationFee()).isTrue();
+        }
+    }
+
+    @Test
+    void refundPaymentIntent_withoutConnectedAccount_doesNotReverseTransfer() throws Exception {
+        try (MockedStatic<Refund> refundMock = Mockito.mockStatic(Refund.class)) {
+            refundMock.when(() -> Refund.create(any(RefundCreateParams.class)))
+                .thenReturn(mock(Refund.class));
+
+            paymentService.refundPaymentIntent("pi_test_123", false);
+
+            ArgumentCaptor<RefundCreateParams> paramsCaptor =
+                ArgumentCaptor.forClass(RefundCreateParams.class);
+            refundMock.verify(() -> Refund.create(paramsCaptor.capture()));
+            assertThat(paramsCaptor.getValue().getPaymentIntent()).isEqualTo("pi_test_123");
+            assertThat(paramsCaptor.getValue().getReverseTransfer()).isNull();
+            assertThat(paramsCaptor.getValue().getRefundApplicationFee()).isNull();
+        }
+    }
+
+    @Test
+    void refundPaymentIntent_nullPaymentIntent_isNoop() throws Exception {
+        try (MockedStatic<Refund> refundMock = Mockito.mockStatic(Refund.class)) {
+            paymentService.refundPaymentIntent(null, true);
+
+            refundMock.verifyNoInteractions();
         }
     }
 

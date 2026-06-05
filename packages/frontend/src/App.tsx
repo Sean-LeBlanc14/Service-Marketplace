@@ -26,7 +26,6 @@ import PrivacyPolicy from "./pages/PrivacyPolicy";
 import { API_ENDPOINTS } from "./utils/api";
 import { WebSocketProvider } from "./context/WebSocketContext";
 import Calendar from "./pages/Calendar";
-import BookingActionPage from "./pages/BookingActionPage";
 
 const TOKEN_STORAGE_KEY = "jwt_token";
 
@@ -121,10 +120,6 @@ function AppRoutes() {
       </Route>
       <Route index element={<LandingPage />} />
       <Route path="verify" element={<VerifyAccount />} />
-      <Route
-        path="booking/action"
-        element={<BookingActionPage />}
-      />
       <Route path="signup" element={<SignupPage />} />
       <Route path="login" element={<LoginPage />} />
       <Route path="suspended" element={<SuspendedPage />} />

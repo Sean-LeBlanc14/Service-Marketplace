@@ -59,9 +59,7 @@ export const API_ENDPOINTS = {
     getProviderRequests: `${API_ROUTE}/bookings/provider/requests/me`,
     getProviderScheduled: `${API_ROUTE}/bookings/provider/scheduled/me`,
     getProviderCompleted: `${API_ROUTE}/bookings/provider/completed/me`,
-    getCustomerScheduled: `${API_ROUTE}/bookings/customer/scheduled/me`,
-    action: (token: string) =>
-      `${API_ROUTE}/bookings/action?token=${encodeURIComponent(token)}`
+    getCustomerScheduled: `${API_ROUTE}/bookings/customer/scheduled/me`
   },
   reports: {
     create: `${API_ROUTE}/reports`,

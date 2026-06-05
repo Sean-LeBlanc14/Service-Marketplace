@@ -19,8 +19,8 @@ public class BookingTokenService {
     private static final int TOKEN_EXPIRY_HOURS = 48;
     private static final int TOKEN_BYTES = 32;
 
-    @Value("${custom.app.base-url}")
-    private String appBaseUrl;
+    @Value("${custom.frontend.base-url}")
+    private String frontendBaseUrl;
 
     private final BookingTokenRepository bookingTokenRepository;
     private final SecureRandom secureRandom = new SecureRandom();
@@ -41,8 +41,8 @@ public class BookingTokenService {
         bookingTokenRepository.save(buildToken(cancelToken, bookingId, BookingTokenAction.CANCEL));
 
         return new TokenPair(
-            appBaseUrl + "/api/bookings/action?token=" + confirmToken,
-            appBaseUrl + "/api/bookings/action?token=" + cancelToken
+            frontendBaseUrl + "/booking/action?token=" + confirmToken,
+            frontendBaseUrl + "/booking/action?token=" + cancelToken
         );
     }
 

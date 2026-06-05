@@ -3,7 +3,6 @@ package com.ServiceMarketplace.service_marketplace.controller;
 import java.util.List;
 
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -135,63 +134,21 @@ public class BookingController {
     }
 
     @GetMapping("/action")
-    public ResponseEntity<String> handleBookingAction(@RequestParam String token) {
+    public ResponseEntity<BookingActionResponse> handleBookingAction(@RequestParam String token) {
         try {
             BookingTokenAction action = bookingService.processTokenAction(token);
-            String title = action == BookingTokenAction.CONFIRM ? "Booking Confirmed" : "Booking Cancelled";
             String message = action == BookingTokenAction.CONFIRM
                     ? "The booking has been confirmed and the customer's payment is being processed."
                     : "The booking request has been cancelled and the customer's card details have been removed.";
-            return ResponseEntity.ok()
-                    .contentType(MediaType.TEXT_HTML)
-                    .body(buildHtmlPage(title, message, "#2e7d32"));
+            return ResponseEntity.ok(new BookingActionResponse("success", message));
         } catch (BookingTokenException e) {
             return ResponseEntity.badRequest()
-                    .contentType(MediaType.TEXT_HTML)
-                    .body(buildHtmlPage("Link Invalid", e.getMessage(), "#c62828"));
+                    .body(new BookingActionResponse("invalid", e.getMessage()));
         } catch (BookingStateException e) {
-            return ResponseEntity.ok()
-                    .contentType(MediaType.TEXT_HTML)
-                    .body(buildHtmlPage("Already Actioned", "This booking has already been confirmed or cancelled.", "#e65100"));
+            return ResponseEntity.ok(new BookingActionResponse("already_actioned",
+                    "This booking has already been confirmed or cancelled."));
         }
     }
 
-    private String buildHtmlPage(String heading, String message, String headingColor) {
-        return """
-            <!DOCTYPE html>
-            <html lang="en">
-            <head>
-              <meta charset="UTF-8" />
-              <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-              <title>%s</title>
-            </head>
-            <body style="margin:0;padding:0;background-color:#f4f4f4;font-family:Arial,sans-serif;">
-              <table width="100%%" cellpadding="0" cellspacing="0" border="0">
-                <tr>
-                  <td align="center" style="padding:80px 20px;">
-                    <table width="100%%" cellpadding="0" cellspacing="0" border="0"
-                           style="max-width:500px;background-color:#ffffff;border-radius:8px;padding:40px;">
-                      <tr>
-                        <td align="center">
-                          <h1 style="margin:0;color:%s;">%s</h1>
-                        </td>
-                      </tr>
-                      <tr>
-                        <td style="padding-top:20px;color:#555555;font-size:16px;line-height:24px;text-align:center;">
-                          %s
-                        </td>
-                      </tr>
-                      <tr>
-                        <td align="center" style="padding-top:30px;font-size:12px;color:#999999;">
-                          &copy; 2026 Service Market Place. All rights reserved.
-                        </td>
-                      </tr>
-                    </table>
-                  </td>
-                </tr>
-              </table>
-            </body>
-            </html>
-            """.formatted(heading, headingColor, heading, message);
-    }
+    public record BookingActionResponse(String status, String message) {}
 }

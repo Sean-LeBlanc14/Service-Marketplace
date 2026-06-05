@@ -1,10 +1,15 @@
 .settings-wrapper {
+  box-sizing: border-box;
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 20px;
+  padding: 20px 20px 72px;
   gap: 20px;
-  height: 100vh;
+  min-height: 100vh;
+}
+
+.settings-wrapper .app-footer {
+  bottom: 24px;
 }
 
 .settings-title {

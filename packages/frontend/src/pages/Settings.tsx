@@ -19,6 +19,7 @@ import Modal from "../components/Modal";
 import MajorComboBox from "../components/MajorComboBox";
 import DropDown from "../components/DropDown";
 import { USER_ID_KEY } from "./profile/constants";
+import Footer from "../components/Footer";
 
 export default function Settings() {
   const navigate = useNavigate();
@@ -583,6 +584,8 @@ export default function Settings() {
           </button>
         </div>
       </div>
+
+      <Footer/>
     </div>
   );
 }

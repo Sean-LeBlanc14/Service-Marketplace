@@ -61,6 +61,7 @@ function getNotificationIcon(type: NotificationType): IconType {
     case "BOOKING_CONFIRMED":
       return FaCalendarCheck;
     case "BOOKING_CANCELLED":
+    case "BOOKING_REJECTED":
       return FaBan;
     case "REVIEW_RECEIVED":
       return FaStar;
@@ -75,6 +76,7 @@ function getNotificationIconClass(
   switch (type) {
     case "PRICE_OFFER_REJECTED":
     case "BOOKING_CANCELLED":
+    case "BOOKING_REJECTED":
       return "notif-icon-danger";
     case "PRICE_OFFER_ACCEPTED":
     case "BOOKING_CONFIRMED":

@@ -45,7 +45,8 @@ export type ApiBookingStatus =
   | "PENDING_PAYMENT"
   | "CONFIRMED"
   | "COMPLETED"
-  | "CANCELLED";
+  | "CANCELLED"
+  | "REJECTED";
 
 export type MessageType =
   | "TEXT"
@@ -61,6 +62,7 @@ export type NotificationType =
   | "BOOKING_REQUESTED"
   | "BOOKING_CONFIRMED"
   | "BOOKING_CANCELLED"
+  | "BOOKING_REJECTED"
   | "REVIEW_RECEIVED";
 
 export interface ApiConversation {

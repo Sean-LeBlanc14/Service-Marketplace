@@ -12,8 +12,10 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.eq;
 import org.mockito.InjectMocks;
+import org.mockito.InOrder;
 import org.mockito.Mock;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.never;
@@ -43,6 +45,7 @@ import com.ServiceMarketplace.service_marketplace.exception.InvalidBookingReview
 import com.ServiceMarketplace.service_marketplace.exception.InvalidPriceException;
 import com.ServiceMarketplace.service_marketplace.exception.ResourceNotFoundException;
 import com.ServiceMarketplace.service_marketplace.exception.ServiceUnavailableException;
+import com.ServiceMarketplace.service_marketplace.exception.UnauthorizedBookingRejectionException;
 import com.ServiceMarketplace.service_marketplace.model.Booking;
 import com.ServiceMarketplace.service_marketplace.model.BookingStatus;
 import com.ServiceMarketplace.service_marketplace.model.BookingTokenAction;
@@ -473,6 +476,27 @@ class BookingServiceTest {
     }
 
     @Test
+    void cancelBooking_confirmedBooking_refundsPaymentAndCleansUpCustomer() {
+        Booking confirmed = buildAwaitingBooking();
+        confirmed.setStatus(BookingStatus.CONFIRMED);
+        confirmed.setStripePaymentIntentId("pi_paid_123");
+
+        when(userRepository.findByEmail("student@calpoly.edu")).thenReturn(Optional.of(mockCustomer));
+        when(bookingRepository.findById("booking-001")).thenReturn(Optional.of(confirmed));
+        when(bookingRepository.save(any(Booking.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(userRepository.findById("provider-456")).thenReturn(Optional.of(mockProvider));
+        when(userRepository.findById("customer-789")).thenReturn(Optional.of(mockCustomer));
+
+        BookingResponse result = bookingService.cancelBooking("booking-001", userDetails);
+
+        assertThat(result.getStatus()).isEqualTo(BookingStatus.CANCELLED);
+        InOrder inOrder = Mockito.inOrder(bookingRepository, paymentService);
+        inOrder.verify(bookingRepository).save(confirmed);
+        inOrder.verify(paymentService).refundPaymentIntent("pi_paid_123", true);
+        inOrder.verify(paymentService).cleanupStripeCustomer("cus_test_123");
+    }
+
+    @Test
     void cancelBooking_unauthorizedUser_throwsAccessDeniedException() {
         Booking pending = buildAwaitingBooking();
         User stranger = buildStranger();
@@ -495,6 +519,116 @@ class BookingServiceTest {
 
         assertThatThrownBy(() -> bookingService.cancelBooking("booking-001", userDetails))
             .isInstanceOf(BookingStateException.class);
+    }
+
+    @Test
+    void cancelBooking_alreadyRejected_throwsBookingStateException() {
+        Booking booking = buildAwaitingBooking();
+        booking.setStatus(BookingStatus.REJECTED);
+
+        when(userRepository.findByEmail("student@calpoly.edu")).thenReturn(Optional.of(mockCustomer));
+        when(bookingRepository.findById("booking-001")).thenReturn(Optional.of(booking));
+
+        assertThatThrownBy(() -> bookingService.cancelBooking("booking-001", userDetails))
+            .isInstanceOf(BookingStateException.class)
+            .hasMessageContaining("rejected");
+    }
+
+    @Test
+    void cancelBooking_completedBooking_throwsBookingStateException() {
+        Booking booking = buildAwaitingBooking();
+        booking.setStatus(BookingStatus.COMPLETED);
+
+        when(userRepository.findByEmail("student@calpoly.edu")).thenReturn(Optional.of(mockCustomer));
+        when(bookingRepository.findById("booking-001")).thenReturn(Optional.of(booking));
+
+        assertThatThrownBy(() -> bookingService.cancelBooking("booking-001", userDetails))
+            .isInstanceOf(BookingStateException.class)
+            .hasMessageContaining("Completed");
+    }
+
+    @Test
+    void rejectBooking_byProvider_rejectsAndNotifiesCustomer() {
+        Booking pending = buildAwaitingBooking();
+
+        when(userDetails.getUsername()).thenReturn("tutor@calpoly.edu");
+        when(userRepository.findByEmail("tutor@calpoly.edu")).thenReturn(Optional.of(mockProvider));
+        when(bookingRepository.findById("booking-001")).thenReturn(Optional.of(pending));
+        when(bookingRepository.save(any(Booking.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(userRepository.findById("customer-789")).thenReturn(Optional.of(mockCustomer));
+
+        BookingResponse result = bookingService.rejectBooking("booking-001", userDetails);
+
+        assertThat(result.getStatus()).isEqualTo(BookingStatus.REJECTED);
+        verify(paymentService, never()).refundPaymentIntent(any(), anyBoolean());
+        verify(paymentService).cleanupStripeCustomer("cus_test_123");
+        verify(emailService).sendBookingRejectedCustomerEmail(
+            eq("student@calpoly.edu"), eq("Alice"), eq("Bob Smith"),
+            eq("Math Tutoring"), any(Instant.class), any()
+        );
+    }
+
+    @Test
+    void rejectBooking_byCustomer_rejectsAndNotifiesProvider() {
+        Booking pending = buildAwaitingBooking();
+
+        when(userRepository.findByEmail("student@calpoly.edu")).thenReturn(Optional.of(mockCustomer));
+        when(bookingRepository.findById("booking-001")).thenReturn(Optional.of(pending));
+        when(bookingRepository.save(any(Booking.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(userRepository.findById("provider-456")).thenReturn(Optional.of(mockProvider));
+
+        BookingResponse result = bookingService.rejectBooking("booking-001", userDetails);
+
+        assertThat(result.getStatus()).isEqualTo(BookingStatus.REJECTED);
+        verify(paymentService, never()).refundPaymentIntent(any(), anyBoolean());
+        verify(paymentService).cleanupStripeCustomer("cus_test_123");
+        verify(emailService).sendBookingRejectedProviderEmail(
+            eq("tutor@calpoly.edu"), eq("Bob"), eq("Alice Student"),
+            eq("Math Tutoring"), any(Instant.class), any()
+        );
+    }
+
+    @Test
+    void rejectBooking_confirmedBooking_throwsBookingStateException() {
+        Booking confirmed = buildAwaitingBooking();
+        confirmed.setStatus(BookingStatus.CONFIRMED);
+        confirmed.setStripePaymentIntentId("pi_paid_123");
+
+        when(userDetails.getUsername()).thenReturn("tutor@calpoly.edu");
+        when(userRepository.findByEmail("tutor@calpoly.edu")).thenReturn(Optional.of(mockProvider));
+        when(bookingRepository.findById("booking-001")).thenReturn(Optional.of(confirmed));
+
+        assertThatThrownBy(() -> bookingService.rejectBooking("booking-001", userDetails))
+            .isInstanceOf(BookingStateException.class)
+            .hasMessageContaining("awaiting provider confirmation");
+        verify(bookingRepository, never()).save(any());
+        verify(paymentService, never()).refundPaymentIntent(any(), anyBoolean());
+    }
+
+    @Test
+    void rejectBooking_unauthorizedUser_throwsUnauthorizedBookingRejectionException() {
+        Booking pending = buildAwaitingBooking();
+        User stranger = buildStranger();
+
+        when(userDetails.getUsername()).thenReturn("stranger@calpoly.edu");
+        when(userRepository.findByEmail("stranger@calpoly.edu")).thenReturn(Optional.of(stranger));
+        when(bookingRepository.findById("booking-001")).thenReturn(Optional.of(pending));
+
+        assertThatThrownBy(() -> bookingService.rejectBooking("booking-001", userDetails))
+            .isInstanceOf(UnauthorizedBookingRejectionException.class);
+    }
+
+    @Test
+    void rejectBooking_completedBooking_throwsBookingStateException() {
+        Booking booking = buildAwaitingBooking();
+        booking.setStatus(BookingStatus.COMPLETED);
+
+        when(userRepository.findByEmail("student@calpoly.edu")).thenReturn(Optional.of(mockCustomer));
+        when(bookingRepository.findById("booking-001")).thenReturn(Optional.of(booking));
+
+        assertThatThrownBy(() -> bookingService.rejectBooking("booking-001", userDetails))
+            .isInstanceOf(BookingStateException.class)
+            .hasMessageContaining("Completed");
     }
 
     @Test

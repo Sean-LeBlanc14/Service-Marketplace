@@ -18,9 +18,10 @@
 
 .profile-screen h1 {
   margin: 0;
-  color: #161616;
-  font-size: 40px;
-  font-weight: 500;
+  color: var(--heading-color);
+  font-family: var(--font-heading);
+  font-size: var(--page-title-size);
+  font-weight: var(--heading-weight);
   letter-spacing: 0;
 }
 
@@ -67,14 +68,15 @@
 
 .profile-section h2 {
   margin: 18px 0 0;
-  color: #161616;
-  font-size: 20px;
-  font-weight: 400;
+  color: var(--heading-color);
+  font-family: var(--font-heading);
+  font-size: var(--section-title-size);
+  font-weight: var(--heading-weight);
   letter-spacing: 0;
 }
 
 .profile-bio h2 {
-  color: #5b5b5b;
+  color: var(--heading-color);
 }
 
 .profile-bio p {
@@ -177,8 +179,9 @@
 .service-form-header h3 {
   margin: 0;
   color: #161616;
-  font-size: 18px;
-  font-weight: 800;
+  font-family: var(--font-heading);
+  font-size: var(--subsection-title-size);
+  font-weight: var(--heading-weight);
   letter-spacing: 0;
 }
 
@@ -384,16 +387,17 @@
 
 .booking-card-heading h3 {
   margin: 0;
-  color: #071b2d;
-  font-size: 20px;
-  font-weight: 800;
+  color: var(--heading-color);
+  font-family: var(--font-heading);
+  font-size: var(--subsection-title-size);
+  font-weight: var(--heading-weight);
   letter-spacing: 0;
 }
 
 .booking-card-heading strong {
   flex: 0 0 auto;
   color: #c89418;
-  font-size: 22px;
+  font-size: 1.25rem;
   line-height: 1;
 }
 
@@ -552,9 +556,10 @@
 
 .listing-card h3 {
   margin: 0;
-  color: #071b2d;
-  font-size: 20px;
-  font-weight: 800;
+  color: var(--heading-color);
+  font-family: var(--font-heading);
+  font-size: var(--subsection-title-size);
+  font-weight: var(--heading-weight);
   letter-spacing: 0;
 }
 
@@ -648,7 +653,7 @@
   background: #f3f5f7;
   color: #334155;
   font-size: 14px;
-  font-weight: 500;
+  font-weight: 600;
   line-height: 1.2;
 }
 
@@ -661,7 +666,7 @@
 
 .listing-card-footer strong {
   color: #c89418;
-  font-size: 26px;
+  font-size: 1.35rem;
   line-height: 1;
 }
 
@@ -692,9 +697,10 @@
 
 .profile-confirm-modal h2 {
   margin: 0;
-  color: #161616;
-  font-size: 22px;
-  font-weight: 800;
+  color: var(--heading-color);
+  font-family: var(--font-heading);
+  font-size: var(--section-title-size);
+  font-weight: var(--heading-weight);
   letter-spacing: 0;
 }
 
@@ -765,7 +771,7 @@
   }
 
   .profile-screen h1 {
-    font-size: 34px;
+    font-size: 2rem;
   }
 
   .listing-grid {

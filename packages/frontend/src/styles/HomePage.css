@@ -11,9 +11,11 @@
 }
 
 .heading {
-  font-weight: 700;
-  font-size: 1.8rem;
   margin: 0;
+  color: var(--heading-color);
+  font-family: var(--font-heading);
+  font-size: var(--page-title-size);
+  font-weight: var(--heading-weight);
 }
 
 .homepage-list-service-button {
@@ -64,7 +66,7 @@
   border: 1px solid #003831;
   background-color: white;
   color: #003831;
-  font-weight: 500;
+  font-weight: 700;
   cursor: pointer;
   font-size: 0.85rem;
 }

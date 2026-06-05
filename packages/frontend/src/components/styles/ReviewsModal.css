@@ -33,9 +33,10 @@
 
 .reviews-modal-header h2 {
   margin: 0;
-  color: #071b2d;
-  font-size: 24px;
-  font-weight: 800;
+  color: var(--heading-color);
+  font-family: var(--font-heading);
+  font-size: var(--section-title-size);
+  font-weight: var(--heading-weight);
 }
 
 .reviews-modal-close {
@@ -77,9 +78,10 @@
 
 .review-header h3 {
   margin: 0;
-  color: #071b2d;
-  font-size: 18px;
-  font-weight: 800;
+  color: var(--heading-color);
+  font-family: var(--font-heading);
+  font-size: var(--subsection-title-size);
+  font-weight: var(--heading-weight);
 }
 
 .review-meta {

@@ -16,9 +16,10 @@
 .inbox-sidebar-title {
   padding: 18px 16px 10px;
   margin: 0;
-  font-size: 20px;
-  font-weight: 800;
-  color: #071b2d;
+  color: var(--heading-color);
+  font-family: var(--font-heading);
+  font-size: var(--section-title-size);
+  font-weight: var(--heading-weight);
   border-bottom: 1px solid #eee;
 }
 
@@ -135,9 +136,9 @@
 
 .inbox-chat-service {
   margin: 0;
-  font-size: 18px;
+  color: var(--heading-color);
+  font-size: var(--card-title-size);
   font-weight: 800;
-  color: #071b2d;
 }
 
 .inbox-chat-other {
@@ -203,7 +204,7 @@
 }
 
 .offer-amount {
-  font-size: 26px;
+  font-size: 1.35rem;
   font-weight: 800;
   color: #c89418;
   line-height: 1;
@@ -215,7 +216,7 @@
   font-weight: 600;
   color: #667386;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: 0;
 }
 
 .offer-actions {
@@ -374,8 +375,10 @@
 
 .offer-dialog h3 {
   margin: 0 0 6px;
-  font-size: 20px;
-  font-weight: 800;
+  color: var(--heading-color);
+  font-family: var(--font-heading);
+  font-size: var(--section-title-size);
+  font-weight: var(--heading-weight);
 }
 
 .offer-dialog-hint {

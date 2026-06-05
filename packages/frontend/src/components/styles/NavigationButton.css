@@ -3,7 +3,7 @@
   color: var(--text-primary);
   border: none;
   cursor: pointer;
-  font-size: large;
+  font-size: var(--body-copy-size);
   display: flex;
   align-items: center;
   gap: 10px;
@@ -23,7 +23,7 @@
 .icon-button.selected {
   background-color: #e9f0eb;
   color: #2a6a3b;
-  font-weight: bold;
+  font-weight: 700;
   border-left: 4px solid #2a6a3b;
   border-top-left-radius: 0;
   border-bottom-left-radius: 0;

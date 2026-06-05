@@ -18,8 +18,10 @@
 
 .admin-dashboard-header h1 {
   margin: 0;
-  font-size: 30px;
-  font-weight: 800;
+  color: var(--heading-color);
+  font-family: var(--font-heading);
+  font-size: var(--page-title-size);
+  font-weight: var(--heading-weight);
   letter-spacing: 0;
 }
 
@@ -106,9 +108,10 @@
 
 .admin-dashboard-section-header h2 {
   margin: 0;
-  color: #071b2d;
-  font-size: 22px;
-  font-weight: 800;
+  color: var(--heading-color);
+  font-family: var(--font-heading);
+  font-size: var(--section-title-size);
+  font-weight: var(--heading-weight);
   letter-spacing: 0;
 }
 

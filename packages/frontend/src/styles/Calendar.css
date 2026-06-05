@@ -22,14 +22,15 @@
 .calendar-header h1 {
   margin: 0;
   font-family: var(--font-heading);
-  font-size: 1.7rem;
-  color: var(--cp-green);
+  font-size: var(--page-title-size);
+  font-weight: var(--heading-weight);
+  color: var(--heading-color);
 }
 
 .calendar-header p {
   margin: 2px 0 0;
   color: #666666;
-  font-size: 0.9rem;
+  font-size: var(--muted-copy-size);
 }
 
 .calendar-view-control {
@@ -46,8 +47,10 @@
 
 .calendar-month-bar h2 {
   margin: 0;
-  font-size: 1.1rem;
-  color: var(--cp-green);
+  color: var(--heading-color);
+  font-family: var(--font-heading);
+  font-size: var(--section-title-size);
+  font-weight: var(--heading-weight);
 }
 
 .calendar-month-bar button {
@@ -187,15 +190,17 @@
 .calendar-modal-eyebrow {
   margin: 0 0 6px;
   color: var(--cp-gold);
-  font-size: 0.78rem;
+  font-size: var(--eyebrow-size);
   font-weight: 800;
   text-transform: uppercase;
 }
 
 .calendar-booking-modal h2 {
   margin: 0 32px 18px 0;
-  color: var(--cp-green);
-  font-size: 1.45rem;
+  color: var(--heading-color);
+  font-family: var(--font-heading);
+  font-size: var(--section-title-size);
+  font-weight: var(--heading-weight);
 }
 
 .calendar-modal-details {

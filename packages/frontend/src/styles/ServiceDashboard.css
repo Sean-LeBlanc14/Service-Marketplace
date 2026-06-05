@@ -6,6 +6,22 @@
   height: 100vh;
 }
 
+.serviceDashboard-wrapper h1 {
+  margin: 0;
+  color: var(--heading-color);
+  font-family: var(--font-heading);
+  font-size: var(--page-title-size);
+  font-weight: var(--heading-weight);
+}
+
+.serviceDashboard-wrapper section h2 {
+  margin: 0;
+  color: var(--heading-color);
+  font-family: var(--font-heading);
+  font-size: var(--section-title-size);
+  font-weight: var(--heading-weight);
+}
+
 .service-dashboard-filter {
   width: min(320px, 100%);
   margin: 8px 0 12px;
@@ -31,14 +47,16 @@
 
 .dashboard-review-modal h2 {
   margin: 0 32px 8px 0;
-  color: var(--cp-green);
-  font-size: 1.35rem;
+  color: var(--heading-color);
+  font-family: var(--font-heading);
+  font-size: var(--section-title-size);
+  font-weight: var(--heading-weight);
 }
 
 .dashboard-review-eyebrow {
   margin: 0 0 6px;
   color: var(--cp-gold);
-  font-size: 0.78rem;
+  font-size: var(--eyebrow-size);
   font-weight: 800;
   text-transform: uppercase;
 }

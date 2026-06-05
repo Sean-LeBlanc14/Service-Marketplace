@@ -30,10 +30,11 @@
 }
 
 .service-card-title {
-  font-size: 1.15rem;
+  color: var(--heading-color);
+  font-family: var(--font-heading);
+  font-size: var(--card-title-size);
   font-weight: 800;
   margin-bottom: 0;
-  color: #071b2d;
   line-height: 1.2;
 }
 
@@ -105,7 +106,7 @@
 .service-tag {
   background-color: #f3f5f7;
   color: #334155;
-  font-weight: 500;
+  font-weight: 600;
   font-size: 0.8rem;
   border-radius: 8px;
   padding: 6px 12px;

@@ -29,9 +29,10 @@
 
 .service-details-header h2 {
   margin: 0;
-  color: #071b2d;
-  font-size: 28px;
-  font-weight: 800;
+  color: var(--heading-color);
+  font-family: var(--font-heading);
+  font-size: var(--section-title-size);
+  font-weight: var(--heading-weight);
   letter-spacing: 0;
 }
 
@@ -70,9 +71,9 @@
 
 .service-details-provider-name {
   margin: 0;
-  color: #071b2d;
-  font-size: 18px;
-  font-weight: 800;
+  color: var(--heading-color);
+  font-size: var(--subsection-title-size);
+  font-weight: var(--heading-weight);
 }
 
 .service-details-rating {
@@ -116,7 +117,7 @@
   gap: 10px;
   margin-top: 24px;
   color: #25364a;
-  font-size: 20px;
+  font-size: var(--body-copy-size);
 }
 
 .service-details-location svg,
@@ -133,7 +134,7 @@
 .service-details-price {
   margin-top: 22px;
   color: #c89418;
-  font-size: 38px;
+  font-size: 2rem;
   font-weight: 800;
   line-height: 1;
 }
@@ -144,16 +145,17 @@
 
 .service-details-section h3 {
   margin: 0 0 14px;
-  color: #050505;
-  font-size: 22px;
-  font-weight: 800;
+  color: var(--heading-color);
+  font-family: var(--font-heading);
+  font-size: var(--subsection-title-size);
+  font-weight: var(--heading-weight);
   letter-spacing: 0;
 }
 
 .service-details-section p {
   margin: 0;
   color: #25364a;
-  font-size: 18px;
+  font-size: var(--body-copy-size);
   line-height: 1.65;
 }
 
@@ -168,7 +170,7 @@
   padding: 7px 16px;
   background: #f3f5f7;
   color: #25364a;
-  font-size: 16px;
+  font-size: var(--muted-copy-size);
   line-height: 1.2;
 }
 
@@ -184,7 +186,7 @@
   border-radius: 8px;
   padding: 14px 28px;
   font: inherit;
-  font-size: 20px;
+  font-size: var(--body-copy-size);
   font-weight: 800;
   cursor: pointer;
 }
@@ -266,9 +268,10 @@
 
 .service-report-header h3 {
   margin: 0;
-  color: #071b2d;
-  font-size: 22px;
-  font-weight: 800;
+  color: var(--heading-color);
+  font-family: var(--font-heading);
+  font-size: var(--section-title-size);
+  font-weight: var(--heading-weight);
   letter-spacing: 0;
 }
 
@@ -349,9 +352,10 @@
 
 .report-dialog h4 {
   margin: 0 0 12px;
-  color: #071b2d;
-  font-size: 18px;
-  font-weight: 800;
+  color: var(--heading-color);
+  font-family: var(--font-heading);
+  font-size: var(--subsection-title-size);
+  font-weight: var(--heading-weight);
 }
 
 .report-dialog select {
@@ -408,11 +412,11 @@
   }
 
   .service-details-header h2 {
-    font-size: 24px;
+    font-size: var(--section-title-size);
   }
 
   .service-details-price {
-    font-size: 34px;
+    font-size: 1.8rem;
   }
 
   .service-details-actions {

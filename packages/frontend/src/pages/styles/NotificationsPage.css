@@ -13,9 +13,10 @@
 
 .notif-title {
   margin: 0;
-  font-size: 28px;
-  font-weight: 800;
-  color: #071b2d;
+  color: var(--heading-color);
+  font-family: var(--font-heading);
+  font-size: var(--page-title-size);
+  font-weight: var(--heading-weight);
 }
 
 .notif-mark-all {

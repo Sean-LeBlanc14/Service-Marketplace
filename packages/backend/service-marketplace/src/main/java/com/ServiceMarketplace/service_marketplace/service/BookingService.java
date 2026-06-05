@@ -9,15 +9,15 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.security.access.AccessDeniedException;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.data.mongodb.core.FindAndModifyOptions;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
+import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
 import com.ServiceMarketplace.service_marketplace.dto.BookingResponse;
@@ -377,6 +377,19 @@ public class BookingService {
         return bookings.stream()
             .map(booking -> toBookingResponse(booking, usersById))
             .collect(Collectors.toList());
+    }
+
+    public List<BookingResponse> getCustomerScheduledBookings(UserDetails userDetails){
+
+        User user = getCurrentUser(userDetails);
+        
+        var bookings = bookingRepository.findByCustomerIdAndStatusOrderByCreatedAtDesc(user.getId(), BookingStatus.CONFIRMED);
+
+        var usersById = getUsersById(bookings);
+
+        return bookings.stream()
+            .map(booking -> toBookingResponse(booking, usersById))
+            .toList();
     }
 
     public List<ProviderReviewResponse> getProviderReviews(String providerId) {

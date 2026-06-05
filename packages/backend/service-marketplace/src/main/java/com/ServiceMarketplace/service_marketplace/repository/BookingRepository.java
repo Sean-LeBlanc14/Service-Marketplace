@@ -4,8 +4,8 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
-import org.springframework.data.mongodb.repository.Query;
 import org.springframework.data.mongodb.repository.MongoRepository;
+import org.springframework.data.mongodb.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import com.ServiceMarketplace.service_marketplace.model.Booking;
@@ -16,6 +16,8 @@ public interface BookingRepository extends MongoRepository<Booking, String> {
     Optional<Booking> findByStripePaymentIntentId(String stripePaymentIntentId);
 
     List<Booking> findByProviderIdAndStatusOrderByCreatedAtDesc(String providerId, BookingStatus status);
+
+    List<Booking> findByCustomerIdAndStatusOrderByCreatedAtDesc(String customerId, BookingStatus status);
 
     List<Booking> findByCustomerIdOrderByCreatedAtDesc(String customerId);
 

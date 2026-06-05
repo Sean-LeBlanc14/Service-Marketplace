@@ -56,7 +56,8 @@ export const API_ENDPOINTS = {
       `${API_ROUTE}/bookings/${encodeURIComponent(bookingId)}/reject`,
     getProviderRequests: `${API_ROUTE}/bookings/provider/requests/me`,
     getProviderScheduled: `${API_ROUTE}/bookings/provider/scheduled/me`,
-    getProviderCompleted: `${API_ROUTE}/bookings/provider/completed/me`
+    getProviderCompleted: `${API_ROUTE}/bookings/provider/completed/me`,
+    getCustomerScheduled: `${API_ROUTE}/bookings/customer/scheduled/me`
   },
   reports: {
     create: `${API_ROUTE}/reports`,

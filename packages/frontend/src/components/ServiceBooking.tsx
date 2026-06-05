@@ -6,6 +6,9 @@ import { useState } from "react";
 
 interface ServiceBookingProps {
   booking: ApiBooking;
+  participantLabel?: string;
+  participantName?: string;
+  onReviewBooking?: (booking: ApiBooking) => void;
   confirmBooking?: (
     booking: ApiBooking
   ) => Promise<boolean> | boolean;
@@ -53,15 +56,29 @@ function getStatusLabel(status: string): string {
 
 function ServiceBooking({
   booking,
+  participantLabel = "Customer",
+  participantName = booking.customerName,
+  onReviewBooking,
   confirmBooking,
   cancelBooking,
   rejectBooking
 }: ServiceBookingProps) {
   const [isUpdating, setIsUpdating] = useState(false);
   const [isRejecting, setIsRejecting] = useState(false);
+  const hasReview =
+    booking.rating !== null &&
+    booking.rating !== undefined &&
+    Boolean(booking.review?.trim());
   const hasBookingActions =
-    booking.status === "AWAITING_PROVIDER_CONFIRMATION" ||
-    booking.status === "CONFIRMED";
+    (booking.status === "AWAITING_PROVIDER_CONFIRMATION" &&
+      Boolean(
+        confirmBooking || rejectBooking || cancelBooking
+      )) ||
+    (booking.status === "CONFIRMED" &&
+      Boolean(cancelBooking)) ||
+    (booking.status === "COMPLETED" &&
+      Boolean(onReviewBooking) &&
+      !hasReview);
 
   return (
     <Card
@@ -84,10 +101,10 @@ function ServiceBooking({
         <div className="booking-details">
           <div>
             <span className="booking-detail-label">
-              Customer
+              {participantLabel}
             </span>
             <span className="booking-detail-value">
-              {booking.customerName}
+              {participantName}
             </span>
           </div>
           <div>
@@ -111,45 +128,75 @@ function ServiceBooking({
           </span>
 
           {booking.status ===
-            "AWAITING_PROVIDER_CONFIRMATION" && (
-            <div className="booking-action-container">
+            "AWAITING_PROVIDER_CONFIRMATION" &&
+            (confirmBooking || rejectBooking) && (
+              <div className="booking-action-container">
+                {confirmBooking && (
+                  <button
+                    type="button"
+                    className="booking-action booking-action-primary"
+                    disabled={isUpdating}
+                    onClick={async () => {
+                      setIsUpdating(true);
+                      const succeeded =
+                        (await confirmBooking(booking)) ??
+                        false;
+
+                      if (!succeeded) {
+                        setIsUpdating(false);
+                      }
+                    }}>
+                    {isUpdating
+                      ? "Accepting..."
+                      : "Accept Booking"}
+                  </button>
+                )}
+
+                {rejectBooking && (
+                  <button
+                    type="button"
+                    className="booking-action booking-action-secondary"
+                    disabled={isRejecting}
+                    onClick={async () => {
+                      setIsRejecting(true);
+                      const succeeded =
+                        (await rejectBooking(booking)) ?? false;
+
+                      if (!succeeded) {
+                        setIsRejecting(false);
+                      }
+                    }}>
+                    {isRejecting
+                      ? "Rejecting..."
+                      : "Reject Booking"}
+                  </button>
+                )}
+              </div>
+            )}
+
+          {booking.status ===
+            "AWAITING_PROVIDER_CONFIRMATION" &&
+            cancelBooking &&
+            !confirmBooking &&
+            !rejectBooking && (
               <button
                 type="button"
-                className="booking-action booking-action-primary"
+                className="booking-action booking-action-secondary"
                 disabled={isUpdating}
                 onClick={async () => {
                   setIsUpdating(true);
                   const succeeded =
-                    (await confirmBooking?.(booking)) ?? false;
+                    (await cancelBooking(booking)) ?? false;
 
                   if (!succeeded) {
                     setIsUpdating(false);
                   }
                 }}>
-                {isUpdating ? "Accepting..." : "Accept Booking"}
+                {isUpdating ? "Canceling..." : "Cancel Request"}
               </button>
+            )}
 
-              <button
-                type="button"
-                className="booking-action booking-action-secondary"
-                disabled={isRejecting}
-                onClick={async () => {
-                  setIsRejecting(true);
-                  const succeeded =
-                    (await rejectBooking?.(booking)) ?? false;
-
-                  if (!succeeded) {
-                    setIsRejecting(false);
-                  }
-                }}>
-                {isRejecting
-                  ? "Rejecting..."
-                  : "Reject Booking"}
-              </button>
-            </div>
-          )}
-
-          {booking.status === "CONFIRMED" && (
+          {booking.status === "CONFIRMED" && cancelBooking && (
             <button
               type="button"
               className="booking-action booking-action-primary"
@@ -165,6 +212,23 @@ function ServiceBooking({
               }}>
               {isUpdating ? "Canceling..." : "Cancel Booking"}
             </button>
+          )}
+
+          {booking.status === "COMPLETED" &&
+            onReviewBooking &&
+            !hasReview && (
+              <button
+                type="button"
+                className="booking-action booking-action-primary"
+                onClick={() => onReviewBooking(booking)}>
+                Add Review
+              </button>
+            )}
+
+          {hasReview && (
+            <span className="booking-review-summary">
+              Reviewed {booking.rating}/5
+            </span>
           )}
         </div>
       </Card.Body>

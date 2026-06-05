@@ -6,6 +6,18 @@ import type {
   NotificationType
 } from "../utils/types";
 import { useWebSocketContext } from "../context/WebSocketContext";
+import type { IconType } from "react-icons";
+import {
+  FaBan,
+  FaBell,
+  FaCalendarCheck,
+  FaCheckCircle,
+  FaClipboardList,
+  FaCommentDots,
+  FaMoneyBillWave,
+  FaStar,
+  FaTimesCircle
+} from "react-icons/fa";
 import "./styles/NotificationsPage.css";
 
 const TOKEN_KEY = "jwt_token";
@@ -34,26 +46,49 @@ function formatTime(iso: string): string {
   });
 }
 
-function notifIcon(type: NotificationType): string {
+function getNotificationIcon(type: NotificationType): IconType {
   switch (type) {
     case "NEW_MESSAGE":
-      return "💬";
+      return FaCommentDots;
     case "PRICE_OFFER_RECEIVED":
-      return "💰";
+      return FaMoneyBillWave;
     case "PRICE_OFFER_ACCEPTED":
-      return "✅";
+      return FaCheckCircle;
     case "PRICE_OFFER_REJECTED":
-      return "❌";
+      return FaTimesCircle;
     case "BOOKING_REQUESTED":
-      return "📋";
+      return FaClipboardList;
     case "BOOKING_CONFIRMED":
-      return "🎉";
+      return FaCalendarCheck;
     case "BOOKING_CANCELLED":
-      return "🚫";
+      return FaBan;
     case "REVIEW_RECEIVED":
-      return "⭐";
+      return FaStar;
     default:
-      return "🔔";
+      return FaBell;
+  }
+}
+
+function getNotificationIconClass(
+  type: NotificationType
+): string {
+  switch (type) {
+    case "PRICE_OFFER_REJECTED":
+    case "BOOKING_CANCELLED":
+      return "notif-icon-danger";
+    case "PRICE_OFFER_ACCEPTED":
+    case "BOOKING_CONFIRMED":
+      return "notif-icon-success";
+    case "PRICE_OFFER_RECEIVED":
+      return "notif-icon-money";
+    case "BOOKING_REQUESTED":
+      return "notif-icon-request";
+    case "REVIEW_RECEIVED":
+      return "notif-icon-review";
+    case "NEW_MESSAGE":
+      return "notif-icon-message";
+    default:
+      return "notif-icon-default";
   }
 }
 
@@ -152,26 +187,35 @@ export default function NotificationsPage() {
       )}
 
       <div className="notif-list">
-        {notifications.map((n) => (
-          <button
-            key={n.id}
-            className={`notif-item ${n.read ? "read" : "unread"}`}
-            onClick={() => handleClick(n)}>
-            <span className="notif-icon" aria-hidden="true">
-              {notifIcon(n.type)}
-            </span>
-            <div className="notif-body">
-              <p className="notif-item-title">{n.title}</p>
-              <p className="notif-item-body">{n.body}</p>
-              <span className="notif-time">
-                {formatTime(n.createdAt)}
+        {notifications.map((n) => {
+          const NotificationIcon = getNotificationIcon(n.type);
+
+          return (
+            <button
+              key={n.id}
+              className={`notif-item ${n.read ? "read" : "unread"}`}
+              onClick={() => handleClick(n)}>
+              <span
+                className={`notif-icon ${getNotificationIconClass(n.type)}`}
+                aria-hidden="true">
+                <NotificationIcon />
               </span>
-            </div>
-            {!n.read && (
-              <span className="notif-dot" aria-label="unread" />
-            )}
-          </button>
-        ))}
+              <div className="notif-body">
+                <p className="notif-item-title">{n.title}</p>
+                <p className="notif-item-body">{n.body}</p>
+                <span className="notif-time">
+                  {formatTime(n.createdAt)}
+                </span>
+              </div>
+              {!n.read && (
+                <span
+                  className="notif-dot"
+                  aria-label="unread"
+                />
+              )}
+            </button>
+          );
+        })}
       </div>
     </div>
   );

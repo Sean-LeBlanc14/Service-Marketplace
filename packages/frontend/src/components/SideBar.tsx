@@ -1,5 +1,6 @@
 import {
   FaBell,
+  FaCalendarAlt,
   FaHome,
   FaMoneyBill,
   FaUserShield
@@ -48,6 +49,12 @@ export default function SideBar() {
             icon={<FaUserShield />}
           />
         )}
+
+        <NavigationButton
+          to="/calendar"
+          label="Calendar"
+          icon={<FaCalendarAlt />}
+        />
 
         <NavigationButton
           to="/inbox"

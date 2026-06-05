@@ -152,6 +152,7 @@ class PaymentServiceTest {
             PaymentIntent paymentIntent = mock(PaymentIntent.class);
             when(paymentIntent.getClientSecret()).thenReturn("pi_secret_test");
             when(paymentIntent.getId()).thenReturn("pi_test_123");
+            when(paymentIntent.getStatus()).thenReturn("succeeded");
 
             paymentMethodMock.when(() -> PaymentMethod.list(any(PaymentMethodListParams.class)))
                 .thenReturn(methodCollection);
@@ -168,6 +169,7 @@ class PaymentServiceTest {
 
             assertThat(result.getClientSecret()).isEqualTo("pi_secret_test");
             assertThat(result.getPaymentIntentId()).isEqualTo("pi_test_123");
+            assertThat(result.getStatus()).isEqualTo("succeeded");
         }
     }
 

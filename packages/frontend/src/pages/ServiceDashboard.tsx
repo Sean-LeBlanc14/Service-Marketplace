@@ -284,6 +284,56 @@ export default function ServiceDashboard() {
     return false;
   }
 
+  async function completeBooking(
+    booking: ApiBooking
+  ): Promise<boolean> {
+    if (!authToken) {
+      navigate("/login");
+      toast.error("Please login");
+      return false;
+    }
+
+    try {
+      const completeResponse = await fetch(
+        API_ENDPOINTS.bookings.complete(booking.id as string),
+        {
+          method: "PUT",
+          headers: {
+            Authorization: `Bearer ${authToken}`,
+            "Content-Type": "application/json"
+          }
+        }
+      );
+
+      if (completeResponse.ok) {
+        const completedBooking =
+          (await completeResponse.json()) as ApiBooking;
+
+        toast.success("Booking marked complete");
+        setUpcomingBookings((bookings) =>
+          bookings.filter(
+            (appointment) => appointment.id !== booking.id
+          )
+        );
+        setServiceHistory((bookings) => [
+          completedBooking,
+          ...bookings.filter(
+            (appointment) => appointment.id !== booking.id
+          )
+        ]);
+        return true;
+      } else {
+        toast.error("Could not mark booking complete.");
+      }
+    } catch {
+      toast.warning(
+        "A network error occurred, please try again"
+      );
+    }
+
+    return false;
+  }
+
   function openReviewModal(booking: ApiBooking) {
     setReviewingBooking(booking);
     setReviewRating("5");
@@ -456,6 +506,7 @@ export default function ServiceDashboard() {
           booking={booking}
           {...participantProps}
           cancelBooking={cancelBooking}
+          completeBooking={completeBooking}
         />
       );
     }

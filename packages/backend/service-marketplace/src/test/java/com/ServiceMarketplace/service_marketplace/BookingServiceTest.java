@@ -428,7 +428,45 @@ class BookingServiceTest {
     }
 
     @Test
-    void confirmBooking_validPrice_chargesCustomerAndSetsPendingPayment() {
+    void confirmBooking_succeededPayment_chargesCustomerAndConfirmsBooking() {
+        Booking pending = buildAwaitingBooking();
+
+        when(userDetails.getUsername()).thenReturn("tutor@calpoly.edu");
+        when(userRepository.findByEmail("tutor@calpoly.edu")).thenReturn(Optional.of(mockProvider));
+        when(bookingRepository.findById("booking-001")).thenReturn(Optional.of(pending));
+        when(serviceRepository.findById("service-123")).thenReturn(Optional.of(mockService));
+        when(userRepository.findById("customer-789")).thenReturn(Optional.of(mockCustomer));
+        when(userRepository.findById("provider-456")).thenReturn(Optional.of(mockProvider));
+        when(paymentService.createAndConfirmPaymentIntent(
+            eq(new BigDecimal("60.00")), eq("cus_test_123"),
+            eq("service-123"), eq("customer-789"), eq("acct_test_provider")))
+            .thenReturn(new PaymentIntentResult("pi_secret_test", "pi_test_id", "succeeded"));
+        when(bookingRepository.save(any(Booking.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        BookingResponse result = bookingService.confirmBooking(
+            "booking-001", new ConfirmBookingRequest(new BigDecimal("60.00")), userDetails);
+
+        assertThat(result.getStatus()).isEqualTo(BookingStatus.CONFIRMED);
+        assertThat(result.getAgreedPrice()).isEqualByComparingTo("60.00");
+        verify(emailService).sendBookingConfirmedCustomerEmail(
+            eq("student@calpoly.edu"), eq("Alice"), eq("Math Tutoring"),
+            eq(new BigDecimal("60.00")), eq("per hour"), any(Instant.class), eq("booking-001")
+        );
+        verify(emailService).sendBookingConfirmedProviderEmail(
+            eq("tutor@calpoly.edu"), eq("Bob"), eq("Math Tutoring"),
+            eq(new BigDecimal("60.00")), eq("per hour"), any(Instant.class), eq("booking-001")
+        );
+        verify(notificationService).send(
+            eq("customer-789"),
+            any(),
+            eq("Booking Confirmed"),
+            eq("Bob confirmed your booking for Math Tutoring"),
+            eq("booking-001")
+        );
+    }
+
+    @Test
+    void confirmBooking_nonSucceededPayment_setsPendingPayment() {
         Booking pending = buildAwaitingBooking();
 
         when(userDetails.getUsername()).thenReturn("tutor@calpoly.edu");
@@ -439,21 +477,15 @@ class BookingServiceTest {
         when(paymentService.createAndConfirmPaymentIntent(
             eq(new BigDecimal("60.00")), eq("cus_test_123"),
             eq("service-123"), eq("customer-789"), eq("acct_test_provider")))
-            .thenReturn(new PaymentIntentResult("pi_secret_test", "pi_test_id"));
+            .thenReturn(new PaymentIntentResult("pi_secret_test", "pi_test_id", "processing"));
         when(bookingRepository.save(any(Booking.class))).thenAnswer(inv -> inv.getArgument(0));
 
         BookingResponse result = bookingService.confirmBooking(
             "booking-001", new ConfirmBookingRequest(new BigDecimal("60.00")), userDetails);
 
         assertThat(result.getStatus()).isEqualTo(BookingStatus.PENDING_PAYMENT);
-        assertThat(result.getAgreedPrice()).isEqualByComparingTo("60.00");
-        verify(notificationService).send(
-            eq("customer-789"),
-            any(),
-            eq("Booking Confirmed"),
-            eq("Bob confirmed your booking for Math Tutoring"),
-            eq("booking-001")
-        );
+        verify(emailService, never()).sendBookingConfirmedCustomerEmail(any(), any(), any(), any(), any(), any(), any());
+        verify(emailService, never()).sendBookingConfirmedProviderEmail(any(), any(), any(), any(), any(), any(), any());
     }
 
     @Test
@@ -613,6 +645,49 @@ class BookingServiceTest {
     }
 
     @Test
+    void completeBooking_providerCompletesConfirmedBooking() {
+        Booking confirmed = buildAwaitingBooking();
+        confirmed.setStatus(BookingStatus.CONFIRMED);
+
+        when(userDetails.getUsername()).thenReturn("tutor@calpoly.edu");
+        when(userRepository.findByEmail("tutor@calpoly.edu")).thenReturn(Optional.of(mockProvider));
+        when(bookingRepository.findById("booking-001")).thenReturn(Optional.of(confirmed));
+        when(bookingRepository.save(any(Booking.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        BookingResponse result = bookingService.completeBooking("booking-001", userDetails);
+
+        assertThat(result.getStatus()).isEqualTo(BookingStatus.COMPLETED);
+        verify(bookingRepository).save(confirmed);
+    }
+
+    @Test
+    void completeBooking_unauthorizedUser_throwsAccessDeniedException() {
+        Booking confirmed = buildAwaitingBooking();
+        confirmed.setStatus(BookingStatus.CONFIRMED);
+        User stranger = buildStranger();
+
+        when(userDetails.getUsername()).thenReturn("stranger@calpoly.edu");
+        when(userRepository.findByEmail("stranger@calpoly.edu")).thenReturn(Optional.of(stranger));
+        when(bookingRepository.findById("booking-001")).thenReturn(Optional.of(confirmed));
+
+        assertThatThrownBy(() -> bookingService.completeBooking("booking-001", userDetails))
+            .isInstanceOf(AccessDeniedException.class);
+    }
+
+    @Test
+    void completeBooking_unconfirmedBooking_throwsBookingStateException() {
+        Booking pending = buildAwaitingBooking();
+
+        when(userDetails.getUsername()).thenReturn("tutor@calpoly.edu");
+        when(userRepository.findByEmail("tutor@calpoly.edu")).thenReturn(Optional.of(mockProvider));
+        when(bookingRepository.findById("booking-001")).thenReturn(Optional.of(pending));
+
+        assertThatThrownBy(() -> bookingService.completeBooking("booking-001", userDetails))
+            .isInstanceOf(BookingStateException.class)
+            .hasMessageContaining("confirmed");
+    }
+
+    @Test
     void rejectBooking_byProvider_rejectsAndNotifiesCustomer() {
         Booking pending = buildAwaitingBooking();
 
@@ -704,11 +779,12 @@ class BookingServiceTest {
             .thenReturn(new TokenResult("booking-001", BookingTokenAction.CONFIRM));
         when(bookingRepository.findById("booking-001")).thenReturn(Optional.of(pending));
         when(userRepository.findById("provider-456")).thenReturn(Optional.of(mockProvider));
+        when(userRepository.findById("customer-789")).thenReturn(Optional.of(mockCustomer));
         when(serviceRepository.findById("service-123")).thenReturn(Optional.of(mockService));
         when(paymentService.createAndConfirmPaymentIntent(
             eq(new BigDecimal("50.00")), eq("cus_test_123"),
             eq("service-123"), eq("customer-789"), eq("acct_test_provider")))
-            .thenReturn(new PaymentIntentResult("pi_secret", "pi_id"));
+            .thenReturn(new PaymentIntentResult("pi_secret", "pi_id", "succeeded"));
         when(bookingRepository.save(any(Booking.class))).thenAnswer(inv -> inv.getArgument(0));
 
         BookingTokenAction result = bookingService.processTokenAction("valid-confirm-token");

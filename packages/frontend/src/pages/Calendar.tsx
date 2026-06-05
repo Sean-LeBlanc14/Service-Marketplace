@@ -126,6 +126,7 @@ export default function Calendar() {
   const [selectedBooking, setSelectedBooking] =
     useState<ApiBooking | null>(null);
   const [isCancelling, setIsCancelling] = useState(false);
+  const [isCompleting, setIsCompleting] = useState(false);
 
   useEffect(() => {
     async function getUserBookings() {
@@ -303,6 +304,51 @@ export default function Calendar() {
     }
   }
 
+  async function completeBooking() {
+    if (!selectedBooking?.id) {
+      toast.error("Could not complete this booking.");
+      return;
+    }
+
+    if (!authToken) {
+      toast.error("Please login");
+      return;
+    }
+
+    setIsCompleting(true);
+
+    try {
+      const response = await fetch(
+        API_ENDPOINTS.bookings.complete(selectedBooking.id),
+        {
+          method: "PUT",
+          headers: {
+            Authorization: `Bearer ${authToken}`,
+            "Content-Type": "application/json"
+          }
+        }
+      );
+
+      if (response.ok) {
+        toast.success("Booking marked complete");
+        setScheduledProviderBookings((bookings) =>
+          bookings.filter(
+            (booking) => booking.id !== selectedBooking.id
+          )
+        );
+        setSelectedBooking(null);
+      } else {
+        toast.error("Could not mark booking complete.");
+      }
+    } catch {
+      toast.warning(
+        "A network error occurred, please try again"
+      );
+    } finally {
+      setIsCompleting(false);
+    }
+  }
+
   return (
     <div className="calendar-wrapper">
       <div className="calendar-header">
@@ -444,6 +490,19 @@ export default function Calendar() {
             </div>
 
             <div className="calendar-modal-actions">
+              {selectedView === "provider" &&
+                selectedBooking.status === "CONFIRMED" && (
+                  <button
+                    type="button"
+                    className="calendar-modal-complete"
+                    disabled={isCompleting}
+                    onClick={() => void completeBooking()}>
+                    {isCompleting
+                      ? "Completing..."
+                      : "Mark Complete"}
+                  </button>
+                )}
+
               <button
                 type="button"
                 className="calendar-modal-cancel"

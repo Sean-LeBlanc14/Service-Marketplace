@@ -194,6 +194,27 @@ public class BookingService {
         return doCancelBooking(booking, isCustomer);
     }
 
+    public BookingResponse completeBooking(String bookingId, UserDetails userDetails) {
+        User provider = userRepository.findByEmail(userDetails.getUsername())
+            .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+
+        Booking booking = bookingRepository.findById(bookingId)
+            .orElseThrow(() -> new ResourceNotFoundException("Booking", bookingId));
+
+        if (!booking.getProviderId().equals(provider.getId())) {
+            throw new AccessDeniedException("You are not authorized to complete this booking");
+        }
+
+        if (booking.getStatus() != BookingStatus.CONFIRMED) {
+            throw new BookingStateException("Only confirmed bookings can be marked complete");
+        }
+
+        booking.setStatus(BookingStatus.COMPLETED);
+        Booking completedBooking = bookingRepository.save(booking);
+
+        return toBookingResponse(completedBooking);
+    }
+
     public BookingTokenAction processTokenAction(String token) {
         TokenResult result = bookingTokenService.validateAndConsume(token);
 
@@ -236,9 +257,15 @@ public class BookingService {
 
         booking.setAgreedPrice(price);
         booking.setStripePaymentIntentId(paymentResult.getPaymentIntentId());
-        booking.setStatus(BookingStatus.PENDING_PAYMENT);
+        booking.setStatus(paymentResult.isSucceeded()
+            ? BookingStatus.CONFIRMED
+            : BookingStatus.PENDING_PAYMENT);
 
         Booking confirmedBooking = bookingRepository.save(booking);
+
+        if (confirmedBooking.getStatus() == BookingStatus.CONFIRMED) {
+            sendConfirmationEmails(confirmedBooking);
+        }
 
         userRepository.findById(confirmedBooking.getCustomerId()).ifPresent(customer ->
             notificationService.send(customer.getId(), NotificationType.BOOKING_CONFIRMED,
@@ -247,6 +274,32 @@ public class BookingService {
                 confirmedBooking.getId()));
 
         return toBookingResponse(confirmedBooking);
+    }
+
+    private void sendConfirmationEmails(Booking booking) {
+        userRepository.findById(booking.getCustomerId()).ifPresent(customer ->
+            emailService.sendBookingConfirmedCustomerEmail(
+                customer.getEmail(),
+                customer.getFirstName(),
+                booking.getServiceTitle(),
+                booking.getAgreedPrice(),
+                booking.getPriceUnit(),
+                booking.getScheduledAt(),
+                booking.getId()
+            )
+        );
+
+        userRepository.findById(booking.getProviderId()).ifPresent(provider ->
+            emailService.sendBookingConfirmedProviderEmail(
+                provider.getEmail(),
+                provider.getFirstName(),
+                booking.getServiceTitle(),
+                booking.getAgreedPrice(),
+                booking.getPriceUnit(),
+                booking.getScheduledAt(),
+                booking.getId()
+            )
+        );
     }
 
     private BookingResponse doCancelBooking(Booking booking, boolean cancelledByCustomer) {

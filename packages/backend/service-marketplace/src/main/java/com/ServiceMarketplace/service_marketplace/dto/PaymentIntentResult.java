@@ -6,4 +6,9 @@ import lombok.Value;
 public class PaymentIntentResult {
     String clientSecret;
     String paymentIntentId;
+    String status;
+
+    public boolean isSucceeded() {
+        return "succeeded".equalsIgnoreCase(status);
+    }
 }

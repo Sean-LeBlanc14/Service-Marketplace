@@ -47,6 +47,11 @@
   cursor: pointer;
 }
 
+.service-details-close:hover,
+.service-details-close:focus-visible {
+  color: red;
+}
+
 .service-details-provider {
   display: flex;
   align-items: center;
@@ -307,6 +312,11 @@
   font-size: 28px;
   line-height: 0.8;
   cursor: pointer;
+}
+
+.service-report-close:hover,
+.service-report-close:focus-visible {
+  color: red;
 }
 
 .service-report-label {

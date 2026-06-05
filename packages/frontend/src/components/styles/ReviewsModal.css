@@ -50,6 +50,11 @@
   cursor: pointer;
 }
 
+.reviews-modal-close:hover,
+.reviews-modal-close:focus-visible {
+  color: red;
+}
+
 .reviews-modal-content {
   overflow-y: auto;
   padding: 28px;

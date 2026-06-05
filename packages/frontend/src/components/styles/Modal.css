@@ -35,8 +35,7 @@
 }
 
 .close-btn:hover {
-  opacity: var(--button-hover-opacity);
-  transform: scale(var(--button-hover-scale));
+  color: red;
 }
 
 @keyframes fadeIn {

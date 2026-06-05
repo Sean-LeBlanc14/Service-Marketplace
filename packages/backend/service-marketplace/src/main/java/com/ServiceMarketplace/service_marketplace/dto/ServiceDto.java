@@ -13,6 +13,8 @@ public class ServiceDto {
     private String category;
     private String userId;
     private String providerName;
+    private Double providerAverageRating;
+    private int providerReviewCount;
     private BigDecimal priceMin;
     private BigDecimal priceMax;
     private String priceUnit;

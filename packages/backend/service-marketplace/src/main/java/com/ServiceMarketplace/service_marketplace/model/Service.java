@@ -47,6 +47,10 @@ public class Service {
 
     private List<String> tags;
 
+    private String postingType;
+
+    private Boolean isAvailable;
+
     @CreatedDate
     private Instant createdAt;
 

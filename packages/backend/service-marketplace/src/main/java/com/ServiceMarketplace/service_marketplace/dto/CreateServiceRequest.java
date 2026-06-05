@@ -7,6 +7,7 @@ import jakarta.validation.constraints.AssertTrue;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
 
@@ -45,6 +46,9 @@ public class CreateServiceRequest {
 
     @Size(max = MAX_TAG_COUNT, message = "Use no more than 5 tags")
     private List<@Size(max = MAX_TAG_LENGTH, message = "Tags must be 50 characters or fewer") String> tags;
+
+    @Pattern(regexp = "^(single|continuous)$", message = "Posting type must be 'single' or 'continuous'")
+    private String postingType;
 
     @AssertTrue(message = "Price max must be greater than or equal to price min")
     public boolean isPriceRangeValid() {

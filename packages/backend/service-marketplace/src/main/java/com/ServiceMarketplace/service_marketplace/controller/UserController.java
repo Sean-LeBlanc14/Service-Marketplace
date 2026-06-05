@@ -6,7 +6,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -15,10 +15,13 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.ServiceMarketplace.service_marketplace.dto.ProviderProfile;
+import com.ServiceMarketplace.service_marketplace.dto.ChangeFieldRequest;
+import com.ServiceMarketplace.service_marketplace.dto.ChangePasswordRequest;
+import com.ServiceMarketplace.service_marketplace.dto.DeleteAccountRequest;
 import com.ServiceMarketplace.service_marketplace.dto.UpdateUserProfileRequest;
 import com.ServiceMarketplace.service_marketplace.dto.UserProfile;
 import com.ServiceMarketplace.service_marketplace.model.User;
-import com.ServiceMarketplace.service_marketplace.repository.UserRepository;
 import com.ServiceMarketplace.service_marketplace.service.UserService;
 
 import jakarta.validation.Valid;
@@ -28,11 +31,9 @@ import jakarta.validation.Valid;
 public class UserController {
 
     private final UserService userService;
-    private final UserRepository userRepository;
 
-    public UserController(UserService userService, UserRepository userRepository){
+    public UserController(UserService userService){
         this.userService = userService;
-        this.userRepository = userRepository;
     }
 
     @GetMapping("/me")
@@ -51,86 +52,84 @@ public class UserController {
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 
+    @GetMapping("/{userId}/profile")
+    public ResponseEntity<ProviderProfile> getProviderProfile(@PathVariable String userId) {
+        ProviderProfile response = userService.getProviderProfile(userId);
+
+        return ResponseEntity.status(HttpStatus.OK).body(response);
+    }
+
+    @DeleteMapping("/delete")
+    public ResponseEntity<Void> deleteUser(@RequestBody DeleteAccountRequest request){
+
+        userService.deleteUserProfile(request);
+
+        return ResponseEntity.noContent().build();
+    }
+
+    @PatchMapping("/password")
+    public ResponseEntity<Void> changeUserPassword(@AuthenticationPrincipal UserDetails userDetails,@Valid @RequestBody ChangePasswordRequest request){
+
+        userService.changeUserPassword(userDetails, request);
+
+        return ResponseEntity.ok().build();
+    }
+
     @GetMapping
     public ResponseEntity<List<User>> getUsers(@AuthenticationPrincipal UserDetails userDetails) {
-        User requester = getCurrentUser(userDetails);
-
-        if (!isAdmin(requester)) {
+        if (!userService.isAdmin(userDetails.getUsername())) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
 
-        return ResponseEntity.status(HttpStatus.OK).body(userRepository.findAll());
+        return ResponseEntity.status(HttpStatus.OK).body(userService.getAllUsers());
     }
 
     @GetMapping("/{userId}")
     public ResponseEntity<User> getUserById(
             @PathVariable String userId,
             @AuthenticationPrincipal UserDetails userDetails) {
-        User requester = getCurrentUser(userDetails);
-
-        if (!isAdmin(requester)) {
+        if (!userService.isAdmin(userDetails.getUsername())) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
 
-        var user = userRepository.findById(userId);
-
-        if (user.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
-        }
-
-        return ResponseEntity.status(HttpStatus.OK).body(user.get());
+        return ResponseEntity.status(HttpStatus.OK).body(userService.getUserById(userId));
     }
 
     @PutMapping("/{userId}/suspend")
     public ResponseEntity<User> suspendUser(
             @PathVariable String userId,
             @AuthenticationPrincipal UserDetails userDetails) {
-        User requester = getCurrentUser(userDetails);
-
-        if (!isAdmin(requester)) {
+        if (!userService.isAdmin(userDetails.getUsername())) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
 
-        var userToSuspend = userRepository.findById(userId);
-
-        if (userToSuspend.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
-        }
-
-        User user = userToSuspend.get();
-        user.setRole("suspended");
-
-        return ResponseEntity.status(HttpStatus.OK).body(userRepository.save(user));
+        return ResponseEntity.status(HttpStatus.OK).body(userService.suspendUser(userId));
     }
 
     @PutMapping("/{userId}/unsuspend")
     public ResponseEntity<User> unsuspendUser(
             @PathVariable String userId,
             @AuthenticationPrincipal UserDetails userDetails) {
-        User requester = getCurrentUser(userDetails);
-
-        if (!isAdmin(requester)) {
+        if (!userService.isAdmin(userDetails.getUsername())) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
 
-        var userToUnsuspend = userRepository.findById(userId);
-
-        if (userToUnsuspend.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
-        }
-
-        User user = userToUnsuspend.get();
-        user.setRole("user");
-
-        return ResponseEntity.status(HttpStatus.OK).body(userRepository.save(user));
+        return ResponseEntity.status(HttpStatus.OK).body(userService.unsuspendUser(userId));
     }
 
-    private User getCurrentUser(UserDetails userDetails) {
-        return userRepository.findByEmail(userDetails.getUsername())
-            .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+    @PatchMapping("/major")
+    public ResponseEntity<UserProfile> changeMajor(@AuthenticationPrincipal UserDetails userDetails, @RequestBody ChangeFieldRequest request){
+
+        UserProfile user = userService.changeUserMajor(userDetails, request.getUpdate());
+
+        return ResponseEntity.status(HttpStatus.OK).body(user);
     }
 
-    private boolean isAdmin(User user) {
-        return "admin".equals(user.getRole());
+    @PatchMapping("/campus")
+    public ResponseEntity<UserProfile> changeCampus(@AuthenticationPrincipal UserDetails userDetails, @RequestBody ChangeFieldRequest request){
+
+        UserProfile user = userService.changeUserCampus(userDetails, request.getUpdate());
+
+        return ResponseEntity.status(HttpStatus.OK).body(user);
     }
 }

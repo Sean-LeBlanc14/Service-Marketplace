@@ -1,7 +1,20 @@
 package com.ServiceMarketplace.service_marketplace.service;
 
 import java.math.BigDecimal;
+import java.time.Instant;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
+import org.springframework.data.mongodb.core.FindAndModifyOptions;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.core.query.Update;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -12,13 +25,19 @@ import com.ServiceMarketplace.service_marketplace.dto.ConfirmBookingRequest;
 import com.ServiceMarketplace.service_marketplace.dto.CreateBookingRequest;
 import com.ServiceMarketplace.service_marketplace.dto.CreateBookingResponse;
 import com.ServiceMarketplace.service_marketplace.dto.PaymentIntentResult;
+import com.ServiceMarketplace.service_marketplace.dto.ProviderReviewResponse;
 import com.ServiceMarketplace.service_marketplace.dto.SetupIntentResult;
+import com.ServiceMarketplace.service_marketplace.dto.SubmitReviewRequest;
 import com.ServiceMarketplace.service_marketplace.exception.BookingStateException;
+import com.ServiceMarketplace.service_marketplace.exception.InvalidBookingReviewException;
 import com.ServiceMarketplace.service_marketplace.exception.InvalidPriceException;
 import com.ServiceMarketplace.service_marketplace.exception.ResourceNotFoundException;
+import com.ServiceMarketplace.service_marketplace.exception.ServiceUnavailableException;
+import com.ServiceMarketplace.service_marketplace.exception.UnauthorizedBookingRejectionException;
 import com.ServiceMarketplace.service_marketplace.model.Booking;
 import com.ServiceMarketplace.service_marketplace.model.BookingStatus;
 import com.ServiceMarketplace.service_marketplace.model.BookingTokenAction;
+import com.ServiceMarketplace.service_marketplace.model.NotificationType;
 import com.ServiceMarketplace.service_marketplace.model.User;
 import com.ServiceMarketplace.service_marketplace.repository.BookingRepository;
 import com.ServiceMarketplace.service_marketplace.repository.ServiceRepository;
@@ -35,16 +54,21 @@ public class BookingService {
     private final PaymentService paymentService;
     private final EmailService emailService;
     private final BookingTokenService bookingTokenService;
+    private final NotificationService notificationService;
+    private final MongoTemplate mongoTemplate;
 
     public BookingService(BookingRepository bookingRepository, ServiceRepository serviceRepository,
             UserRepository userRepository, PaymentService paymentService, EmailService emailService,
-            BookingTokenService bookingTokenService) {
+            BookingTokenService bookingTokenService, NotificationService notificationService,
+            MongoTemplate mongoTemplate) {
         this.bookingRepository = bookingRepository;
         this.serviceRepository = serviceRepository;
         this.userRepository = userRepository;
         this.paymentService = paymentService;
         this.emailService = emailService;
         this.bookingTokenService = bookingTokenService;
+        this.notificationService = notificationService;
+        this.mongoTemplate = mongoTemplate;
     }
 
     public CreateBookingResponse createBooking(CreateBookingRequest request, UserDetails userDetails) {
@@ -55,6 +79,10 @@ public class BookingService {
             .findById(request.getServiceId())
             .orElseThrow(() -> new ResourceNotFoundException("Service", request.getServiceId()));
 
+        if (Boolean.FALSE.equals(service.getIsAvailable())) {
+            throw new ServiceUnavailableException("This service is no longer available.");
+        }
+
         if (request.getProposedPrice().compareTo(service.getPriceMin()) < 0 ||
             request.getProposedPrice().compareTo(service.getPriceMax()) > 0) {
             throw new InvalidPriceException(
@@ -62,41 +90,73 @@ public class BookingService {
             );
         }
 
-        User provider = userRepository.findById(service.getUserId())
-            .orElseThrow(() -> new ResourceNotFoundException("Provider", service.getUserId()));
+        String providerId = service.getUserId();
+        User provider = userRepository.findById(providerId)
+            .orElseThrow(() -> new ResourceNotFoundException("Provider", providerId));
 
-        String customerName = customer.getFirstName() + " " + customer.getLastName();
-        SetupIntentResult setupResult = paymentService.createSetupIntent(customer.getEmail(), customerName);
+        boolean reservedSinglePosting = false;
+        Booking saved = null;
 
-        Booking booking = new Booking();
-        booking.setServiceId(request.getServiceId());
-        booking.setCustomerId(customer.getId());
-        booking.setProviderId(service.getUserId());
-        booking.setServiceTitle(service.getTitle());
-        booking.setAgreedPrice(request.getProposedPrice());
-        booking.setPriceUnit(service.getPriceUnit());
-        booking.setScheduledAt(request.getScheduledAt());
-        booking.setStatus(BookingStatus.AWAITING_PROVIDER_CONFIRMATION);
-        booking.setStripeSetupIntentId(setupResult.getSetupIntentId());
-        booking.setStripeCustomerId(setupResult.getStripeCustomerId());
+        if (isSinglePosting(service)) {
+            service = reserveSinglePostingService(service.getId());
+            reservedSinglePosting = true;
+        }
 
-        Booking saved = bookingRepository.save(booking);
+        try {
+            String customerName = customer.getFirstName() + " " + customer.getLastName();
+            SetupIntentResult setupResult = paymentService.createSetupIntent(customer.getEmail(), customerName);
 
-        TokenPair tokenPair = bookingTokenService.generateTokenPair(saved.getId());
+            Booking booking = new Booking();
+            booking.setServiceId(request.getServiceId());
+            booking.setCustomerId(customer.getId());
+            booking.setProviderId(service.getUserId());
+            booking.setServiceTitle(service.getTitle());
+            booking.setAgreedPrice(request.getProposedPrice());
+            booking.setPriceUnit(service.getPriceUnit());
+            booking.setScheduledAt(request.getScheduledAt());
+            booking.setStatus(BookingStatus.AWAITING_PROVIDER_CONFIRMATION);
+            booking.setStripeSetupIntentId(setupResult.getSetupIntentId());
+            booking.setStripeCustomerId(setupResult.getStripeCustomerId());
 
-        emailService.sendProviderBookingNotificationEmail(
-            provider.getEmail(),
-            provider.getFirstName(),
-            customerName,
-            service.getTitle(),
-            request.getProposedPrice(),
-            service.getPriceUnit(),
-            request.getScheduledAt(),
-            tokenPair.confirmUrl(),
-            tokenPair.cancelUrl()
-        );
+            saved = bookingRepository.save(booking);
 
-        return new CreateBookingResponse(toBookingResponse(saved), setupResult.getSetupClientSecret());
+            emailService.sendBookingRequestedCustomerEmail(
+                customer.getEmail(),
+                customer.getFirstName(),
+                service.getTitle(),
+                request.getProposedPrice(),
+                service.getPriceUnit(),
+                request.getScheduledAt(),
+                saved.getId()
+            );
+
+            TokenPair tokenPair = bookingTokenService.generateTokenPair(saved.getId());
+
+            emailService.sendProviderBookingNotificationEmail(
+                provider.getEmail(),
+                provider.getFirstName(),
+                customerName,
+                service.getTitle(),
+                request.getProposedPrice(),
+                service.getPriceUnit(),
+                request.getScheduledAt(),
+                tokenPair.confirmUrl(),
+                tokenPair.cancelUrl()
+            );
+
+            notificationService.send(provider.getId(), NotificationType.BOOKING_REQUESTED,
+                "New Booking Request",
+                customerName + " has requested to book " + service.getTitle(),
+                saved.getId());
+
+            return new CreateBookingResponse(toBookingResponse(saved), setupResult.getSetupClientSecret());
+        } catch (RuntimeException e) {
+            if (reservedSinglePosting && saved == null) {
+                releaseSinglePostingService(service.getId());
+            }
+
+            throw e;
+        }
     }
 
     public BookingResponse confirmBooking(String bookingId, ConfirmBookingRequest request, UserDetails userDetails) {
@@ -127,7 +187,7 @@ public class BookingService {
             throw new AccessDeniedException("You are not authorized to cancel this booking");
         }
 
-        return doCancelBooking(booking);
+        return doCancelBooking(booking, isCustomer);
     }
 
     public BookingTokenAction processTokenAction(String token) {
@@ -141,7 +201,7 @@ public class BookingService {
                 .orElseThrow(() -> new ResourceNotFoundException("Provider", booking.getProviderId()));
             doConfirmBooking(booking, booking.getAgreedPrice(), provider);
         } else {
-            doCancelBooking(booking);
+            doCancelBooking(booking, false);
         }
 
         return result.action();
@@ -174,19 +234,273 @@ public class BookingService {
         booking.setStripePaymentIntentId(paymentResult.getPaymentIntentId());
         booking.setStatus(BookingStatus.PENDING_PAYMENT);
 
-        return toBookingResponse(bookingRepository.save(booking));
+        Booking confirmedBooking = bookingRepository.save(booking);
+
+        userRepository.findById(confirmedBooking.getCustomerId()).ifPresent(customer ->
+            notificationService.send(customer.getId(), NotificationType.BOOKING_CONFIRMED,
+                "Booking Confirmed",
+                provider.getFirstName() + " confirmed your booking for " + confirmedBooking.getServiceTitle(),
+                confirmedBooking.getId()));
+
+        return toBookingResponse(confirmedBooking);
     }
 
-    private BookingResponse doCancelBooking(Booking booking) {
-        if (booking.getStatus() != BookingStatus.AWAITING_PROVIDER_CONFIRMATION) {
-            throw new BookingStateException("Only bookings awaiting confirmation can be cancelled");
+    private BookingResponse doCancelBooking(Booking booking, boolean cancelledByCustomer) {
+        if (booking.getStatus() == BookingStatus.CANCELLED) {
+            throw new BookingStateException("Booking is already cancelled");
         }
 
         booking.setStatus(BookingStatus.CANCELLED);
         bookingRepository.save(booking);
         paymentService.cleanupStripeCustomer(booking.getStripeCustomerId());
 
+        if (cancelledByCustomer) {
+            userRepository.findById(booking.getProviderId()).ifPresent(provider -> {
+                String customerName = userRepository.findById(booking.getCustomerId())
+                    .map(c -> c.getFirstName() + " " + c.getLastName())
+                    .orElse("A customer");
+                emailService.sendBookingCancelledProviderEmail(
+                    provider.getEmail(),
+                    provider.getFirstName(),
+                    customerName,
+                    booking.getServiceTitle(),
+                    booking.getScheduledAt(),
+                    booking.getId()
+                );
+                notificationService.send(provider.getId(), NotificationType.BOOKING_CANCELLED,
+                    "Booking Cancelled",
+                    customerName + " cancelled their booking for " + booking.getServiceTitle(),
+                    booking.getId());
+            });
+        } else {
+            userRepository.findById(booking.getCustomerId()).ifPresent(customer -> {
+                String providerName = userRepository.findById(booking.getProviderId())
+                    .map(p -> p.getFirstName() + " " + p.getLastName())
+                    .orElse("The provider");
+                emailService.sendBookingCancelledCustomerEmail(
+                    customer.getEmail(),
+                    customer.getFirstName(),
+                    providerName,
+                    booking.getServiceTitle(),
+                    booking.getScheduledAt(),
+                    booking.getId()
+                );
+                notificationService.send(customer.getId(), NotificationType.BOOKING_CANCELLED,
+                    "Booking Cancelled",
+                    providerName + " cancelled your booking for " + booking.getServiceTitle(),
+                    booking.getId());
+            });
+        }
+
         return toBookingResponse(booking);
+    }
+
+    public List<BookingResponse> getProviderBookingRequests(UserDetails userDetails){
+        var user = getUserByEmail(userDetails.getUsername());
+
+        List<Booking> bookingRequests = bookingRepository.findByProviderIdAndStatusOrderByCreatedAtDesc(
+            user.getId(), BookingStatus.AWAITING_PROVIDER_CONFIRMATION);
+        
+        var userIds = getUsersById(bookingRequests);
+
+        return bookingRequests.stream()
+            .map(booking -> toBookingResponse(booking, userIds))
+            .toList();
+    }   
+
+    //Gets all scheduled services/bookings for a provider
+    public List<BookingResponse> getProviderScheduledBookings(UserDetails userDetails){
+        var user = getUserByEmail(userDetails.getUsername());
+
+        List<Booking> bookingRequests = bookingRepository.findByProviderIdAndStatusOrderByCreatedAtDesc(
+            user.getId(), BookingStatus.CONFIRMED);
+        
+        var userIds = getUsersById(bookingRequests);
+
+        return bookingRequests.stream()
+            .map(booking -> toBookingResponse(booking, userIds))
+            .toList();
+    }
+
+    public void rejectBooking(String bookingId, UserDetails userDetails){
+
+        var provider = getUserByEmail(userDetails.getUsername());
+
+        var rejectedBooking = bookingRepository.findById(bookingId)
+            .orElseThrow(() -> new ResourceNotFoundException("Booking", bookingId));
+
+        if (!provider.getId().equals(rejectedBooking.getProviderId()) && !rejectedBooking.getStatus().equals(BookingStatus.AWAITING_PROVIDER_CONFIRMATION)){
+            throw new UnauthorizedBookingRejectionException("You are not the provider for this booking");
+        }
+
+        rejectedBooking.setStatus(BookingStatus.REJECTED);
+        bookingRepository.save(rejectedBooking);
+        
+        userRepository.findById(rejectedBooking.getCustomerId()).ifPresent(customer -> {
+                String providerName = provider.getFirstName() + " " + provider.getLastName();
+
+                emailService.sendBookingRejectedCustomerEmail(
+                    customer.getEmail(),
+                    customer.getFirstName(),
+                    providerName,
+                    rejectedBooking.getServiceTitle(),
+                    rejectedBooking.getScheduledAt(),
+                    rejectedBooking.getId()
+                );
+                notificationService.send(customer.getId(), NotificationType.BOOKING_REJECTED,
+                    "Booking Cancelled",
+                    providerName + " cancelled your booking for " + rejectedBooking.getServiceTitle(),
+                    rejectedBooking.getId());
+            });
+        
+    }
+
+    //Gets all completed bookings for a provider
+    public List<BookingResponse> getProviderCompletedBookings(UserDetails userDetails){
+        var user = getUserByEmail(userDetails.getUsername());
+
+        List<Booking> bookingRequests = bookingRepository.findByProviderIdAndStatusOrderByCreatedAtDesc(
+            user.getId(), BookingStatus.COMPLETED);
+        
+        var userIds = getUsersById(bookingRequests);
+
+        return bookingRequests.stream()
+            .map(booking -> toBookingResponse(booking, userIds))
+            .toList();
+    }
+
+    public List<BookingResponse> getCustomerBookings(UserDetails userDetails) {
+        var customer = getCurrentUser(userDetails);
+        var bookings = bookingRepository.findByCustomerIdOrderByCreatedAtDesc(customer.getId());
+        var usersById = getUsersById(bookings);
+
+        return bookings.stream()
+            .map(booking -> toBookingResponse(booking, usersById))
+            .collect(Collectors.toList());
+    }
+
+    public List<BookingResponse> getCustomerScheduledBookings(UserDetails userDetails){
+
+        User user = getCurrentUser(userDetails);
+        
+        var bookings = bookingRepository.findByCustomerIdAndStatusOrderByCreatedAtDesc(user.getId(), BookingStatus.CONFIRMED);
+
+        var usersById = getUsersById(bookings);
+
+        return bookings.stream()
+            .map(booking -> toBookingResponse(booking, usersById))
+            .toList();
+    }
+
+    public List<ProviderReviewResponse> getProviderReviews(String providerId) {
+        String cleanProviderId = clean(providerId);
+        List<Booking> reviewedBookings = bookingRepository.findReviewedBookingsByProviderId(cleanProviderId);
+        var usersById = getUsersById(reviewedBookings);
+
+        return reviewedBookings.stream()
+            .map(booking -> toProviderReviewResponse(booking, usersById))
+            .collect(Collectors.toList());
+    }
+
+    private void completeOverdueBookings() {
+        Instant now = Instant.now();
+        List<Booking> overdueBookings = bookingRepository.findByStatusOrderByCreatedAtDesc(BookingStatus.CONFIRMED)
+            .stream()
+            .filter(booking -> booking.getScheduledAt() != null && booking.getScheduledAt().isBefore(now))
+            .collect(Collectors.toList());
+
+        for (Booking booking : overdueBookings) {
+            booking.setStatus(BookingStatus.COMPLETED);
+            bookingRepository.save(booking);
+        }
+    }
+
+    @Scheduled(fixedDelay = 300000)
+    void scheduleBookingCompletion() {
+        completeOverdueBookings();
+    }
+
+    public BookingResponse submitReview(String bookingId, SubmitReviewRequest request, UserDetails userDetails) {
+        var customer = getCurrentUser(userDetails);
+        var booking = bookingRepository.findById(bookingId)
+            .orElseThrow(() -> new ResourceNotFoundException("Booking", bookingId));
+
+        if (!customer.getId().equals(booking.getCustomerId())) {
+            throw new AccessDeniedException("You can only review your own bookings.");
+        }
+
+        if (booking.getStatus() != BookingStatus.COMPLETED) {
+            throw new InvalidBookingReviewException("You can only review completed bookings.");
+        }
+
+        if (booking.getRating() != null) {
+            throw new InvalidBookingReviewException("This booking has already been reviewed.");
+        }
+
+        booking.setRating(request.getRating());
+        booking.setReview(clean(request.getReview()));
+        booking.setReviewerName(getUserDisplayName(customer));
+        booking.setReviewedAt(Instant.now());
+
+        Booking reviewed = bookingRepository.save(booking);
+
+        notificationService.send(reviewed.getProviderId(), NotificationType.REVIEW_RECEIVED,
+            "New Review Received",
+            getUserDisplayName(customer) + " left a " + request.getRating() + "-star review for " + reviewed.getServiceTitle(),
+            reviewed.getId());
+
+        return toBookingResponse(reviewed);
+    }
+
+    private User getCurrentUser(UserDetails userDetails) {
+        return userRepository.findByEmail(userDetails.getUsername())
+            .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+    }
+
+    private boolean isSinglePosting(com.ServiceMarketplace.service_marketplace.model.Service service) {
+        return "single".equalsIgnoreCase(clean(service.getPostingType()));
+    }
+
+    private com.ServiceMarketplace.service_marketplace.model.Service reserveSinglePostingService(String serviceId) {
+        Criteria availabilityCriteria = new Criteria().orOperator(
+            Criteria.where("isAvailable").is(true),
+            Criteria.where("isAvailable").is(null),
+            Criteria.where("isAvailable").exists(false)
+        );
+        Query query = Query.query(new Criteria().andOperator(
+            Criteria.where("_id").is(serviceId),
+            Criteria.where("postingType").regex("^single$", "i"),
+            availabilityCriteria
+        ));
+        Update update = new Update().set("isAvailable", false);
+
+        com.ServiceMarketplace.service_marketplace.model.Service reservedService = mongoTemplate.findAndModify(
+            query,
+            update,
+            FindAndModifyOptions.options().returnNew(true),
+            com.ServiceMarketplace.service_marketplace.model.Service.class
+        );
+
+        if (reservedService == null) {
+            throw new ServiceUnavailableException("This service is no longer available.");
+        }
+
+        return reservedService;
+    }
+
+    private void releaseSinglePostingService(String serviceId) {
+        Query query = Query.query(new Criteria().andOperator(
+            Criteria.where("_id").is(serviceId),
+            Criteria.where("postingType").regex("^single$", "i"),
+            Criteria.where("isAvailable").is(false)
+        ));
+        Update update = new Update().set("isAvailable", true);
+
+        mongoTemplate.updateFirst(
+            query,
+            update,
+            com.ServiceMarketplace.service_marketplace.model.Service.class
+        );
     }
 
     private BookingResponse toBookingResponse(Booking booking) {
@@ -196,11 +510,148 @@ public class BookingService {
             booking.getServiceTitle(),
             booking.getCustomerId(),
             booking.getProviderId(),
+            getUserDisplayName(booking.getCustomerId()),
+            getUserDisplayName(booking.getProviderId()),
+            getReviewerName(booking),
             booking.getAgreedPrice(),
             booking.getPriceUnit(),
             booking.getScheduledAt(),
             booking.getStatus(),
+            booking.getRating(),
+            booking.getReview(),
+            booking.getReviewedAt(),
             booking.getCreatedAt()
         );
+    }
+
+    private ProviderReviewResponse toProviderReviewResponse(Booking booking, Map<String, User> usersById) {
+        return new ProviderReviewResponse(
+            booking.getServiceTitle(),
+            booking.getRating(),
+            clean(booking.getReview()),
+            getReviewerFirstName(booking, usersById),
+            booking.getReviewedAt()
+        );
+    }
+
+    private BookingResponse toBookingResponse(Booking booking, Map<String, User> usersById) {
+        return new BookingResponse(
+            booking.getId(),
+            booking.getServiceId(),
+            booking.getServiceTitle(),
+            booking.getCustomerId(),
+            booking.getProviderId(),
+            getUserDisplayName(booking.getCustomerId(), usersById),
+            getUserDisplayName(booking.getProviderId(), usersById),
+            getReviewerName(booking, usersById),
+            booking.getAgreedPrice(),
+            booking.getPriceUnit(),
+            booking.getScheduledAt(),
+            booking.getStatus(),
+            booking.getRating(),
+            booking.getReview(),
+            booking.getReviewedAt(),
+            booking.getCreatedAt()
+        );
+    }
+
+    private Map<String, User> getUsersById(List<Booking> bookings) {
+        Set<String> userIds = new HashSet<>();
+
+        for (Booking booking : bookings) {
+            addUserId(userIds, booking.getCustomerId());
+            addUserId(userIds, booking.getProviderId());
+        }
+
+        if (userIds.isEmpty()) {
+            return Map.of();
+        }
+
+        return userRepository.findAllById(userIds)
+            .stream()
+            .collect(Collectors.toMap(User::getId, Function.identity()));
+    }
+
+    private void addUserId(Set<String> userIds, String userId) {
+        String cleanUserId = clean(userId);
+
+        if (!cleanUserId.isBlank()) {
+            userIds.add(cleanUserId);
+        }
+    }
+
+    private String clean(String value) {
+        return value == null ? "" : value.trim();
+    }
+
+    private String getUserDisplayName(String userId) {
+        String cleanUserId = clean(userId);
+
+        if (cleanUserId.isBlank()) {
+            return "";
+        }
+
+        var user = userRepository.findById(cleanUserId);
+
+        if (user.isEmpty()) {
+            return cleanUserId;
+        }
+
+        User foundUser = user.get();
+        return getUserDisplayName(foundUser);
+    }
+
+    private String getUserDisplayName(String userId, Map<String, User> usersById) {
+        String cleanUserId = clean(userId);
+
+        if (cleanUserId.isBlank()) {
+            return "";
+        }
+
+        User user = usersById.get(cleanUserId);
+        return user == null ? cleanUserId : getUserDisplayName(user);
+    }
+
+    private String getUserDisplayName(User user) {
+        String fullName = (clean(user.getFirstName()) + " " + clean(user.getLastName())).trim();
+
+        if (!fullName.isBlank()) {
+            return fullName;
+        }
+
+        String email = clean(user.getEmail());
+        return email.isBlank() ? clean(user.getId()) : email;
+    }
+
+    private String getReviewerName(Booking booking) {
+        String reviewerName = clean(booking.getReviewerName());
+        return reviewerName.isBlank() ? getUserDisplayName(booking.getCustomerId()) : reviewerName;
+    }
+
+    private String getReviewerName(Booking booking, Map<String, User> usersById) {
+        String reviewerName = clean(booking.getReviewerName());
+        return reviewerName.isBlank() ? getUserDisplayName(booking.getCustomerId(), usersById) : reviewerName;
+    }
+
+    private String getReviewerFirstName(Booking booking, Map<String, User> usersById) {
+        String customerId = clean(booking.getCustomerId());
+        User customer = usersById.get(customerId);
+
+        if (customer != null && !clean(customer.getFirstName()).isBlank()) {
+            return clean(customer.getFirstName());
+        }
+
+        String reviewerName = getReviewerName(booking, usersById);
+
+        if (reviewerName.isBlank()) {
+            return "";
+        }
+
+        return reviewerName.split("\\s+")[0];
+    }
+
+    private User getUserByEmail(String email){
+        return userRepository.findByEmail(email)
+            .orElseThrow(() -> new UsernameNotFoundException("User not found"));
     }
 }

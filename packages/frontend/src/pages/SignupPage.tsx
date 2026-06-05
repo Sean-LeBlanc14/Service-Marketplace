@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import InputField from "../components/InputField";
 import MajorComboBox from "../components/MajorComboBox";
 import NavLink from "../components/NavLink";
@@ -10,6 +10,7 @@ import DropDown from "../components/DropDown";
 import { toast } from "react-toastify";
 import "../styles/SignupPage.css";
 import { API_ENDPOINTS } from "../utils/api";
+import { USER_ID_KEY } from "./profile/constants";
 
 function SignupPage() {
   const [email, setEmail] = useState("");
@@ -52,7 +53,7 @@ function SignupPage() {
         const data = await response.json();
         localStorage.setItem("jwt_token", data.token);
         localStorage.setItem("user_role", data.role);
-        localStorage.setItem("user_id", data.id);
+        localStorage.setItem(USER_ID_KEY, data.id);
         navigate("/verify", {
           state: { email: data.email, token: data.token }
         });
@@ -153,10 +154,19 @@ function SignupPage() {
           label={"Sign Up"}
           onClick={handleSubmit}
         />
-        link=<NavLink
-          to="/login"
-          label="Already have an account?"
-        />
+        link={
+          <>
+            <p className="signup-consent">
+              By signing up, you agree to our{" "}
+              <Link to="/terms">Terms of Service</Link> and{" "}
+              <Link to="/privacy">Privacy Policy</Link>.
+            </p>
+            <NavLink
+              to="/login"
+              label="Already have an account?"
+            />
+          </>
+        }
       />
 
       <InformationSection />

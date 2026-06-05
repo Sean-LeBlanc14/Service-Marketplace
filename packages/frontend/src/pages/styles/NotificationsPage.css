@@ -1,0 +1,144 @@
+.notif-page {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 32px 20px;
+}
+
+.notif-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24px;
+}
+
+.notif-title {
+  margin: 0;
+  font-size: 28px;
+  font-weight: 800;
+  color: #071b2d;
+}
+
+.notif-mark-all {
+  border: none;
+  padding: 0;
+  background: transparent;
+  color: #1f4a3f;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+.notif-loading,
+.notif-empty {
+  color: #667386;
+  font-size: 15px;
+}
+
+.notif-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.notif-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  width: 100%;
+  border: none;
+  border-radius: 10px;
+  padding: 14px 16px;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.15s;
+  position: relative;
+}
+
+.notif-item:hover {
+  background: #f3f5f7;
+}
+
+.notif-item.unread {
+  background: #eef4f0;
+}
+
+.notif-item.unread:hover {
+  background: #e0ede5;
+}
+
+.notif-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  width: 24px;
+  height: 24px;
+  font-size: 24px;
+  line-height: 1;
+  margin-top: 2px;
+}
+
+.notif-icon-default {
+  color: #1f4a3f;
+}
+
+.notif-icon-message {
+  color: #2563eb;
+}
+
+.notif-icon-money {
+  color: #b7791f;
+}
+
+.notif-icon-success {
+  color: #188038;
+}
+
+.notif-icon-danger {
+  color: #c5221f;
+}
+
+.notif-icon-request {
+  color: #6b4bb8;
+}
+
+.notif-icon-review {
+  color: #d97706;
+}
+
+.notif-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.notif-item-title {
+  margin: 0 0 3px;
+  font-size: 15px;
+  font-weight: 700;
+  color: #071b2d;
+}
+
+.notif-item-body {
+  margin: 0 0 5px;
+  font-size: 14px;
+  color: #25364a;
+  line-height: 1.45;
+}
+
+.notif-time {
+  font-size: 12px;
+  color: #667386;
+}
+
+.notif-dot {
+  flex: 0 0 auto;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #1f4a3f;
+  margin-top: 6px;
+}

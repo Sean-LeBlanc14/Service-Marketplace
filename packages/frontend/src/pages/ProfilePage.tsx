@@ -3,7 +3,6 @@ import type { FormEvent } from "react";
 import "../styles/ProfilePage.css";
 import { API_ENDPOINTS } from "../utils/api";
 import {
-  formatPriceUnit,
   normalizePriceUnit,
   PRICE_UNIT_OPTIONS
 } from "../utils/pricing";
@@ -12,171 +11,36 @@ import type {
   ApiUserProfile,
   ApiService
 } from "../utils/types";
+import { formatProviderRating } from "../utils/serviceFormatting";
 import { useNavigate } from "react-router-dom";
-
-const TOKEN_STORAGE_KEY = "jwt_token";
-
-const SERVICE_CATEGORY_OPTIONS = [
-  { value: "tutoring", label: "Tutoring" },
-  { value: "tech help", label: "Tech Help" },
-  { value: "housing", label: "Housing" },
-  { value: "finance", label: "Finance" },
-  { value: "food and catering", label: "Food and Catering" },
-  { value: "photography", label: "Photography" }
-];
-
-const NO_PRICE_UNIT_VALUE = "__none__";
-
-const SERVICE_TITLE_MAX_LENGTH = 80;
-const SERVICE_DESCRIPTION_MAX_LENGTH = 1000;
-const SERVICE_TAG_MAX_COUNT = 5;
-const SERVICE_TAG_MAX_LENGTH = 50;
-
-interface ServiceListing {
-  id: string;
-  title: string;
-  category: string;
-  description: string;
-  priceMin: string;
-  priceMax: string;
-  priceUnit: string;
-  location: string;
-  tags: string[];
-}
-
-interface UserProfile {
-  email: string;
-  firstName: string;
-  lastName: string;
-  major: string;
-  campus: string;
-  bio: string;
-  services: ServiceListing[];
-}
-
-interface ConnectStatus {
-  accountId: string | null;
-  chargesEnabled: boolean;
-  detailsSubmitted: boolean;
-  payoutsEnabled: boolean;
-}
-
-const emptyProfile: UserProfile = {
-  email: "",
-  firstName: "",
-  lastName: "",
-  major: "",
-  campus: "",
-  bio: "",
-  services: []
-};
-
-const PRICE_INPUT_PATTERN = /^\d*(?:\.\d{0,2})?$/;
-
-function cleanText(value?: string) {
-  return value?.trim() ?? "";
-}
-
-function cleanPriceValue(value?: number | string | null) {
-  return value == null ? "" : String(value).trim();
-}
-
-function isPriceInputValue(value: string) {
-  return PRICE_INPUT_PATTERN.test(value);
-}
-
-function normalizeTag(value: string) {
-  return value
-    .trim()
-    .replace(/\s+/g, " ")
-    .toLocaleLowerCase()
-    .split(" ")
-    .map((word) =>
-      word
-        ? `${word.charAt(0).toLocaleUpperCase()}${word.slice(1)}`
-        : word
-    )
-    .join(" ");
-}
-
-function parseServiceTags(value: string) {
-  return value
-    .split(",")
-    .map(normalizeTag)
-    .filter((tag) => tag.length > 0);
-}
-
-function formatCurrency(value: string) {
-  const amount = Number(value);
-
-  if (!Number.isFinite(amount)) {
-    return "$0";
-  }
-
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-    maximumFractionDigits: Number.isInteger(amount) ? 0 : 2
-  }).format(amount);
-}
-
-function formatPrice(service: ServiceListing) {
-  const minPrice = service.priceMin || service.priceMax;
-  const maxPrice = service.priceMax || service.priceMin;
-  const displayPrice =
-    minPrice && maxPrice && minPrice !== maxPrice
-      ? `${formatCurrency(minPrice)} - ${formatCurrency(maxPrice)}`
-      : formatCurrency(minPrice || maxPrice);
-  const priceUnit = normalizePriceUnit(service.priceUnit);
-
-  return priceUnit
-    ? `${displayPrice}/${priceUnit}`
-    : displayPrice;
-}
-
-function formatCategory(category: string) {
-  return (
-    SERVICE_CATEGORY_OPTIONS.find(
-      (option) => option.value === category
-    )?.label || category
-  );
-}
-
-function normalizeServices(
-  services: ApiService[] | undefined
-): ServiceListing[] {
-  if (!Array.isArray(services)) {
-    return [];
-  }
-
-  return services.map((service, index) => ({
-    id: cleanText(service.id) || `profile-service-${index}`,
-    title: cleanText(service.title),
-    category: cleanText(service.category),
-    description: cleanText(service.description),
-    priceMin: cleanPriceValue(service.priceMin),
-    priceMax: cleanPriceValue(service.priceMax),
-    priceUnit: cleanText(service.priceUnit ?? undefined),
-    location: cleanText(service.location),
-    tags: Array.isArray(service.tags)
-      ? service.tags.map(cleanText).filter(Boolean)
-      : []
-  }));
-}
-
-function normalizeProfile(
-  profile: ApiUserProfile
-): UserProfile {
-  return {
-    email: cleanText(profile.email),
-    firstName: cleanText(profile.firstName),
-    lastName: cleanText(profile.lastName),
-    major: cleanText(profile.major),
-    campus: cleanText(profile.campus),
-    bio: cleanText(profile.bio),
-    services: normalizeServices(profile.services)
-  };
-}
+import {
+  NO_PRICE_UNIT_VALUE,
+  SERVICE_DESCRIPTION_MAX_LENGTH,
+  SERVICE_TAG_MAX_COUNT,
+  SERVICE_TAG_MAX_LENGTH,
+  SERVICE_TITLE_MAX_LENGTH,
+  TOKEN_STORAGE_KEY,
+  USER_ID_KEY,
+  emptyProfile
+} from "./profile/constants";
+import type {
+  ConnectStatus,
+  ServiceListing,
+  ServicePricingType,
+  UserProfile
+} from "./profile/types";
+import {
+  isPriceInputValue,
+  normalizeProfile,
+  normalizeServices,
+  parseServiceTags
+} from "./profile/utils";
+import { BioSection } from "./profile/BioSection";
+import { DeleteServiceModal } from "./profile/ProfileModals";
+import { PaymentsSection } from "./profile/PaymentsSection";
+import { ProfileHeader } from "./profile/ProfileHeader";
+import { ServicesSection } from "./profile/ServicesSection";
+import { ReviewsModal } from "../components/ReviewsModal";
 
 function ProfilePage() {
   const [profile, setProfile] =
@@ -197,10 +61,11 @@ function ProfilePage() {
   const [serviceDescription, setServiceDescription] =
     useState("");
   const [serviceMessage, setServiceMessage] = useState("");
+
   const [serviceTitle, setServiceTitle] = useState("");
   const [serviceCategory, setServiceCategory] = useState("");
   const [servicePricingType, setServicePricingType] =
-    useState("flat");
+    useState<ServicePricingType>("flat");
   const [isCreatingService, setIsCreatingService] =
     useState(false);
   const [isServiceFormOpen, setIsServiceFormOpen] =
@@ -211,6 +76,8 @@ function ProfilePage() {
   const [servicePriceUnit, setServicePriceUnit] = useState("");
   const [serviceLocation, setServiceLocation] = useState("");
   const [serviceTags, setServiceTags] = useState("");
+  const [servicePostingType, setServicePostingType] =
+    useState("continuous");
   const navigate = useNavigate();
   const [connectStatus, setConnectStatus] =
     useState<ConnectStatus | null>(null);
@@ -223,6 +90,7 @@ function ProfilePage() {
   >(null);
   const [servicePendingDeletion, setServicePendingDeletion] =
     useState<ServiceListing | null>(null);
+  const [showOwnReviews, setShowOwnReviews] = useState(false);
 
   const isEditingService = editingServiceId !== null;
   const hasCustomPriceUnit =
@@ -493,7 +361,8 @@ function ProfilePage() {
             : normalizePriceUnit(servicePriceUnit),
         description: descriptionText,
         location: locationText,
-        tags: tags
+        tags: tags,
+        postingType: servicePostingType
       };
 
       setIsCreatingService(true);
@@ -569,6 +438,7 @@ function ProfilePage() {
     setServicePriceUnit("");
     setServiceLocation("");
     setServiceTags("");
+    setServicePostingType("continuous");
     setEditingServiceId(null);
   }
 
@@ -679,6 +549,10 @@ function ProfilePage() {
   const displayName =
     `${profile.firstName} ${profile.lastName}`.trim() ||
     "Profile";
+  const ratingText = formatProviderRating(
+    profile.averageRating,
+    profile.reviewCount
+  );
   const isDeletingPendingService =
     servicePendingDeletion !== null &&
     deletingServiceId === servicePendingDeletion.id;
@@ -702,563 +576,140 @@ function ProfilePage() {
   return (
     <>
       <main className="profile-screen">
-        <header className="profile-header">
-          <div>
-            <h1>{displayName}</h1>
-            <p>{profile.email}</p>
-            {(profile.major || profile.campus) && (
-              <p>
-                {[profile.major, profile.campus]
-                  .filter(Boolean)
-                  .join(" - ")}
-              </p>
-            )}
-          </div>
-          <p>{profile.services.length} services</p>
-        </header>
+        <ProfileHeader
+          displayName={displayName}
+          profile={profile}
+          ratingText={ratingText}
+          onReviewsClick={() => setShowOwnReviews(true)}
+        />
 
-        <section
-          className="profile-section profile-bio"
-          aria-label="Bio">
-          <div className="section-heading">
-            <div>
-              <h2>Bio</h2>
-              <p>Profile bio shown with your services.</p>
-            </div>
-            {!isEditingBio && ( //testing
-              <button
-                type="button"
-                className="section-action-button"
-                onClick={() => {
-                  setBioDraft(profile.bio);
-                  setBioMessage("");
-                  setError("");
-                  setIsEditingBio(true);
-                }}>
-                Edit Bio
-              </button>
-            )}
-          </div>
-          {profile.bio ? (
-            <p>{profile.bio}</p>
-          ) : (
-            <p>Write a short bio for your profile.</p>
-          )}
-          {(bioMessage || error) && (
-            <p
-              role="status"
-              className={`status-message ${error ? "form-error" : "form-success"}`}>
-              {error || bioMessage}
-            </p>
-          )}
-          {isEditingBio ? (
-            <form
-              aria-label="Edit profile bio"
-              onSubmit={handleBioSubmit}
-              className="bio-form">
-              <textarea
-                aria-label="Profile bio"
-                value={bioDraft}
-                onChange={(event) => {
-                  setBioDraft(event.target.value);
-                  setBioMessage("");
-                  setError("");
-                }}
-                placeholder="Bio"
-                rows={4}
-                className="bio-textarea"
-              />
-              <div className="bio-form-actions">
-                <button
-                  type="submit"
-                  disabled={isSaving}
-                  className="primary-button">
-                  {isSaving ? "Saving..." : "Save Bio"}
-                </button>
-                <button
-                  type="button"
-                  className="secondary-button"
-                  onClick={() => {
-                    setBioDraft(profile.bio);
-                    setBioMessage("");
-                    setError("");
-                    setIsEditingBio(false);
-                  }}>
-                  Cancel
-                </button>
-              </div>
-            </form>
-          ) : null}
-        </section>
+        <BioSection
+          profile={profile}
+          bioDraft={bioDraft}
+          bioMessage={bioMessage}
+          error={error}
+          isEditingBio={isEditingBio}
+          isSaving={isSaving}
+          onBioDraftChange={(value) => {
+            setBioDraft(value);
+            setBioMessage("");
+            setError("");
+          }}
+          onCancel={() => {
+            setBioDraft(profile.bio);
+            setBioMessage("");
+            setError("");
+            setIsEditingBio(false);
+          }}
+          onEdit={() => {
+            setBioDraft(profile.bio);
+            setBioMessage("");
+            setError("");
+            setIsEditingBio(true);
+          }}
+          onSubmit={handleBioSubmit}
+        />
 
-        <section
-          className="profile-section"
-          aria-label="Payments">
-          <div className="section-heading">
-            <div>
-              <h2>Payments</h2>
-              <p>
-                Connect Stripe to receive payments for your
-                services.
-              </p>
-            </div>
-            {connectStatus && !connectStatus.chargesEnabled && (
-              <button
-                type="button"
-                className="section-action-button"
-                disabled={isConnecting}
-                onClick={() => void handleConnectStripe()}>
-                {isConnecting
-                  ? "Redirecting..."
-                  : connectStatus.accountId
-                    ? "Continue Setup"
-                    : "Connect Stripe"}
-              </button>
-            )}
-          </div>
-          {connectStatus?.chargesEnabled ? (
-            <p className="connect-status connect-status--active">
-              Stripe connected. Payments are active.
-            </p>
-          ) : connectStatus?.detailsSubmitted ? (
-            <p className="connect-status">
-              Stripe setup in progress. Payments will be enabled
-              once verification is complete.
-            </p>
-          ) : (
-            <p className="empty-state">
-              Connect a Stripe account to receive payments from
-              customers.
-            </p>
-          )}
-        </section>
+        <PaymentsSection
+          connectStatus={connectStatus}
+          isConnecting={isConnecting}
+          onConnectStripe={() => void handleConnectStripe()}
+        />
 
-        <section
-          className="profile-section services-section"
-          aria-label="Services">
-          <div className="section-heading">
-            <div>
-              <h2>Services</h2>
-              <p>Services shown on this profile.</p>
-            </div>
-            {!isServiceFormOpen && (
-              <button
-                type="button"
-                className="section-action-button"
-                onClick={() => {
-                  resetServiceForm();
-                  setServiceMessage("");
-                  setIsServiceFormOpen(true);
-                }}>
-                Create Service
-              </button>
-            )}
-          </div>
-
-          {!isServiceFormOpen && serviceMessage && (
-            <p role="status" className="form-success">
-              {serviceMessage}
-            </p>
-          )}
-
-          {isServiceFormOpen && (
-            <form
-              className="service-form"
-              aria-label={
-                isEditingService
-                  ? "Edit service listing"
-                  : "Create service listing"
-              }
-              onSubmit={handleServiceSubmit}>
-              <div className="service-form-header">
-                <h3>
-                  {isEditingService
-                    ? "Edit Service"
-                    : "Create Service"}
-                </h3>
-              </div>
-              <div className="service-form-grid">
-                <label>
-                  <span>Title</span>
-                  <input
-                    value={serviceTitle}
-                    onChange={(event) => {
-                      setServiceTitle(event.target.value);
-                      setServiceMessage("");
-                    }}
-                    maxLength={SERVICE_TITLE_MAX_LENGTH}
-                    placeholder="Calculus tutoring"
-                    required
-                  />
-                </label>
-
-                <label>
-                  <span>Category</span>
-                  <select
-                    value={serviceCategory}
-                    onChange={(event) => {
-                      setServiceCategory(event.target.value);
-                      setServiceMessage("");
-                    }}
-                    required>
-                    <option value="" disabled hidden>
-                      Select a category
-                    </option>
-                    {SERVICE_CATEGORY_OPTIONS.map(
-                      (category) => (
-                        <option
-                          key={category.value}
-                          value={category.value}>
-                          {category.label}
-                        </option>
-                      )
-                    )}
-                  </select>
-                </label>
-              </div>
-
-              <div className="service-pricing">
-                <div className="service-pricing-heading">
-                  <span>Pricing</span>
-                  <div
-                    className="pricing-toggle"
-                    aria-label="Choose pricing type">
-                    <button
-                      type="button"
-                      className={
-                        servicePricingType === "flat"
-                          ? "active"
-                          : ""
-                      }
-                      aria-pressed={
-                        servicePricingType === "flat"
-                      }
-                      onClick={() => {
-                        setServicePricingType("flat");
-                        setServiceMessage("");
-                      }}>
-                      Flat Price
-                    </button>
-                    <button
-                      type="button"
-                      className={
-                        servicePricingType === "range"
-                          ? "active"
-                          : ""
-                      }
-                      aria-pressed={
-                        servicePricingType === "range"
-                      }
-                      onClick={() => {
-                        setServicePricingType("range");
-                        setServiceMessage("");
-                      }}>
-                      Range
-                    </button>
-                  </div>
-                </div>
-
-                <div
-                  className={`service-form-grid service-price-grid ${
-                    servicePricingType === "flat"
-                      ? "service-price-grid-flat"
-                      : ""
-                  }`}>
-                  {servicePricingType === "flat" ? (
-                    <label>
-                      <span>Price</span>
-                      <input
-                        value={servicePrice}
-                        onChange={(event) => {
-                          const nextPrice = event.target.value;
-
-                          if (!isPriceInputValue(nextPrice)) {
-                            return;
-                          }
-
-                          setServicePrice(nextPrice);
-                          setServiceMessage("");
-                        }}
-                        inputMode="decimal"
-                        pattern="[0-9]*[.]?[0-9]{0,2}"
-                        type="text"
-                        placeholder="$"
-                        required
-                      />
-                    </label>
-                  ) : (
-                    <>
-                      <label>
-                        <span>Price Min</span>
-                        <input
-                          value={serviceMinPrice}
-                          onChange={(event) => {
-                            const nextPrice =
-                              event.target.value;
-
-                            if (!isPriceInputValue(nextPrice)) {
-                              return;
-                            }
-
-                            setServiceMinPrice(nextPrice);
-                            setServiceMessage("");
-                          }}
-                          inputMode="decimal"
-                          pattern="[0-9]*[.]?[0-9]{0,2}"
-                          type="text"
-                          placeholder="$"
-                          required
-                        />
-                      </label>
-
-                      <label>
-                        <span>Price Max</span>
-                        <input
-                          value={serviceMaxPrice}
-                          onChange={(event) => {
-                            const nextPrice =
-                              event.target.value;
-
-                            if (!isPriceInputValue(nextPrice)) {
-                              return;
-                            }
-
-                            setServiceMaxPrice(nextPrice);
-                            setServiceMessage("");
-                          }}
-                          inputMode="decimal"
-                          pattern="[0-9]*[.]?[0-9]{0,2}"
-                          type="text"
-                          placeholder="$$$"
-                          required
-                        />
-                      </label>
-                    </>
-                  )}
-
-                  <label>
-                    <span>Price Unit (optional)</span>
-                    <select
-                      value={servicePriceUnit}
-                      onChange={(event) => {
-                        setServicePriceUnit(event.target.value);
-                        setServiceMessage("");
-                      }}>
-                      <option value="" disabled hidden>
-                        Select a price unit
-                      </option>
-                      <option value={NO_PRICE_UNIT_VALUE}>
-                        N/A
-                      </option>
-                      {hasCustomPriceUnit && (
-                        <option value={servicePriceUnit}>
-                          {formatPriceUnit(servicePriceUnit)}
-                        </option>
-                      )}
-                      {PRICE_UNIT_OPTIONS.map((unit) => (
-                        <option
-                          key={unit.value}
-                          value={unit.value}>
-                          {unit.label}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
-                </div>
-              </div>
-
-              <label>
-                <span>Description</span>
-                <textarea
-                  value={serviceDescription}
-                  onChange={(event) => {
-                    setServiceDescription(event.target.value);
-                    setServiceMessage("");
-                  }}
-                  maxLength={SERVICE_DESCRIPTION_MAX_LENGTH}
-                  placeholder="Describe what you are offering"
-                  rows={4}
-                  required
-                />
-              </label>
-
-              <label>
-                <span>Location</span>
-                <input
-                  value={serviceLocation}
-                  onChange={(event) => {
-                    setServiceLocation(event.target.value);
-                    setServiceMessage("");
-                  }}
-                  placeholder="Campus or address"
-                  required
-                />
-              </label>
-
-              <label>
-                <span>Tags (optional)</span>
-                <textarea
-                  value={serviceTags}
-                  onChange={(event) => {
-                    setServiceTags(event.target.value);
-                    setServiceMessage("");
-                  }}
-                  placeholder="e.g. Python, Data Science, Algorithms"
-                  rows={2}
-                />
-              </label>
-
-              <div className="service-form-actions">
-                <button
-                  type="submit"
-                  disabled={isCreatingService}>
-                  {isCreatingService
-                    ? isEditingService
-                      ? "Saving..."
-                      : "Creating..."
-                    : isEditingService
-                      ? "Save Changes"
-                      : "Create Service"}
-                </button>
-                <button
-                  type="button"
-                  className="secondary-button"
-                  onClick={handleCancelServiceForm}>
-                  Cancel
-                </button>
-              </div>
-            </form>
-          )}
-
-          {profile.services.length === 0 ? (
-            <p className="empty-state">
-              No services are listed on this profile yet.
-            </p>
-          ) : (
-            <div className="listing-grid">
-              {profile.services.map((service) => (
-                <article
-                  className="listing-card"
-                  key={service.id}>
-                  <div>
-                    <div className="listing-card-heading">
-                      <h3>{service.title}</h3>
-                      <div
-                        className="listing-card-actions"
-                        role="group"
-                        aria-label={`${service.title} actions`}>
-                        <button
-                          type="button"
-                          onClick={() =>
-                            handleEditService(service)
-                          }>
-                          Edit
-                        </button>
-                        <button
-                          type="button"
-                          className="danger-button"
-                          disabled={
-                            deletingServiceId === service.id
-                          }
-                          onClick={() =>
-                            setServicePendingDeletion(service)
-                          }>
-                          {deletingServiceId === service.id
-                            ? "Taking down..."
-                            : "Take Down"}
-                        </button>
-                      </div>
-                    </div>
-                    {service.category && (
-                      <p className="listing-category">
-                        {formatCategory(service.category)}
-                      </p>
-                    )}
-                    <p className="listing-description">
-                      {service.description}
-                    </p>
-                    <p className="listing-location">
-                      <span
-                        aria-hidden="true"
-                        className="listing-location-pin">
-                        <svg
-                          viewBox="0 0 24 24"
-                          focusable="false">
-                          <path d="M12 21s7-6.1 7-12A7 7 0 0 0 5 9c0 5.9 7 12 7 12Z" />
-                          <circle cx="12" cy="9" r="2.4" />
-                        </svg>
-                      </span>
-                      {service.location}
-                    </p>
-                    {service.tags.length > 0 && (
-                      <div
-                        className="listing-tags"
-                        aria-label="Service tags">
-                        {service.tags.map((tag) => (
-                          <span key={tag}>{tag}</span>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                  <div className="listing-card-footer">
-                    <strong>{formatPrice(service)}</strong>
-                  </div>
-                </article>
-              ))}
-            </div>
-          )}
-        </section>
+        <ServicesSection
+          deletingServiceId={deletingServiceId}
+          hasCustomPriceUnit={hasCustomPriceUnit}
+          isCreatingService={isCreatingService}
+          isEditingService={isEditingService}
+          isServiceFormOpen={isServiceFormOpen}
+          serviceCategory={serviceCategory}
+          serviceDescription={serviceDescription}
+          serviceLocation={serviceLocation}
+          serviceMaxPrice={serviceMaxPrice}
+          serviceMessage={serviceMessage}
+          serviceMinPrice={serviceMinPrice}
+          servicePrice={servicePrice}
+          servicePriceUnit={servicePriceUnit}
+          servicePricingType={servicePricingType}
+          servicePostingType={servicePostingType}
+          services={profile.services}
+          serviceTags={serviceTags}
+          serviceTitle={serviceTitle}
+          onCancelServiceForm={handleCancelServiceForm}
+          onEditService={handleEditService}
+          onOpenCreateService={() => {
+            resetServiceForm();
+            setServiceMessage("");
+            setIsServiceFormOpen(true);
+          }}
+          onRequestDeleteService={(service) =>
+            setServicePendingDeletion(service)
+          }
+          onServiceCategoryChange={(value) => {
+            setServiceCategory(value);
+            setServiceMessage("");
+          }}
+          onServiceDescriptionChange={(value) => {
+            setServiceDescription(value);
+            setServiceMessage("");
+          }}
+          onServiceLocationChange={(value) => {
+            setServiceLocation(value);
+            setServiceMessage("");
+          }}
+          onServiceMaxPriceChange={(value) => {
+            setServiceMaxPrice(value);
+            setServiceMessage("");
+          }}
+          onServiceMinPriceChange={(value) => {
+            setServiceMinPrice(value);
+            setServiceMessage("");
+          }}
+          onServicePriceChange={(value) => {
+            setServicePrice(value);
+            setServiceMessage("");
+          }}
+          onServicePriceUnitChange={(value) => {
+            setServicePriceUnit(value);
+            setServiceMessage("");
+          }}
+          onServicePricingTypeChange={(value) => {
+            setServicePricingType(value);
+            setServiceMessage("");
+          }}
+          onServicePostingTypeChange={(value) => {
+            setServicePostingType(value);
+            setServiceMessage("");
+          }}
+          onServiceTagsChange={(value) => {
+            setServiceTags(value);
+            setServiceMessage("");
+          }}
+          onServiceTitleChange={(value) => {
+            setServiceTitle(value);
+            setServiceMessage("");
+          }}
+          onSubmit={handleServiceSubmit}
+        />
       </main>
 
       {servicePendingDeletion && (
-        <div
-          className="profile-modal-backdrop"
-          role="presentation"
-          onMouseDown={(event) => {
-            if (
-              event.target === event.currentTarget &&
-              !isDeletingPendingService
-            ) {
-              setServicePendingDeletion(null);
-            }
-          }}>
-          <section
-            className="profile-confirm-modal"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="take-down-title">
-            <h2 id="take-down-title">Take Down Service</h2>
-            <p>
-              This will remove{" "}
-              <strong>
-                {servicePendingDeletion.title || "this service"}
-              </strong>{" "}
-              from your profile and campus services.
-            </p>
-            <div className="profile-confirm-actions">
-              <button
-                type="button"
-                className="profile-confirm-danger"
-                disabled={isDeletingPendingService}
-                onClick={() =>
-                  void handleDeleteService(
-                    servicePendingDeletion
-                  )
-                }>
-                {isDeletingPendingService
-                  ? "Taking down..."
-                  : "Take Down"}
-              </button>
-              <button
-                type="button"
-                className="profile-confirm-cancel"
-                disabled={isDeletingPendingService}
-                onClick={() => setServicePendingDeletion(null)}>
-                Cancel
-              </button>
-            </div>
-          </section>
-        </div>
+        <DeleteServiceModal
+          isDeleting={isDeletingPendingService}
+          service={servicePendingDeletion}
+          onCancel={() => setServicePendingDeletion(null)}
+          onConfirm={(service) =>
+            void handleDeleteService(service)
+          }
+        />
+      )}
+
+      {showOwnReviews && (
+        <ReviewsModal
+          providerId={localStorage.getItem(USER_ID_KEY) || ""}
+          providerName={displayName}
+          onClose={() => setShowOwnReviews(false)}
+        />
       )}
     </>
   );

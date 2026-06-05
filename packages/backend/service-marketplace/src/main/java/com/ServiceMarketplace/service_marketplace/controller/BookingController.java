@@ -119,11 +119,11 @@ public class BookingController {
     }
 
     @DeleteMapping("/{id}/reject")
-    public ResponseEntity<Void> rejectBooking(@PathVariable String id, @AuthenticationPrincipal UserDetails userDetails){
+    public ResponseEntity<BookingResponse> rejectBooking(@PathVariable String id, @AuthenticationPrincipal UserDetails userDetails){
         
-        bookingService.rejectBooking(id, userDetails);
+        BookingResponse response = bookingService.rejectBooking(id, userDetails);
 
-        return ResponseEntity.noContent().build();
+        return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 
     @GetMapping("/action")

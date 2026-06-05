@@ -18,8 +18,11 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import java.math.BigDecimal;
+import java.util.Map;
 import java.util.List;
 import java.util.Optional;
 
@@ -285,5 +288,163 @@ public class ServiceServiceTest {
         serviceService.deleteService("service123", userDetails);
 
         verify(serviceRepository).delete(existingService);
+    }
+
+    @Test
+    void createService_missingUser_throwsUsernameNotFoundException() {
+        CreateServiceRequest request = new CreateServiceRequest();
+        request.setTitle("Tutoring");
+
+        UserDetails userDetails = mock(UserDetails.class);
+        when(userDetails.getUsername()).thenReturn("missing@example.com");
+        when(userRepository.findByEmail("missing@example.com")).thenReturn(Optional.empty());
+
+        assertThrows(UsernameNotFoundException.class, () -> serviceService.createService(request, userDetails));
+    }
+
+    @Test
+    void createService_nullTagsAndBlankProviderName_usesEmailDisplayName() {
+        CreateServiceRequest request = new CreateServiceRequest();
+        request.setTitle(" Tutoring ");
+        request.setDescription(" Help ");
+        request.setPriceMin(new BigDecimal("10.00"));
+        request.setPriceMax(new BigDecimal("20.00"));
+        request.setCategory(" tutoring ");
+        request.setLocation(" library ");
+        request.setTags(null);
+
+        User user = new User();
+        user.setId("user123");
+        user.setEmail("student@example.com");
+        user.setFirstName(" ");
+        user.setLastName(" ");
+
+        UserDetails userDetails = mock(UserDetails.class);
+        when(userDetails.getUsername()).thenReturn("student@example.com");
+        when(userRepository.findByEmail("student@example.com")).thenReturn(Optional.of(user));
+        when(serviceRepository.save(any(Service.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        ServiceDto result = serviceService.createService(request, userDetails);
+
+        assertEquals("student@example.com", result.getProviderName());
+        ArgumentCaptor<Service> serviceCaptor = ArgumentCaptor.forClass(Service.class);
+        verify(serviceRepository).save(serviceCaptor.capture());
+        assertEquals(List.of(), serviceCaptor.getValue().getTags());
+    }
+
+    @Test
+    void updateService_missingService_throwsResourceNotFoundException() {
+        UpdateServiceRequest request = new UpdateServiceRequest();
+        User user = new User();
+        user.setId("user123");
+        user.setEmail("student@example.com");
+
+        UserDetails userDetails = mock(UserDetails.class);
+        when(userDetails.getUsername()).thenReturn("student@example.com");
+        when(userRepository.findByEmail("student@example.com")).thenReturn(Optional.of(user));
+        when(serviceRepository.findById("missing-service")).thenReturn(Optional.empty());
+
+        assertThrows(
+            com.ServiceMarketplace.service_marketplace.exception.ResourceNotFoundException.class,
+            () -> serviceService.updateService("missing-service", request, userDetails)
+        );
+    }
+
+    @Test
+    void getProviderRatingSummary_blankAndNullRatings_returnNoRating() {
+        ServiceService.ProviderRatingSummary blankSummary = serviceService.getProviderRatingSummary(" ");
+        assertNull(blankSummary.averageRating());
+        assertEquals(0, blankSummary.reviewCount());
+
+        Booking unratedBooking = new Booking();
+        unratedBooking.setProviderId("user123");
+        unratedBooking.setRating(null);
+        when(bookingRepository.findReviewedBookingsByProviderId("user123")).thenReturn(List.of(unratedBooking));
+
+        ServiceService.ProviderRatingSummary unratedSummary = serviceService.getProviderRatingSummary("user123");
+
+        assertNull(unratedSummary.averageRating());
+        assertEquals(0, unratedSummary.reviewCount());
+    }
+
+    @Test
+    void getProviderRatingSummary_ratedBookings_returnsRoundedAverage() {
+        Booking firstReview = new Booking();
+        firstReview.setProviderId("user123");
+        firstReview.setRating(5);
+        Booking secondReview = new Booking();
+        secondReview.setProviderId("user123");
+        secondReview.setRating(4);
+
+        when(bookingRepository.findReviewedBookingsByProviderId("user123"))
+            .thenReturn(List.of(firstReview, secondReview));
+
+        ServiceService.ProviderRatingSummary summary = serviceService.getProviderRatingSummary("user123");
+
+        assertEquals(4.5, summary.averageRating());
+        assertEquals(2, summary.reviewCount());
+    }
+
+    @Test
+    void summarizeReviewedBookings_emptyRatings_returnsNoRating() {
+        Booking unratedBooking = new Booking();
+
+        ServiceService.ProviderRatingSummary summary = ReflectionTestUtils.invokeMethod(
+            serviceService,
+            "summarizeReviewedBookings",
+            List.of(unratedBooking)
+        );
+
+        assertNull(summary.averageRating());
+        assertEquals(0, summary.reviewCount());
+    }
+
+    @Test
+    void privateToDto_missingProvider_usesServiceCreatorFallback() {
+        Service service = createMockService("service123", "tutoring");
+        service.setUserId(" ");
+
+        ServiceDto dto = ReflectionTestUtils.invokeMethod(serviceService, "toDto", service);
+
+        assertEquals("Service creator", dto.getProviderName());
+    }
+
+    @Test
+    void privateToDto_existingProvider_usesRepositoryDisplayName() {
+        Service service = createMockService("service123", "tutoring");
+        User provider = new User();
+        provider.setId("user123");
+        provider.setFirstName("Avery");
+        provider.setLastName("Chen");
+
+        when(userRepository.findById("user123")).thenReturn(Optional.of(provider));
+        when(bookingRepository.findReviewedBookingsByProviderId("user123")).thenReturn(List.of());
+
+        ServiceDto dto = ReflectionTestUtils.invokeMethod(serviceService, "toDto", service);
+
+        assertEquals("Avery Chen", dto.getProviderName());
+    }
+
+    @Test
+    void getDisplayName_blankNameAndEmail_usesServiceCreatorFallback() {
+        User user = new User();
+        user.setFirstName(" ");
+        user.setLastName(" ");
+        user.setEmail(" ");
+
+        String displayName = ReflectionTestUtils.invokeMethod(serviceService, "getDisplayName", user);
+
+        assertEquals("Service creator", displayName);
+    }
+
+    @Test
+    void getProviderRatingSummaries_emptyIds_returnsEmptyMap() {
+        Map<String, ServiceService.ProviderRatingSummary> result = ReflectionTestUtils.invokeMethod(
+            serviceService,
+            "getProviderRatingSummaries",
+            List.of(" ")
+        );
+
+        assertEquals(Map.of(), result);
     }
 }

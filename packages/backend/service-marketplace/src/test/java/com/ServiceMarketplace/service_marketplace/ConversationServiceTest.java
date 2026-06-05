@@ -253,6 +253,34 @@ class ConversationServiceTest {
     }
 
     @Test
+    void sendMessage_textFromProvider_pushesToCustomer() {
+        SendMessageRequest request = new SendMessageRequest();
+        request.setType(MessageType.TEXT);
+        request.setContent("I can help with that.");
+
+        Message saved = new Message();
+        saved.setId("msg-provider");
+        saved.setConversationId("conv-1");
+        saved.setSenderId("prov-1");
+        saved.setSenderName("Bob Smith");
+        saved.setType(MessageType.TEXT);
+        saved.setContent("I can help with that.");
+
+        when(userDetails.getUsername()).thenReturn("provider@calpoly.edu");
+        when(userRepository.findByEmail("provider@calpoly.edu")).thenReturn(Optional.of(provider));
+        when(conversationRepository.findById("conv-1")).thenReturn(Optional.of(conversation));
+        when(messageRepository.save(any(Message.class))).thenReturn(saved);
+        when(conversationRepository.save(any(Conversation.class))).thenReturn(conversation);
+        when(userRepository.findById("cust-1")).thenReturn(Optional.of(customer));
+
+        MessageResponse result = conversationService.sendMessage("conv-1", request, userDetails);
+
+        assertThat(result.getSenderId()).isEqualTo("prov-1");
+        verify(messagingTemplate).convertAndSendToUser(eq("customer@calpoly.edu"), eq("/queue/messages"), any());
+        verify(notificationService).send(eq("cust-1"), any(), anyString(), anyString(), eq("conv-1"));
+    }
+
+    @Test
     void sendMessage_emptyText_throwsIllegalArgumentException() {
         SendMessageRequest request = new SendMessageRequest();
         request.setType(MessageType.TEXT);
@@ -422,6 +450,25 @@ class ConversationServiceTest {
         assertThatThrownBy(() -> conversationService.acceptOffer("conv-1", "msg-text", userDetails))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("not a price offer");
+    }
+
+    @Test
+    void acceptOffer_offerFromDifferentConversation_throwsUnauthorizedChatAccessException() {
+        when(userDetails.getUsername()).thenReturn("provider@calpoly.edu");
+
+        Message offer = new Message();
+        offer.setId("offer-other");
+        offer.setConversationId("other-conv");
+        offer.setType(MessageType.PRICE_OFFER);
+        offer.setOfferedPrice(new BigDecimal("55.00"));
+
+        when(userRepository.findByEmail("provider@calpoly.edu")).thenReturn(Optional.of(provider));
+        when(conversationRepository.findById("conv-1")).thenReturn(Optional.of(conversation));
+        when(messageRepository.findById("offer-other")).thenReturn(Optional.of(offer));
+
+        assertThatThrownBy(() -> conversationService.acceptOffer("conv-1", "offer-other", userDetails))
+                .isInstanceOf(UnauthorizedChatAccessException.class)
+                .hasMessageContaining("does not belong");
     }
 
     // --- rejectOffer ---

@@ -3,6 +3,7 @@ package com.ServiceMarketplace.service_marketplace;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -26,6 +27,8 @@ import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import com.ServiceMarketplace.service_marketplace.dto.BookingResponse;
 import com.ServiceMarketplace.service_marketplace.dto.ConfirmBookingRequest;
@@ -364,6 +367,7 @@ class BookingServiceTest {
         when(userRepository.findByEmail("tutor@calpoly.edu")).thenReturn(Optional.of(mockProvider));
         when(bookingRepository.findById("booking-001")).thenReturn(Optional.of(pending));
         when(serviceRepository.findById("service-123")).thenReturn(Optional.of(mockService));
+        when(userRepository.findById("customer-789")).thenReturn(Optional.of(mockCustomer));
         when(paymentService.createAndConfirmPaymentIntent(
             eq(new BigDecimal("60.00")), eq("cus_test_123"),
             eq("service-123"), eq("customer-789"), eq("acct_test_provider")))
@@ -375,6 +379,13 @@ class BookingServiceTest {
 
         assertThat(result.getStatus()).isEqualTo(BookingStatus.PENDING_PAYMENT);
         assertThat(result.getAgreedPrice()).isEqualByComparingTo("60.00");
+        verify(notificationService).send(
+            eq("customer-789"),
+            any(),
+            eq("Booking Confirmed"),
+            eq("Bob confirmed your booking for Math Tutoring"),
+            eq("booking-001")
+        );
     }
 
     @Test
@@ -546,6 +557,219 @@ class BookingServiceTest {
         assertThatThrownBy(() -> bookingService.processTokenAction("expired-token"))
             .isInstanceOf(BookingTokenException.class)
             .hasMessageContaining("expired");
+    }
+
+    @Test
+    void createBooking_singlePostingSetupFailure_releasesReservation() {
+        CreateBookingRequest request = new CreateBookingRequest("service-123", new BigDecimal("50.00"), Instant.now());
+        mockService.setPostingType("single");
+        mockService.setIsAvailable(true);
+
+        when(userRepository.findByEmail("student@calpoly.edu")).thenReturn(Optional.of(mockCustomer));
+        when(serviceRepository.findById("service-123")).thenReturn(Optional.of(mockService));
+        when(userRepository.findById("provider-456")).thenReturn(Optional.of(mockProvider));
+        when(mongoTemplate.findAndModify(any(Query.class), any(Update.class), any(FindAndModifyOptions.class), eq(Service.class)))
+            .thenReturn(mockService);
+        when(paymentService.createSetupIntent(eq("student@calpoly.edu"), eq("Alice Student")))
+            .thenThrow(new RuntimeException("Stripe setup failed"));
+
+        assertThatThrownBy(() -> bookingService.createBooking(request, userDetails))
+            .isInstanceOf(RuntimeException.class)
+            .hasMessage("Stripe setup failed");
+
+        verify(mongoTemplate).updateFirst(any(Query.class), any(Update.class), eq(Service.class));
+    }
+
+    @Test
+    void getProviderBookingRequests_returnsAwaitingRequests() {
+        Booking booking = createBookingWithStatus(BookingStatus.AWAITING_PROVIDER_CONFIRMATION);
+
+        when(userDetails.getUsername()).thenReturn("tutor@calpoly.edu");
+        when(userRepository.findByEmail("tutor@calpoly.edu")).thenReturn(Optional.of(mockProvider));
+        when(bookingRepository.findByProviderIdAndStatusOrderByCreatedAtDesc(
+            "provider-456",
+            BookingStatus.AWAITING_PROVIDER_CONFIRMATION
+        )).thenReturn(List.of(booking));
+        when(userRepository.findAllById(any())).thenReturn(List.of(mockCustomer, mockProvider));
+
+        List<BookingResponse> result = bookingService.getProviderBookingRequests(userDetails);
+
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).getStatus()).isEqualTo(BookingStatus.AWAITING_PROVIDER_CONFIRMATION);
+    }
+
+    @Test
+    void getProviderScheduledBookings_returnsConfirmedBookings() {
+        Booking booking = createBookingWithStatus(BookingStatus.CONFIRMED);
+
+        when(userDetails.getUsername()).thenReturn("tutor@calpoly.edu");
+        when(userRepository.findByEmail("tutor@calpoly.edu")).thenReturn(Optional.of(mockProvider));
+        when(bookingRepository.findByProviderIdAndStatusOrderByCreatedAtDesc("provider-456", BookingStatus.CONFIRMED))
+            .thenReturn(List.of(booking));
+        when(userRepository.findAllById(any())).thenReturn(List.of(mockCustomer, mockProvider));
+
+        List<BookingResponse> result = bookingService.getProviderScheduledBookings(userDetails);
+
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).getStatus()).isEqualTo(BookingStatus.CONFIRMED);
+    }
+
+    @Test
+    void getProviderCompletedBookings_returnsCompletedBookings() {
+        Booking booking = createBookingWithStatus(BookingStatus.COMPLETED);
+
+        when(userDetails.getUsername()).thenReturn("tutor@calpoly.edu");
+        when(userRepository.findByEmail("tutor@calpoly.edu")).thenReturn(Optional.of(mockProvider));
+        when(bookingRepository.findByProviderIdAndStatusOrderByCreatedAtDesc("provider-456", BookingStatus.COMPLETED))
+            .thenReturn(List.of(booking));
+        when(userRepository.findAllById(any())).thenReturn(List.of(mockCustomer, mockProvider));
+
+        List<BookingResponse> result = bookingService.getProviderCompletedBookings(userDetails);
+
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).getStatus()).isEqualTo(BookingStatus.COMPLETED);
+    }
+
+    @Test
+    void getCustomerScheduledBookings_returnsConfirmedCustomerBookings() {
+        Booking booking = createBookingWithStatus(BookingStatus.CONFIRMED);
+
+        when(userRepository.findByEmail("student@calpoly.edu")).thenReturn(Optional.of(mockCustomer));
+        when(bookingRepository.findByCustomerIdAndStatusOrderByCreatedAtDesc("customer-789", BookingStatus.CONFIRMED))
+            .thenReturn(List.of(booking));
+        when(userRepository.findAllById(any())).thenReturn(List.of(mockCustomer, mockProvider));
+
+        List<BookingResponse> result = bookingService.getCustomerScheduledBookings(userDetails);
+
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).getStatus()).isEqualTo(BookingStatus.CONFIRMED);
+    }
+
+    @Test
+    void getCustomerBookings_emptyBookings_doesNotLookupUsers() {
+        when(userRepository.findByEmail("student@calpoly.edu")).thenReturn(Optional.of(mockCustomer));
+        when(bookingRepository.findByCustomerIdOrderByCreatedAtDesc("customer-789")).thenReturn(List.of());
+
+        List<BookingResponse> result = bookingService.getCustomerBookings(userDetails);
+
+        assertThat(result).isEmpty();
+        verify(userRepository, never()).findAllById(any());
+    }
+
+    @Test
+    void getProviderBookingRequests_missingUser_throwsUsernameNotFoundException() {
+        when(userDetails.getUsername()).thenReturn("missing@calpoly.edu");
+        when(userRepository.findByEmail("missing@calpoly.edu")).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> bookingService.getProviderBookingRequests(userDetails))
+            .isInstanceOf(UsernameNotFoundException.class);
+    }
+
+    @Test
+    void rejectBooking_providerRejectsRequestAndNotifiesCustomer() {
+        Booking booking = createBookingWithStatus(BookingStatus.AWAITING_PROVIDER_CONFIRMATION);
+
+        when(userDetails.getUsername()).thenReturn("tutor@calpoly.edu");
+        when(userRepository.findByEmail("tutor@calpoly.edu")).thenReturn(Optional.of(mockProvider));
+        when(bookingRepository.findById("booking-123")).thenReturn(Optional.of(booking));
+        when(userRepository.findById("customer-789")).thenReturn(Optional.of(mockCustomer));
+
+        bookingService.rejectBooking("booking-123", userDetails);
+
+        assertThat(booking.getStatus()).isEqualTo(BookingStatus.REJECTED);
+        verify(bookingRepository).save(booking);
+        verify(emailService).sendBookingRejectedCustomerEmail(
+            eq("student@calpoly.edu"),
+            eq("Alice"),
+            eq("Bob Smith"),
+            eq("Math Tutoring"),
+            any(Instant.class),
+            eq("booking-123")
+        );
+    }
+
+    @Test
+    void rejectBooking_wrongProviderAndWrongStatus_throwsUnauthorizedRejection() {
+        Booking booking = createBookingWithStatus(BookingStatus.CONFIRMED);
+        User stranger = buildStranger();
+
+        when(userDetails.getUsername()).thenReturn("stranger@calpoly.edu");
+        when(userRepository.findByEmail("stranger@calpoly.edu")).thenReturn(Optional.of(stranger));
+        when(bookingRepository.findById("booking-123")).thenReturn(Optional.of(booking));
+
+        assertThatThrownBy(() -> bookingService.rejectBooking("booking-123", userDetails))
+            .isInstanceOf(com.ServiceMarketplace.service_marketplace.exception.UnauthorizedBookingRejectionException.class);
+    }
+
+    @Test
+    void scheduleBookingCompletion_marksOnlyPastConfirmedBookingsCompleted() {
+        Booking pastBooking = createBookingWithStatus(BookingStatus.CONFIRMED);
+        pastBooking.setId("past-booking");
+        pastBooking.setScheduledAt(Instant.now().minusSeconds(60));
+        Booking futureBooking = createBookingWithStatus(BookingStatus.CONFIRMED);
+        futureBooking.setId("future-booking");
+        futureBooking.setScheduledAt(Instant.now().plusSeconds(60));
+        Booking unscheduledBooking = createBookingWithStatus(BookingStatus.CONFIRMED);
+        unscheduledBooking.setId("unscheduled-booking");
+        unscheduledBooking.setScheduledAt(null);
+
+        when(bookingRepository.findByStatusOrderByCreatedAtDesc(BookingStatus.CONFIRMED))
+            .thenReturn(List.of(pastBooking, futureBooking, unscheduledBooking));
+
+        ReflectionTestUtils.invokeMethod(bookingService, "scheduleBookingCompletion");
+
+        assertThat(pastBooking.getStatus()).isEqualTo(BookingStatus.COMPLETED);
+        assertThat(futureBooking.getStatus()).isEqualTo(BookingStatus.CONFIRMED);
+        assertThat(unscheduledBooking.getStatus()).isEqualTo(BookingStatus.CONFIRMED);
+        verify(bookingRepository).save(pastBooking);
+    }
+
+    @Test
+    void privateDisplayNameHelpers_coverFallbacks() {
+        assertThat((String) ReflectionTestUtils.invokeMethod(bookingService, "getUserDisplayName", " "))
+            .isEmpty();
+
+        User idOnlyUser = new User();
+        idOnlyUser.setId("user-id");
+        idOnlyUser.setFirstName(" ");
+        idOnlyUser.setLastName(" ");
+        idOnlyUser.setEmail(" ");
+        assertThat((String) ReflectionTestUtils.invokeMethod(bookingService, "getUserDisplayName", idOnlyUser))
+            .isEqualTo("user-id");
+
+        User emailOnlyUser = new User();
+        emailOnlyUser.setId("email-user");
+        emailOnlyUser.setFirstName(" ");
+        emailOnlyUser.setLastName(" ");
+        emailOnlyUser.setEmail("fallback@calpoly.edu");
+        assertThat((String) ReflectionTestUtils.invokeMethod(bookingService, "getUserDisplayName", emailOnlyUser))
+            .isEqualTo("fallback@calpoly.edu");
+
+        assertThat((String) ReflectionTestUtils.invokeMethod(
+            bookingService,
+            "getUserDisplayName",
+            " ",
+            Map.of()
+        )).isEmpty();
+
+        Booking namelessReview = new Booking();
+        namelessReview.setCustomerId(" ");
+        assertThat((String) ReflectionTestUtils.invokeMethod(
+            bookingService,
+            "getReviewerFirstName",
+            namelessReview,
+            Map.of()
+        )).isEmpty();
+
+        Booking namedReview = new Booking();
+        namedReview.setCustomerId("missing-customer");
+        namedReview.setReviewerName("Avery Chen");
+        assertThat((String) ReflectionTestUtils.invokeMethod(
+            bookingService,
+            "getReviewerFirstName",
+            namedReview,
+            Map.of()
+        )).isEqualTo("Avery");
     }
 
     private Booking createBookingWithStatus(BookingStatus status) {

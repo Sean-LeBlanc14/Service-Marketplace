@@ -13,15 +13,15 @@ type Status =
 export default function BookingActionPage() {
   const [searchParams] = useSearchParams();
   const token = searchParams.get("token");
-  const [status, setStatus] = useState<Status>(
-    token ? "loading" : "invalid"
-  );
-  const [message, setMessage] = useState(
-    token ? "" : "No token provided."
-  );
+  const [status, setStatus] = useState<Status>("loading");
+  const [message, setMessage] = useState("");
 
   useEffect(() => {
-    if (!token) return;
+    if (!token) {
+      setStatus("invalid");
+      setMessage("No token provided.");
+      return;
+    }
 
     fetch(API_ENDPOINTS.bookings.action(token))
       .then(async (res) => {

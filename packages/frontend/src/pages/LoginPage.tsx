@@ -1,7 +1,6 @@
 import { useState } from "react";
 import InputField from "../components/InputField";
 import NavLink from "../components/NavLink";
-import InformationSection from "../components/InformationSection";
 import FormContainer from "../components/FormContainer";
 import SubmitButton from "../components/SubmitButton";
 import { useNavigate } from "react-router-dom";
@@ -9,6 +8,7 @@ import { toast } from "react-toastify";
 import "../styles/LoginPage.css";
 import { API_ENDPOINTS } from "../utils/api";
 import { USER_ID_KEY } from "./profile/constants";
+import InformationSection from "../components/InformationSection";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -85,7 +85,8 @@ export default function LoginPage() {
         link=<NavLink to="/signup" label="Create Account" />
       />
 
-      <InformationSection />
+      <InformationSection/>
+
     </div>
   );
 }

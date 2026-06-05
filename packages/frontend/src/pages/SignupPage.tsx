@@ -3,7 +3,6 @@ import { Link, useNavigate } from "react-router-dom";
 import InputField from "../components/InputField";
 import MajorComboBox from "../components/MajorComboBox";
 import NavLink from "../components/NavLink";
-import InformationSection from "../components/InformationSection";
 import FormContainer from "../components/FormContainer";
 import SubmitButton from "../components/SubmitButton";
 import DropDown from "../components/DropDown";
@@ -11,6 +10,7 @@ import { toast } from "react-toastify";
 import "../styles/SignupPage.css";
 import { API_ENDPOINTS } from "../utils/api";
 import { USER_ID_KEY } from "./profile/constants";
+import InformationSection from "../components/InformationSection";
 
 function SignupPage() {
   const [email, setEmail] = useState("");
@@ -169,7 +169,8 @@ function SignupPage() {
         }
       />
 
-      <InformationSection />
+      <InformationSection/>
+
     </div>
   );
 }

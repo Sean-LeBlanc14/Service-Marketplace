@@ -212,7 +212,8 @@ function ServiceBooking({
                     onClick={async () => {
                       setIsCompleting(true);
                       const succeeded =
-                        (await completeBooking(booking)) ?? false;
+                        (await completeBooking(booking)) ??
+                        false;
 
                       if (!succeeded) {
                         setIsCompleting(false);
@@ -232,13 +233,16 @@ function ServiceBooking({
                     onClick={async () => {
                       setIsUpdating(true);
                       const succeeded =
-                        (await cancelBooking?.(booking)) ?? false;
+                        (await cancelBooking?.(booking)) ??
+                        false;
 
                       if (!succeeded) {
                         setIsUpdating(false);
                       }
                     }}>
-                    {isUpdating ? "Canceling..." : "Cancel Booking"}
+                    {isUpdating
+                      ? "Canceling..."
+                      : "Cancel Booking"}
                   </button>
                 )}
               </div>

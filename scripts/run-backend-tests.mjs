@@ -16,8 +16,8 @@ const command =
   process.platform === "win32" ? "mvnw.cmd" : "sh";
 const args =
   process.platform === "win32"
-    ? ["clean", "test"]
-    : ["./mvnw", "clean", "test"];
+    ? ["clean", "verify"]
+    : ["./mvnw", "clean", "verify"];
 
 const child = spawn(command, args, {
   cwd: backendDir,

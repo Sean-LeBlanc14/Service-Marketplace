@@ -14,6 +14,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.eq;
 import org.mockito.InjectMocks;
+import org.mockito.InOrder;
 import org.mockito.Mock;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.never;
@@ -478,8 +479,10 @@ class BookingServiceTest {
         BookingResponse result = bookingService.cancelBooking("booking-001", userDetails);
 
         assertThat(result.getStatus()).isEqualTo(BookingStatus.CANCELLED);
-        verify(paymentService).refundPaymentIntent("pi_paid_123", true);
-        verify(paymentService).cleanupStripeCustomer("cus_test_123");
+        InOrder inOrder = Mockito.inOrder(bookingRepository, paymentService);
+        inOrder.verify(bookingRepository).save(confirmed);
+        inOrder.verify(paymentService).refundPaymentIntent("pi_paid_123", true);
+        inOrder.verify(paymentService).cleanupStripeCustomer("cus_test_123");
     }
 
     @Test
@@ -505,6 +508,19 @@ class BookingServiceTest {
 
         assertThatThrownBy(() -> bookingService.cancelBooking("booking-001", userDetails))
             .isInstanceOf(BookingStateException.class);
+    }
+
+    @Test
+    void cancelBooking_alreadyRejected_throwsBookingStateException() {
+        Booking booking = buildAwaitingBooking();
+        booking.setStatus(BookingStatus.REJECTED);
+
+        when(userRepository.findByEmail("student@calpoly.edu")).thenReturn(Optional.of(mockCustomer));
+        when(bookingRepository.findById("booking-001")).thenReturn(Optional.of(booking));
+
+        assertThatThrownBy(() -> bookingService.cancelBooking("booking-001", userDetails))
+            .isInstanceOf(BookingStateException.class)
+            .hasMessageContaining("rejected");
     }
 
     @Test
@@ -555,14 +571,14 @@ class BookingServiceTest {
         assertThat(result.getStatus()).isEqualTo(BookingStatus.REJECTED);
         verify(paymentService, never()).refundPaymentIntent(any(), anyBoolean());
         verify(paymentService).cleanupStripeCustomer("cus_test_123");
-        verify(emailService).sendBookingCancelledProviderEmail(
+        verify(emailService).sendBookingRejectedProviderEmail(
             eq("tutor@calpoly.edu"), eq("Bob"), eq("Alice Student"),
             eq("Math Tutoring"), any(Instant.class), any()
         );
     }
 
     @Test
-    void rejectBooking_confirmedBooking_refundsPayment() {
+    void rejectBooking_confirmedBooking_throwsBookingStateException() {
         Booking confirmed = buildAwaitingBooking();
         confirmed.setStatus(BookingStatus.CONFIRMED);
         confirmed.setStripePaymentIntentId("pi_paid_123");
@@ -570,15 +586,12 @@ class BookingServiceTest {
         when(userDetails.getUsername()).thenReturn("tutor@calpoly.edu");
         when(userRepository.findByEmail("tutor@calpoly.edu")).thenReturn(Optional.of(mockProvider));
         when(bookingRepository.findById("booking-001")).thenReturn(Optional.of(confirmed));
-        when(bookingRepository.save(any(Booking.class))).thenAnswer(inv -> inv.getArgument(0));
-        when(userRepository.findById("provider-456")).thenReturn(Optional.of(mockProvider));
-        when(userRepository.findById("customer-789")).thenReturn(Optional.of(mockCustomer));
 
-        BookingResponse result = bookingService.rejectBooking("booking-001", userDetails);
-
-        assertThat(result.getStatus()).isEqualTo(BookingStatus.REJECTED);
-        verify(paymentService).refundPaymentIntent("pi_paid_123", true);
-        verify(paymentService).cleanupStripeCustomer("cus_test_123");
+        assertThatThrownBy(() -> bookingService.rejectBooking("booking-001", userDetails))
+            .isInstanceOf(BookingStateException.class)
+            .hasMessageContaining("awaiting provider confirmation");
+        verify(bookingRepository, never()).save(any());
+        verify(paymentService, never()).refundPaymentIntent(any(), anyBoolean());
     }
 
     @Test

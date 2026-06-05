@@ -107,6 +107,18 @@ public class EmailService {
             ));
     }
 
+    public void sendBookingRejectedProviderEmail(String toEmail, String providerName, String customerName,
+            String serviceTitle, Instant scheduledAt, String bookingId) {
+        sendTemplatedEmail(toEmail, "Booking Request Rejected - " + serviceTitle, "bookingRejectedProvider",
+            Map.of(
+                "providerName", providerName,
+                "customerName", customerName,
+                "serviceTitle", serviceTitle,
+                "scheduledAt", DATE_FORMATTER.format(scheduledAt),
+                "bookingId", bookingId
+            ));
+    }
+
     public void sendBookingCancelledCustomerEmail(String toEmail, String customerName, String providerName,
             String serviceTitle, Instant scheduledAt, String bookingId) {
         sendTemplatedEmail(toEmail, "Booking Cancelled - " + serviceTitle, "bookingCancelledCustomer",

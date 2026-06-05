@@ -9,6 +9,8 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.mongodb.core.FindAndModifyOptions;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
@@ -47,6 +49,8 @@ import com.ServiceMarketplace.service_marketplace.service.BookingTokenService.To
 
 @Service
 public class BookingService {
+
+    private static final Logger log = LoggerFactory.getLogger(BookingService.class);
 
     private final BookingRepository bookingRepository;
     private final ServiceRepository serviceRepository;
@@ -246,19 +250,12 @@ public class BookingService {
     }
 
     private BookingResponse doCancelBooking(Booking booking, boolean cancelledByCustomer) {
-        if (booking.getStatus() == BookingStatus.CANCELLED) {
-            throw new BookingStateException("Booking is already cancelled");
-        }
-        if (booking.getStatus() == BookingStatus.REJECTED) {
-            throw new BookingStateException("Booking is already rejected");
-        }
-        if (booking.getStatus() == BookingStatus.COMPLETED) {
-            throw new BookingStateException("Completed bookings cannot be cancelled");
-        }
+        ensureBookingIsNotTerminal(booking, "cancelled");
 
-        refundPaymentIfNeeded(booking);
         booking.setStatus(BookingStatus.CANCELLED);
         bookingRepository.save(booking);
+
+        refundPaymentIfNeeded(booking);
         paymentService.cleanupStripeCustomer(booking.getStripeCustomerId());
 
         if (cancelledByCustomer) {
@@ -302,6 +299,18 @@ public class BookingService {
         return toBookingResponse(booking);
     }
 
+    private void ensureBookingIsNotTerminal(Booking booking, String action) {
+        if (booking.getStatus() == BookingStatus.CANCELLED) {
+            throw new BookingStateException("Booking is already cancelled");
+        }
+        if (booking.getStatus() == BookingStatus.REJECTED) {
+            throw new BookingStateException("Booking is already rejected");
+        }
+        if (booking.getStatus() == BookingStatus.COMPLETED) {
+            throw new BookingStateException("Completed bookings cannot be " + action);
+        }
+    }
+
     private void refundPaymentIfNeeded(Booking booking) {
         String paymentIntentId = clean(booking.getStripePaymentIntentId());
 
@@ -309,8 +318,18 @@ public class BookingService {
             return;
         }
 
-        boolean reverseTransfer = userRepository.findById(booking.getProviderId())
-            .map(provider -> !clean(provider.getStripeAccountId()).isBlank())
+        var provider = userRepository.findById(booking.getProviderId());
+
+        if (provider.isEmpty()) {
+            log.warn(
+                "Refunding booking {} without provider {} record; connected-account transfer reversal cannot be determined",
+                booking.getId(),
+                booking.getProviderId()
+            );
+        }
+
+        boolean reverseTransfer = provider
+            .map(foundProvider -> !clean(foundProvider.getStripeAccountId()).isBlank())
             .orElse(false);
 
         paymentService.refundPaymentIntent(paymentIntentId, reverseTransfer);
@@ -357,27 +376,22 @@ public class BookingService {
             throw new UnauthorizedBookingRejectionException("You are not authorized to reject this booking");
         }
 
-        if (rejectedBooking.getStatus() == BookingStatus.REJECTED) {
-            throw new BookingStateException("Booking is already rejected");
-        }
-        if (rejectedBooking.getStatus() == BookingStatus.CANCELLED) {
-            throw new BookingStateException("Booking is already cancelled");
-        }
-        if (rejectedBooking.getStatus() == BookingStatus.COMPLETED) {
-            throw new BookingStateException("Completed bookings cannot be rejected");
+        ensureBookingIsNotTerminal(rejectedBooking, "rejected");
+        if (rejectedBooking.getStatus() != BookingStatus.AWAITING_PROVIDER_CONFIRMATION) {
+            throw new BookingStateException("Only booking requests awaiting provider confirmation can be rejected");
         }
 
-        refundPaymentIfNeeded(rejectedBooking);
         rejectedBooking.setStatus(BookingStatus.REJECTED);
         Booking saved = bookingRepository.save(rejectedBooking);
 
+        refundPaymentIfNeeded(saved);
         paymentService.cleanupStripeCustomer(rejectedBooking.getStripeCustomerId());
 
         if (isCustomer) {
             userRepository.findById(rejectedBooking.getProviderId()).ifPresent(provider -> {
                 String customerName = getUserDisplayName(user);
 
-                emailService.sendBookingCancelledProviderEmail(
+                emailService.sendBookingRejectedProviderEmail(
                     provider.getEmail(),
                     provider.getFirstName(),
                     customerName,

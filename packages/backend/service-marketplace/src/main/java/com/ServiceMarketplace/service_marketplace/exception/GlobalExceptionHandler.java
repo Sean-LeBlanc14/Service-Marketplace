@@ -110,7 +110,9 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(StripeException.class)
     public ResponseEntity<String> handleStripeException(com.stripe.exception.StripeException e) {
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
+        log.error("Unhandled StripeException", e);
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+            .body("Payment provider request failed. Please try again later.");
     }
 
     @ExceptionHandler(PaymentProcessingException.class)

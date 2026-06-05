@@ -29,13 +29,12 @@
   color: var(--text-primary);
   display: flex;
   align-items: center;
-  transition: color 0.2s;
+  transition: var(--button-transition);
 }
 
 .notification-icon:hover {
-  scale: 1.01;
-  color: #2a6a3b;
-  background-color: #f8f9fa;
+  opacity: var(--button-hover-opacity);
+  transform: scale(var(--button-hover-scale));
 }
 
 .calendar-icon {
@@ -45,11 +44,10 @@
   display: flex;
   align-items: center;
   color: var(--text-primary);
-  transition: color 0.2s;
+  transition: var(--button-transition);
 }
 
 .calendar-icon:hover {
-  scale: 1.01;
-  color: #2a6a3b;
-  background-color: #f8f9fa;
+  opacity: var(--button-hover-opacity);
+  transform: scale(var(--button-hover-scale));
 }

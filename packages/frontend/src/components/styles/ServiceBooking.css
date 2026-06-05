@@ -109,7 +109,7 @@
 }
 
 .booking-price {
-  color: #c89418;
+  color: var(--cp-gold);
   font-size: 1.22rem;
   font-weight: 800;
   line-height: 1;
@@ -124,7 +124,7 @@
 .booking-action {
   flex: 1 1 0;
   min-width: 0;
-  border-radius: 8px;
+  border-radius: var(--button-radius);
   padding: 9px 14px;
   border: none;
   font-size: 0.9rem;
@@ -132,9 +132,7 @@
   line-height: 1.2;
   white-space: normal;
   cursor: pointer;
-  transition:
-    transform 0.2s ease,
-    opacity 0.2s ease;
+  transition: var(--button-transition);
 }
 
 .booking-action:hover,
@@ -150,7 +148,7 @@
 }
 
 .booking-action-primary {
-  background-color: #1f4a3f;
+  background-color: var(--cp-green);
   color: #ffffff;
 }
 

@@ -31,11 +31,12 @@
   border: none;
   font-size: 40px;
   cursor: pointer;
+  transition: var(--button-transition);
 }
 
 .close-btn:hover {
-  color: red;
-  transform: scale(1.02);
+  opacity: var(--button-hover-opacity);
+  transform: scale(var(--button-hover-scale));
 }
 
 @keyframes fadeIn {

@@ -26,6 +26,12 @@
   --eyebrow-size: 0.78rem;
   --body-copy-size: 0.95rem;
   --muted-copy-size: 0.9rem;
+  --button-radius: 8px;
+  --button-hover-opacity: 0.9;
+  --button-hover-scale: 1.01;
+  --button-transition: transform 0.18s ease, opacity 0.18s ease;
+  --button-secondary-border: #cfd6df;
+  --button-secondary-text: #25364a;
 }
 
 body {
@@ -40,4 +46,8 @@ h4,
 h5,
 h6 {
   letter-spacing: 0;
+}
+
+button {
+  font-family: inherit;
 }

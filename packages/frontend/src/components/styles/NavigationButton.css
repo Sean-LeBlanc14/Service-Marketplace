@@ -11,20 +11,20 @@
   width: 100%;
   border-radius: 8px;
   text-decoration: none;
-  transition: all 0.2s ease;
+  transition: var(--button-transition);
   min-width: fit-content;
 }
 
 .icon-button:hover {
-  color: #2a6a3b;
-  background-color: #f8f9fa;
+  opacity: var(--button-hover-opacity);
+  transform: scale(var(--button-hover-scale));
 }
 
 .icon-button.selected {
   background-color: #e9f0eb;
-  color: #2a6a3b;
+  color: var(--cp-green);
   font-weight: 700;
-  border-left: 4px solid #2a6a3b;
+  border-left: 4px solid var(--cp-green);
   border-top-left-radius: 0;
   border-bottom-left-radius: 0;
 }

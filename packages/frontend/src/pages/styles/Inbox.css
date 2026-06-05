@@ -38,16 +38,16 @@
   background: transparent;
   text-align: left;
   cursor: pointer;
-  transition: background 0.15s;
+  transition: var(--button-transition);
 }
 
 .inbox-conversation-item:hover {
-  background: #f8f9fa;
+  opacity: var(--button-hover-opacity);
 }
 
 .inbox-conversation-item.selected {
   background: #e9f0eb;
-  border-left: 3px solid #1f4a3f;
+  border-left: 3px solid var(--cp-green);
 }
 
 .inbox-conv-header {
@@ -82,7 +82,7 @@
 
 .inbox-conv-service {
   font-size: 12px;
-  color: #1f4a3f;
+  color: var(--cp-green);
   font-weight: 600;
   white-space: nowrap;
   overflow: hidden;
@@ -95,7 +95,7 @@
   height: 18px;
   border-radius: 999px;
   padding: 0 5px;
-  background: #1f4a3f;
+  background: var(--cp-green);
   color: #fff;
   font-size: 11px;
   font-weight: 700;
@@ -168,7 +168,7 @@
 
 .message-bubble.mine {
   align-self: flex-end;
-  background: #1f4a3f;
+  background: var(--cp-green);
   color: #fff;
 }
 
@@ -200,13 +200,13 @@
 }
 
 .offer-bubble {
-  border: 2px solid #c89418;
+  border: 2px solid var(--cp-gold);
 }
 
 .offer-amount {
   font-size: 1.35rem;
   font-weight: 800;
-  color: #c89418;
+  color: var(--cp-gold);
   line-height: 1;
 }
 
@@ -228,16 +228,17 @@
 .offer-accept,
 .offer-reject {
   border: none;
-  border-radius: 6px;
+  border-radius: var(--button-radius);
   padding: 6px 14px;
   font: inherit;
   font-size: 13px;
   font-weight: 700;
   cursor: pointer;
+  transition: var(--button-transition);
 }
 
 .offer-accept {
-  background: #1f4a3f;
+  background: var(--cp-green);
   color: #fff;
 }
 
@@ -250,6 +251,14 @@
 .offer-reject:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+}
+
+.offer-accept:hover:not(:disabled),
+.offer-accept:focus-visible:not(:disabled),
+.offer-reject:hover:not(:disabled),
+.offer-reject:focus-visible:not(:disabled) {
+  opacity: var(--button-hover-opacity);
+  transform: scale(var(--button-hover-scale));
 }
 
 .offer-responded-note {
@@ -307,7 +316,7 @@
 }
 
 .inbox-textarea:focus {
-  border-color: #1f4a3f;
+  border-color: var(--cp-green);
 }
 
 .inbox-input-actions {
@@ -317,19 +326,21 @@
 }
 
 .inbox-offer-btn {
-  border: 1px solid #cfd6df;
-  border-radius: 8px;
+  border: 1px solid var(--button-secondary-border);
+  border-radius: var(--button-radius);
   padding: 8px 18px;
   background: #fff;
-  color: #071b2d;
+  color: var(--button-secondary-text);
   font: inherit;
   font-size: 14px;
   font-weight: 700;
   cursor: pointer;
+  transition: var(--button-transition);
 }
 
 .inbox-offer-btn:hover {
-  background: #f3f5f7;
+  opacity: var(--button-hover-opacity);
+  transform: scale(var(--button-hover-scale));
 }
 
 .inbox-offer-btn:disabled {
@@ -339,14 +350,21 @@
 
 .inbox-send-btn {
   border: none;
-  border-radius: 8px;
+  border-radius: var(--button-radius);
   padding: 8px 22px;
-  background: #1f4a3f;
+  background: var(--cp-green);
   color: #fff;
   font: inherit;
   font-size: 14px;
   font-weight: 700;
   cursor: pointer;
+  transition: var(--button-transition);
+}
+
+.inbox-send-btn:hover:not(:disabled),
+.inbox-send-btn:focus-visible:not(:disabled) {
+  opacity: var(--button-hover-opacity);
+  transform: scale(var(--button-hover-scale));
 }
 
 .inbox-send-btn:disabled {
@@ -399,7 +417,7 @@
 }
 
 .offer-dialog-input:focus {
-  border-color: #1f4a3f;
+  border-color: var(--cp-green);
 }
 
 .offer-dialog-error {
@@ -417,24 +435,34 @@
 
 .offer-dialog-send {
   border: none;
-  border-radius: 8px;
+  border-radius: var(--button-radius);
   padding: 10px 20px;
-  background: #1f4a3f;
+  background: var(--cp-green);
   color: #fff;
   font: inherit;
   font-weight: 700;
   cursor: pointer;
+  transition: var(--button-transition);
 }
 
 .offer-dialog-cancel {
-  border: 1px solid #cfd6df;
-  border-radius: 8px;
+  border: 1px solid var(--button-secondary-border);
+  border-radius: var(--button-radius);
   padding: 10px 16px;
   background: #fff;
-  color: #071b2d;
+  color: var(--button-secondary-text);
   font: inherit;
   font-weight: 700;
   cursor: pointer;
+  transition: var(--button-transition);
+}
+
+.offer-dialog-send:hover,
+.offer-dialog-send:focus-visible,
+.offer-dialog-cancel:hover,
+.offer-dialog-cancel:focus-visible {
+  opacity: var(--button-hover-opacity);
+  transform: scale(var(--button-hover-scale));
 }
 
 @media (max-width: 700px) {

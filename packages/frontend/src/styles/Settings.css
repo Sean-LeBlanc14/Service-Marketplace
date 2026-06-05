@@ -59,7 +59,7 @@
   gap: 10px;
   padding: 10px 15px;
   text-decoration: none;
-  transition: all 0.2s ease;
+  transition: var(--button-transition);
   justify-content: space-between;
 }
 
@@ -74,18 +74,16 @@
 }
 
 .setting-container button:hover {
-  color: #2a6a3b;
-  background-color: #f8f9fa;
+  opacity: var(--button-hover-opacity);
+  transform: scale(var(--button-hover-scale));
 }
 
 .delete-account-button:hover {
-  color: #c92a2a !important;
-  background-color: #fff5f5 !important;
+  opacity: var(--button-hover-opacity);
 }
 
 .logout-button:hover {
-  color: #c92a2a !important;
-  background-color: #fff5f5 !important;
+  opacity: var(--button-hover-opacity);
 }
 
 .modal-style {

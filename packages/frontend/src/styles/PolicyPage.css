@@ -22,10 +22,12 @@
   padding: 0;
   margin-bottom: 1.5rem;
   display: inline-block;
+  transition: var(--button-transition);
 }
 
 .policy-back-btn:hover {
-  text-decoration: underline;
+  opacity: var(--button-hover-opacity);
+  transform: scale(var(--button-hover-scale));
 }
 
 .policy-title {

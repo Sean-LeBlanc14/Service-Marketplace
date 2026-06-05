@@ -23,6 +23,12 @@
 
 .resend-button {
   font-size: 0.9rem;
-  color: #003831;
+  color: var(--cp-green);
   cursor: pointer;
+  transition: var(--button-transition);
+}
+
+.resend-button:hover {
+  opacity: var(--button-hover-opacity);
+  transform: scale(var(--button-hover-scale));
 }

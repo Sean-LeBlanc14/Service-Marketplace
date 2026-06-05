@@ -95,7 +95,7 @@
   align-items: center;
   gap: 6px;
   flex: 0 0 auto;
-  color: #d8a20b;
+  color: var(--cp-gold);
   font-size: 18px;
 }
 

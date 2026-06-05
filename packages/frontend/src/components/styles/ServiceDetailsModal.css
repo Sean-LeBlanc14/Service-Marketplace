@@ -61,7 +61,7 @@
   place-items: center;
   border-radius: 8px;
   background: #f2f4f7;
-  color: #1f4a3f;
+  color: var(--cp-green);
   font-weight: 800;
 }
 
@@ -85,7 +85,7 @@
 }
 
 .service-details-star {
-  color: #d8a20b;
+  color: var(--cp-gold);
   font-size: 18px;
   line-height: 1;
 }
@@ -97,18 +97,20 @@
 .service-details-profile-link {
   flex: 0 0 auto;
   margin-left: auto;
-  border-radius: 8px;
+  border-radius: var(--button-radius);
   padding: 10px 14px;
   background: #edf5f2;
-  color: #1f4a3f;
+  color: var(--cp-green);
   font-weight: 800;
   text-decoration: none;
+  transition: var(--button-transition);
 }
 
 .service-details-profile-link:hover,
 .service-details-profile-link:focus-visible {
-  color: #16382f;
   text-decoration: none;
+  opacity: var(--button-hover-opacity);
+  transform: scale(var(--button-hover-scale));
 }
 
 .service-details-location {
@@ -133,7 +135,7 @@
 
 .service-details-price {
   margin-top: 22px;
-  color: #c89418;
+  color: var(--cp-gold);
   font-size: 2rem;
   font-weight: 800;
   line-height: 1;
@@ -183,18 +185,37 @@
 
 .service-details-actions button {
   min-height: 62px;
-  border-radius: 8px;
+  border-radius: var(--button-radius);
   padding: 14px 28px;
   font: inherit;
   font-size: var(--body-copy-size);
   font-weight: 800;
   cursor: pointer;
+  transition: var(--button-transition);
 }
 
 .service-details-book {
   border: none;
-  background: #1f4a3f;
+  border-radius: var(--button-radius);
+  padding: 12px 20px;
+  background: var(--cp-green);
   color: #ffffff;
+  font: inherit;
+  font-weight: 800;
+  cursor: pointer;
+  transition: var(--button-transition);
+}
+
+.service-details-book:hover:not(:disabled),
+.service-details-book:focus-visible:not(:disabled) {
+  opacity: var(--button-hover-opacity);
+  transform: scale(var(--button-hover-scale));
+}
+
+.service-details-actions button:hover:not(:disabled),
+.service-details-actions button:focus-visible:not(:disabled) {
+  opacity: var(--button-hover-opacity);
+  transform: scale(var(--button-hover-scale));
 }
 
 .service-details-book:disabled {
@@ -208,9 +229,9 @@
   align-items: center;
   justify-content: center;
   gap: 12px;
-  border: 1px solid #cfd6df;
+  border: 1px solid var(--button-secondary-border);
   background: #ffffff;
-  color: #050505;
+  color: var(--button-secondary-text);
 }
 
 .service-details-message-icon {
@@ -231,10 +252,12 @@
   text-decoration: underline;
   text-underline-offset: 3px;
   cursor: pointer;
+  transition: var(--button-transition);
 }
 
 .service-details-report-button:hover {
-  color: #6f2222;
+  opacity: var(--button-hover-opacity);
+  transform: scale(var(--button-hover-scale));
 }
 
 .service-report-backdrop {
@@ -313,13 +336,20 @@
 
 .service-report-submit {
   border: none;
-  border-radius: 8px;
+  border-radius: var(--button-radius);
   padding: 12px 20px;
-  background: #1f4a3f;
+  background: var(--cp-green);
   color: #ffffff;
   font: inherit;
   font-weight: 800;
   cursor: pointer;
+  transition: var(--button-transition);
+}
+
+.service-report-submit:hover:not(:disabled),
+.service-report-submit:focus-visible:not(:disabled) {
+  opacity: var(--button-hover-opacity);
+  transform: scale(var(--button-hover-scale));
 }
 
 .service-report-submit:disabled {
@@ -337,10 +367,12 @@
   font-size: 0.85rem;
   text-decoration: none;
   cursor: pointer;
+  transition: var(--button-transition);
 }
 
 .service-details-report-link:hover {
-  text-decoration: underline;
+  opacity: var(--button-hover-opacity);
+  transform: scale(var(--button-hover-scale));
 }
 
 .report-dialog {
@@ -395,9 +427,27 @@
 }
 
 .report-dialog-actions button {
+  border: 1px solid var(--button-secondary-border);
   padding: 8px 16px;
-  border-radius: 6px;
+  border-radius: var(--button-radius);
+  background: #ffffff;
+  color: var(--button-secondary-text);
+  font: inherit;
+  font-weight: 700;
   cursor: pointer;
+  transition: var(--button-transition);
+}
+
+.report-dialog-actions button:first-child {
+  border: none;
+  background: var(--cp-green);
+  color: #ffffff;
+}
+
+.report-dialog-actions button:hover,
+.report-dialog-actions button:focus-visible {
+  opacity: var(--button-hover-opacity);
+  transform: scale(var(--button-hover-scale));
 }
 
 @media (max-width: 720px) {

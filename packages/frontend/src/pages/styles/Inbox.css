@@ -38,11 +38,11 @@
   background: transparent;
   text-align: left;
   cursor: pointer;
-  transition: var(--button-transition);
+  transition: background 0.18s ease;
 }
 
 .inbox-conversation-item:hover {
-  opacity: var(--button-hover-opacity);
+  background: #f8f9fa;
 }
 
 .inbox-conversation-item.selected {

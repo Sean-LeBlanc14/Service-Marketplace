@@ -47,6 +47,7 @@ import com.ServiceMarketplace.service_marketplace.exception.UnauthorizedBookingR
 import com.ServiceMarketplace.service_marketplace.model.Booking;
 import com.ServiceMarketplace.service_marketplace.model.BookingStatus;
 import com.ServiceMarketplace.service_marketplace.model.BookingTokenAction;
+import com.ServiceMarketplace.service_marketplace.model.NotificationType;
 import com.ServiceMarketplace.service_marketplace.model.Service;
 import com.ServiceMarketplace.service_marketplace.model.User;
 import com.ServiceMarketplace.service_marketplace.repository.BookingRepository;
@@ -653,11 +654,18 @@ class BookingServiceTest {
         when(userRepository.findByEmail("tutor@calpoly.edu")).thenReturn(Optional.of(mockProvider));
         when(bookingRepository.findById("booking-001")).thenReturn(Optional.of(confirmed));
         when(bookingRepository.save(any(Booking.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(userRepository.findById("customer-789")).thenReturn(Optional.of(mockCustomer));
 
         BookingResponse result = bookingService.completeBooking("booking-001", userDetails);
 
         assertThat(result.getStatus()).isEqualTo(BookingStatus.COMPLETED);
         verify(bookingRepository).save(confirmed);
+        verify(notificationService).send(
+            "customer-789",
+            NotificationType.BOOKING_COMPLETED,
+            "Service Completed",
+            "Bob marked your booking for Math Tutoring as complete",
+            "booking-001");
     }
 
     @Test

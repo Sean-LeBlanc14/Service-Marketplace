@@ -118,6 +118,9 @@ export default function Calendar() {
     scheduledCustomerBookings,
     setScheduledCustomerBookings
   ] = useState<ApiBooking[]>([]);
+  const [serviceHistory, setServiceHistory] = useState<
+    ApiBooking[]
+  >([]);
   const [selectedView, setSelectedView] =
     useState<CalendarView>("provider");
   const [visibleMonth, setVisibleMonth] = useState(
@@ -135,15 +138,21 @@ export default function Calendar() {
       }
 
       try {
-        const [providerResponse, customerResponse] =
-          await Promise.all([
-            fetch(API_ENDPOINTS.bookings.getProviderScheduled, {
-              headers: { Authorization: `Bearer ${authToken}` }
-            }),
-            fetch(API_ENDPOINTS.bookings.getCustomerScheduled, {
-              headers: { Authorization: `Bearer ${authToken}` }
-            })
-          ]);
+        const [
+          providerResponse,
+          providerCompletedResponse,
+          customerResponse
+        ] = await Promise.all([
+          fetch(API_ENDPOINTS.bookings.getProviderScheduled, {
+            headers: { Authorization: `Bearer ${authToken}` }
+          }),
+          fetch(API_ENDPOINTS.bookings.getProviderCompleted, {
+            headers: { Authorization: `Bearer ${authToken}` }
+          }),
+          fetch(API_ENDPOINTS.bookings.getCustomerScheduled, {
+            headers: { Authorization: `Bearer ${authToken}` }
+          })
+        ]);
 
         if (providerResponse.ok) {
           const bookings =
@@ -151,6 +160,14 @@ export default function Calendar() {
           setScheduledProviderBookings(bookings);
         } else {
           toast.error("Could not get your provided services");
+        }
+
+        if (providerCompletedResponse.ok) {
+          const bookings =
+            (await providerCompletedResponse.json()) as ApiBooking[];
+          setServiceHistory(bookings);
+        } else {
+          toast.error("Could not get your completed services");
         }
 
         if (customerResponse.ok) {
@@ -175,14 +192,21 @@ export default function Calendar() {
     () => ({
       provider: {
         heading: "Provider Calendar",
-        bookings: scheduledProviderBookings
+        bookings: [
+          ...scheduledProviderBookings,
+          ...serviceHistory
+        ]
       },
       customer: {
         heading: "Customer Calendar",
         bookings: scheduledCustomerBookings
       }
     }),
-    [scheduledProviderBookings, scheduledCustomerBookings]
+    [
+      scheduledProviderBookings,
+      scheduledCustomerBookings,
+      serviceHistory
+    ]
   );
 
   const selectedCalendar = calendarViews[selectedView];
@@ -330,13 +354,22 @@ export default function Calendar() {
       );
 
       if (response.ok) {
+        const completedBooking =
+          (await response.json()) as ApiBooking;
+
         toast.success("Booking marked complete");
         setScheduledProviderBookings((bookings) =>
           bookings.filter(
             (booking) => booking.id !== selectedBooking.id
           )
         );
-        setSelectedBooking(null);
+        setServiceHistory((bookings) => [
+          completedBooking,
+          ...bookings.filter(
+            (booking) => booking.id !== selectedBooking.id
+          )
+        ]);
+        setSelectedBooking(completedBooking);
       } else {
         toast.error("Could not mark booking complete.");
       }
@@ -503,15 +536,17 @@ export default function Calendar() {
                   </button>
                 )}
 
-              <button
-                type="button"
-                className="calendar-modal-cancel"
-                disabled={isCancelling}
-                onClick={() => void cancelBooking()}>
-                {isCancelling
-                  ? "Canceling..."
-                  : "Cancel Booking"}
-              </button>
+              {selectedBooking.status !== "COMPLETED" && (
+                <button
+                  type="button"
+                  className="calendar-modal-cancel"
+                  disabled={isCancelling}
+                  onClick={() => void cancelBooking()}>
+                  {isCancelling
+                    ? "Canceling..."
+                    : "Cancel Booking"}
+                </button>
+              )}
             </div>
           </div>
         )}

@@ -23,5 +23,5 @@
 }
 
 .major-combobox-option:hover {
-  opacity: var(--button-hover-opacity);
+  background: #f0f0f0;
 }

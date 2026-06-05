@@ -55,13 +55,12 @@
   background: transparent;
   text-align: left;
   cursor: pointer;
-  transition: var(--button-transition);
+  transition: background 0.18s ease;
   position: relative;
 }
 
 .notif-item:hover {
-  opacity: var(--button-hover-opacity);
-  transform: scale(var(--button-hover-scale));
+  background: #f8f9fa;
 }
 
 .notif-item.unread {
@@ -69,8 +68,7 @@
 }
 
 .notif-item.unread:hover {
-  opacity: var(--button-hover-opacity);
-  transform: scale(var(--button-hover-scale));
+  background: #e5efe9;
 }
 
 .notif-icon {

@@ -212,6 +212,12 @@ public class BookingService {
         booking.setStatus(BookingStatus.COMPLETED);
         Booking completedBooking = bookingRepository.save(booking);
 
+        userRepository.findById(completedBooking.getCustomerId()).ifPresent(customer ->
+            notificationService.send(customer.getId(), NotificationType.BOOKING_COMPLETED,
+                "Service Completed",
+                provider.getFirstName() + " marked your booking for " + completedBooking.getServiceTitle() + " as complete",
+                completedBooking.getId()));
+
         return toBookingResponse(completedBooking);
     }
 
@@ -265,13 +271,12 @@ public class BookingService {
 
         if (confirmedBooking.getStatus() == BookingStatus.CONFIRMED) {
             sendConfirmationEmails(confirmedBooking);
+            userRepository.findById(confirmedBooking.getCustomerId()).ifPresent(customer ->
+                notificationService.send(customer.getId(), NotificationType.BOOKING_CONFIRMED,
+                    "Booking Confirmed",
+                    provider.getFirstName() + " confirmed your booking for " + confirmedBooking.getServiceTitle(),
+                    confirmedBooking.getId()));
         }
-
-        userRepository.findById(confirmedBooking.getCustomerId()).ifPresent(customer ->
-            notificationService.send(customer.getId(), NotificationType.BOOKING_CONFIRMED,
-                "Booking Confirmed",
-                provider.getFirstName() + " confirmed your booking for " + confirmedBooking.getServiceTitle(),
-                confirmedBooking.getId()));
 
         return toBookingResponse(confirmedBooking);
     }

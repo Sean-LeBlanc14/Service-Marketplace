@@ -19,6 +19,7 @@ import static org.mockito.Mockito.when;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 
+import com.ServiceMarketplace.service_marketplace.exception.BookingStateException;
 import com.ServiceMarketplace.service_marketplace.exception.BookingTokenException;
 import com.ServiceMarketplace.service_marketplace.model.BookingToken;
 import com.ServiceMarketplace.service_marketplace.model.BookingTokenAction;
@@ -36,7 +37,7 @@ class BookingTokenServiceTest {
 
     @BeforeEach
     void setUp() {
-        ReflectionTestUtils.setField(bookingTokenService, "appBaseUrl", "https://polyservices.test");
+        ReflectionTestUtils.setField(bookingTokenService, "frontendBaseUrl", "https://polyservices.test");
     }
 
     @Test
@@ -60,9 +61,9 @@ class BookingTokenServiceTest {
         assertThat(savedTokens.get(1).getToken()).isNotBlank();
         assertThat(savedTokens.get(0).getToken()).isNotEqualTo(savedTokens.get(1).getToken());
         assertThat(tokenPair.confirmUrl())
-            .isEqualTo("https://polyservices.test/api/bookings/action?token=" + savedTokens.get(0).getToken());
+            .isEqualTo("https://polyservices.test/bookings/action?token=" + savedTokens.get(0).getToken());
         assertThat(tokenPair.cancelUrl())
-            .isEqualTo("https://polyservices.test/api/bookings/action?token=" + savedTokens.get(1).getToken());
+            .isEqualTo("https://polyservices.test/bookings/action?token=" + savedTokens.get(1).getToken());
     }
 
     @Test
@@ -95,7 +96,7 @@ class BookingTokenServiceTest {
     }
 
     @Test
-    void validateAndConsume_usedToken_throwsBookingTokenException() {
+    void validateAndConsume_usedToken_throwsBookingStateException() {
         BookingToken token = new BookingToken();
         token.setToken("used-token");
         token.setUsed(true);
@@ -104,7 +105,7 @@ class BookingTokenServiceTest {
         when(bookingTokenRepository.findByToken("used-token")).thenReturn(Optional.of(token));
 
         assertThatThrownBy(() -> bookingTokenService.validateAndConsume("used-token"))
-            .isInstanceOf(BookingTokenException.class)
+            .isInstanceOf(BookingStateException.class)
             .hasMessage("This link has already been used");
 
         verify(bookingTokenRepository, never()).save(any(BookingToken.class));

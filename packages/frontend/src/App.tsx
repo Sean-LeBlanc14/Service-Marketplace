@@ -26,6 +26,7 @@ import PrivacyPolicy from "./pages/PrivacyPolicy";
 import { API_ENDPOINTS } from "./utils/api";
 import { WebSocketProvider } from "./context/WebSocketContext";
 import Calendar from "./pages/Calendar";
+import BookingActionPage from "./pages/BookingActionPage";
 
 const TOKEN_STORAGE_KEY = "jwt_token";
 
@@ -125,6 +126,10 @@ function AppRoutes() {
       <Route path="suspended" element={<SuspendedPage />} />
       <Route path="terms" element={<TermsOfService />} />
       <Route path="privacy" element={<PrivacyPolicy />} />
+      <Route
+        path="bookings/action"
+        element={<BookingActionPage />}
+      />
     </Routes>
   );
 }

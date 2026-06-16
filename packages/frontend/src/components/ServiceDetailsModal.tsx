@@ -149,7 +149,10 @@ function ServiceDetailsModal({
       );
 
       if (!response.ok) {
-        throw new Error("Failed to create booking.");
+        const errorText = await response.text();
+        throw new Error(
+          errorText || "Failed to create booking."
+        );
       }
 
       const data = await response.json();

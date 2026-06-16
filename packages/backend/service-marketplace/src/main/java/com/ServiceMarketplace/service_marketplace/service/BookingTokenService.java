@@ -8,6 +8,7 @@ import java.util.Base64;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import com.ServiceMarketplace.service_marketplace.exception.BookingStateException;
 import com.ServiceMarketplace.service_marketplace.exception.BookingTokenException;
 import com.ServiceMarketplace.service_marketplace.model.BookingToken;
 import com.ServiceMarketplace.service_marketplace.model.BookingTokenAction;
@@ -19,8 +20,8 @@ public class BookingTokenService {
     private static final int TOKEN_EXPIRY_HOURS = 48;
     private static final int TOKEN_BYTES = 32;
 
-    @Value("${custom.app.base-url}")
-    private String appBaseUrl;
+    @Value("${custom.app.frontend-base-url}")
+    private String frontendBaseUrl;
 
     private final BookingTokenRepository bookingTokenRepository;
     private final SecureRandom secureRandom = new SecureRandom();
@@ -41,8 +42,8 @@ public class BookingTokenService {
         bookingTokenRepository.save(buildToken(cancelToken, bookingId, BookingTokenAction.CANCEL));
 
         return new TokenPair(
-            appBaseUrl + "/api/bookings/action?token=" + confirmToken,
-            appBaseUrl + "/api/bookings/action?token=" + cancelToken
+            frontendBaseUrl + "/bookings/action?token=" + confirmToken,
+            frontendBaseUrl + "/bookings/action?token=" + cancelToken
         );
     }
 
@@ -51,7 +52,7 @@ public class BookingTokenService {
             .orElseThrow(() -> new BookingTokenException("Invalid or unrecognized confirmation link"));
 
         if (bookingToken.isUsed()) {
-            throw new BookingTokenException("This link has already been used");
+            throw new BookingStateException("This link has already been used");
         }
 
         if (Instant.now().isAfter(bookingToken.getExpiresAt())) {

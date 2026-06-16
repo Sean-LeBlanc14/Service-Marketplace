@@ -1,0 +1,63 @@
+.booking-action-page {
+  min-height: 100vh;
+  background-color: #f4f4f4;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  font-family: Arial, sans-serif;
+}
+
+.booking-action-card {
+  background-color: #ffffff;
+  border-radius: 8px;
+  padding: 40px;
+  max-width: 500px;
+  width: 100%;
+  text-align: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.booking-action-loading {
+  color: #555555;
+  font-size: 16px;
+}
+
+.booking-action-title {
+  margin: 0 0 20px;
+  font-size: 28px;
+}
+
+.booking-action-title--success {
+  color: #2e7d32;
+}
+
+.booking-action-title--warning {
+  color: #e65100;
+}
+
+.booking-action-title--error {
+  color: #c62828;
+}
+
+.booking-action-message {
+  color: #555555;
+  font-size: 16px;
+  line-height: 24px;
+  margin: 0 0 30px;
+}
+
+.booking-action-link {
+  display: inline-block;
+  background-color: #1976d2;
+  color: #ffffff;
+  text-decoration: none;
+  padding: 12px 28px;
+  border-radius: 6px;
+  font-size: 15px;
+  font-weight: bold;
+}
+
+.booking-action-link:hover {
+  background-color: #1565c0;
+}

@@ -1,6 +1,7 @@
 package com.ServiceMarketplace.service_marketplace.service;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.List;
 
 import org.slf4j.Logger;
@@ -9,6 +10,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
+
+import jakarta.annotation.PostConstruct;
 
 import com.ServiceMarketplace.service_marketplace.dto.ConnectOnboardingResponse;
 import com.ServiceMarketplace.service_marketplace.dto.ConnectStatusResponse;
@@ -75,8 +78,12 @@ public class PaymentService {
         this.emailService = emailService;
     }
 
-    public SetupIntentResult createSetupIntent(String customerEmail, String customerName) {
+    @PostConstruct
+    void init() {
         Stripe.apiKey = STRIPE_SECRET_KEY;
+    }
+
+    public SetupIntentResult createSetupIntent(String customerEmail, String customerName) {
 
         try {
             CustomerCreateParams customerParams = CustomerCreateParams.builder()
@@ -100,10 +107,9 @@ public class PaymentService {
     }
 
     public PaymentIntentResult createAndConfirmPaymentIntent(BigDecimal amount, String stripeCustomerId, String serviceId, String customerId, String providerStripeAccountId) {
-        Stripe.apiKey = STRIPE_SECRET_KEY;
-
         long amountInCents = amount
             .multiply(new BigDecimal("100"))
+            .setScale(0, RoundingMode.HALF_UP)
             .longValue();
 
         try {
@@ -154,7 +160,6 @@ public class PaymentService {
 
     public void cleanupStripeCustomer(String stripeCustomerId) {
         if (stripeCustomerId == null) return;
-        Stripe.apiKey = STRIPE_SECRET_KEY;
         try {
             Customer customer = Customer.retrieve(stripeCustomerId);
             customer.delete();
@@ -165,8 +170,6 @@ public class PaymentService {
 
     public void refundPaymentIntent(String stripePaymentIntentId, boolean reverseTransfer) {
         if (stripePaymentIntentId == null || stripePaymentIntentId.isBlank()) return;
-        Stripe.apiKey = STRIPE_SECRET_KEY;
-
         try {
             RefundCreateParams.Builder paramsBuilder = RefundCreateParams.builder()
                 .setPaymentIntent(stripePaymentIntentId);
@@ -185,8 +188,6 @@ public class PaymentService {
     }
 
     public ConnectOnboardingResponse initiateOnboarding(UserDetails userDetails) {
-        Stripe.apiKey = STRIPE_SECRET_KEY;
-
         User user = userRepository.findByEmail(userDetails.getUsername())
             .orElseThrow(() -> new UsernameNotFoundException("User not found"));
 
@@ -220,8 +221,6 @@ public class PaymentService {
     }
 
     public ConnectStatusResponse getConnectStatus(UserDetails userDetails) {
-        Stripe.apiKey = STRIPE_SECRET_KEY;
-
         User user = userRepository.findByEmail(userDetails.getUsername())
             .orElseThrow(() -> new UsernameNotFoundException("User not found"));
 
